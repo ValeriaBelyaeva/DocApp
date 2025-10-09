@@ -1,0 +1,9 @@
+<!-- res/values/themes.xml -->
+<resources>
+    <!-- Тема приложения на базе Material 3 -->
+    <style name="Theme.DocApp" parent="Theme.Material3.DayNight">
+        <!-- Выключаем ActionBar и заголовок окна для Compose -->
+        <item name="windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+</resources>
