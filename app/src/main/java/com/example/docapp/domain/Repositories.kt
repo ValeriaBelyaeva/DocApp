@@ -6,7 +6,7 @@ interface SettingsRepository {
     suspend fun isPinSet(): Boolean
     suspend fun verifyPin(pin: String): Boolean
     suspend fun setNewPin(pin: String)
-    suspend fun disablePin()                  // <-- новое
+    suspend fun disablePin()
 }
 
 interface FolderRepository {
@@ -32,7 +32,7 @@ interface DocumentRepository {
         val doc: Document,
         val fields: List<DocumentField>,
         val photos: List<Attachment>,
-        val pdf: Attachment?
+        val pdfs: List<Attachment>
     )
 
     fun observeHome(): Flow<HomeList>
@@ -43,7 +43,7 @@ interface DocumentRepository {
         name: String,
         fields: List<Pair<String, String>>,
         photoUris: List<String>,
-        pdfUri: String?
+        pdfsUri: List<String> = emptyList()
     ): String
 
     suspend fun getDocument(id: String): FullDocument?
