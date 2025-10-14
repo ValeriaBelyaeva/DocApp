@@ -90,7 +90,7 @@ fun DocumentViewScreen(
             }
 
             // PDF
-            item { Spacer(Modifier.height(12.dp)); Text("PDF", style = MaterialTheme.typTypography.titleMedium) }
+            item { Spacer(Modifier.height(12.dp)); Text("PDF", style = MaterialTheme.typography.titleMedium) }
             full?.pdfs?.let { pdfs ->
                 itemsIndexed(pdfs) { index, pdf ->
                     OutlinedButton(onClick = {
@@ -275,8 +275,8 @@ fun DocumentEditScreen(
                 scope.launch {
                     if (existingDocId == null) {
 
-                        val id = uc.createDocument(
-                            templateId = templateId,
+                        val id = uc.createDoc(
+                            tplId = templateId,
                             folderId = folderId,
                             name = name.ifBlank { "Документ" },
                             fields = fields.toList(),
@@ -300,8 +300,8 @@ fun DocumentEditScreen(
                         }
                         val attachments =
                             photoUris.map { Attachment(newId(), existingDocId, AttachmentKind.photo, null, it, System.currentTimeMillis()) } +
-                                    listOfNotNull(pdfsUri?.let { Attachment(newId(), existingDocId, AttachmentKind.pdfs, "document.pdfs", it, System.currentTimeMillis()) })
-                        uc.updateDoc(DocumentRepository.FullDocument(updatedDoc, updatedFields, attachments.filter { it.kind == AttachmentKind.photo }, attachments.firstOrNull { it.kind == AttachmentKind.pdfs }))
+                                    pdfsUris.map { Attachment(newId(), existingDocId, AttachmentKind.pdfs, "document.pdfs", it, System.currentTimeMillis()) } //listOfNotNull(pdfsUri?.let { Attachment(newId(), existingDocId, AttachmentKind.pdfs, "document.pdfs", it, System.currentTimeMillis()) })
+                        uc.updateDoc(DocumentRepository.FullDocument(updatedDoc, updatedFields, attachments.filter { it.kind == AttachmentKind.photo }, attachments.filter {it.kind == AttachmentKind.pdfs}))
                         onSaved(existingDocId)
                     }
                 }

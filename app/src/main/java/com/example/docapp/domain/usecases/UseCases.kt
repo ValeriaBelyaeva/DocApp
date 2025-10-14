@@ -1,5 +1,6 @@
 package com.example.docapp.domain.usecases
 
+import com.example.docapp.domain.Attachment
 import com.example.docapp.domain.DocumentRepository
 import com.example.docapp.domain.Repositories
 
@@ -8,7 +9,7 @@ class UseCases(private val repos: Repositories) {
     suspend fun verifyPin(pin: String) = repos.settings.verifyPin(pin)
     suspend fun isPinSet() = repos.settings.isPinSet()
     suspend fun setNewPin(pin: String) = repos.settings.setNewPin(pin)
-    suspend fun disablePin() = repos.settings.disablePin()      // <-- новое
+    suspend fun disablePin() = repos.settings.disablePin()
 
     // Observers
     fun observeHome() = repos.documents.observeHome()
@@ -23,9 +24,13 @@ class UseCases(private val repos: Repositories) {
 
     // Documents
     suspend fun createDoc(
-        tplId: String?, folderId: String?, name: String,
-        fields: List<Pair<String, String>>, photos: List<String>, pdf: String?
-    ) = repos.documents.createDocument(tplId, folderId, name, fields, photos, pdf)
+        tplId: String?,
+        folderId: String?,
+        name: String,
+        fields: List<Pair<String, String>>,
+        photos: List<String>,
+        pdfsUri: List<String>
+    ) = repos.documents.createDocument(tplId, folderId, name, fields, photos, pdfsUri)
 
     suspend fun getDoc(id: String) = repos.documents.getDocument(id)
 
@@ -35,7 +40,7 @@ class UseCases(private val repos: Repositories) {
             fd.fields,
             buildList {
                 addAll(fd.photos)
-                fd.pdf?.let { add(it) }
+                addAll(fd.pdfs)
             }
         )
 
