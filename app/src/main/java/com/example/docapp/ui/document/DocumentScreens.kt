@@ -280,8 +280,8 @@ fun DocumentEditScreen(
                             folderId = folderId,
                             name = name.ifBlank { "Документ" },
                             fields = fields.toList(),
-                            photoUris = photoUris.map { it.toString() },
-                            pdfsUri   = pdfsUris.map { it.toString() }
+                            photos = photoUris.map { it.toString() },
+                            pdfUris = pdfsUris.map { it.toString() }
                         )
                         onSaved(id)
                     } else {
@@ -300,7 +300,7 @@ fun DocumentEditScreen(
                         }
                         val attachments =
                             photoUris.map { Attachment(newId(), existingDocId, AttachmentKind.photo, null, it, System.currentTimeMillis()) } +
-                                    pdfsUris.map { Attachment(newId(), existingDocId, AttachmentKind.pdfs, "document.pdfs", it, System.currentTimeMillis()) } //listOfNotNull(pdfsUri?.let { Attachment(newId(), existingDocId, AttachmentKind.pdfs, "document.pdfs", it, System.currentTimeMillis()) })
+                                    pdfsUris.map { Attachment(newId(), existingDocId, AttachmentKind.pdfs, "document.pdfs", it, System.currentTimeMillis()) }
                         uc.updateDoc(DocumentRepository.FullDocument(updatedDoc, updatedFields, attachments.filter { it.kind == AttachmentKind.photo }, attachments.filter {it.kind == AttachmentKind.pdfs}))
                         onSaved(existingDocId)
                     }

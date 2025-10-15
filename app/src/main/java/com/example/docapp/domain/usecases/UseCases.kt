@@ -29,8 +29,8 @@ class UseCases(private val repos: Repositories) {
         name: String,
         fields: List<Pair<String, String>>,
         photos: List<String>,
-        pdfsUri: List<String>
-    ) = repos.documents.createDocument(tplId, folderId, name, fields, photos, pdfsUri)
+        pdfUris: List<String>
+    ) = repos.documents.createDocument(tplId, folderId, name, fields, photos, pdfUris)
 
     suspend fun getDoc(id: String) = repos.documents.getDocument(id)
 

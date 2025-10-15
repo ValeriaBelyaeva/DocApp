@@ -45,7 +45,7 @@ data class DocumentField(
     val ord: Int
 )
 
-enum class AttachmentKind { photo, pdf }
+enum class AttachmentKind { photo, pdf, pdfs }
 data class Attachment(
     val id: String,
     val documentId: String,

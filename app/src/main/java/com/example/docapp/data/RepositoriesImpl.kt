@@ -26,6 +26,9 @@ class RepositoriesImpl(
             dao.settings.updatePin(hash)
             crypto.deriveRuntimeKeysFromPin(pin)
         }
+        override suspend fun disablePin() {
+            dao.settings.clearPin()
+        }
     }
 
     override val folders: FolderRepository = object : FolderRepository {
@@ -55,11 +58,11 @@ class RepositoriesImpl(
             name: String,
             fields: List<Pair<String, String>>,
             photoUris: List<String>,
-            pdfUri: String?
+            pdfUris: List<String>
         ): String {
             val photos = photoUris.map { files.persist(Uri.parse(it)).toString() }
-            val pdf = pdfUri?.let { files.persist(Uri.parse(it)).toString() }
-            val id = dao.documents.create(templateId, folderId, name, fields, photos, pdf)
+            val pdfs = pdfUris.map { files.persist(Uri.parse(it)).toString() }
+            val id = dao.documents.create(templateId, folderId, name, fields, photos, pdfs)
             dao.documents.touch(id)
             return id
         }
@@ -70,7 +73,9 @@ class RepositoriesImpl(
             doc: Document,
             fields: List<DocumentField>,
             attachments: List<Attachment>
-        ) = dao.documents.update(doc, fields, attachments)
+        ) {
+            dao.documents.update(doc, fields, attachments)
+        }
 
         override suspend fun deleteDocument(id: String) = dao.documents.delete(id)
         override suspend fun pinDocument(id: String, pinned: Boolean) = dao.documents.pin(id, pinned)

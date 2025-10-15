@@ -118,7 +118,7 @@ interface DocumentDao {
 
     suspend fun create(
         templateId: String?, folderId: String?, name: String,
-        fields: List<Pair<String, String>>, photoUris: List<String>, pdfUri: String?
+        fields: List<Pair<String, String>>, photoUris: List<String>, pdfUris: List<String>
     ): String
 
     suspend fun getFull(id: String): DocumentRepository.FullDocument?
@@ -305,7 +305,7 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         name: String,
         fields: List<Pair<String, String>>,
         photoUris: List<String>,
-        pdfUri: String?
+        pdfUris: List<String>
     ): String = withContext(Dispatchers.IO) {
         val id = newId()
         val ts = now()
@@ -327,10 +327,10 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
                     arrayOf(newId(), id, "photo", null, p, ts)
                 )
             }
-            pdfUri?.let {
+            pdfUris.forEach { pdfUri ->
                 db.writableDatabase.execSQL(
                     "INSERT INTO attachments(id,document_id,kind,file_name,uri,created_at) VALUES(?,?,?,?,?,?)",
-                    arrayOf(newId(), id, "pdf", "document.pdf", it, ts)
+                    arrayOf(newId(), id, "pdfs", "document.pdfs", pdfUri, ts)
                 )
             }
             db.writableDatabase.setTransactionSuccessful()
@@ -347,7 +347,7 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         var doc: Document? = null
         val fields = mutableListOf<DocumentField>()
         val photos = mutableListOf<Attachment>()
-        var pdf: Attachment? = null
+        val pdfs = mutableListOf<Attachment>()
 
         db.readableDatabase.rawQuery("SELECT * FROM documents WHERE id=?", arrayOf(id)).use { c ->
             if (c.moveToFirst()) doc = c.toDoc()
@@ -377,21 +377,28 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
             arrayOf(id)
         ).use { c ->
             while (c.moveToNext()) {
+                val kindStr = c.getString(c.getColumnIndexOrThrow("kind"))
                 val a = Attachment(
                     id = c.getString(c.getColumnIndexOrThrow("id")),
                     documentId = id,
-                    kind = if (c.getString(c.getColumnIndexOrThrow("kind")) == "photo") AttachmentKind.photo else AttachmentKind.pdf,
+                    kind = when (kindStr) {
+                        "photo" -> AttachmentKind.photo
+                        "pdf" -> AttachmentKind.pdf
+                        "pdfs" -> AttachmentKind.pdfs
+                        else -> AttachmentKind.pdf
+                    },
                     fileName = c.getStringOrNull("file_name"),
                     uri = Uri.parse(c.getString(c.getColumnIndexOrThrow("uri"))),
                     createdAt = c.getLong(c.getColumnIndexOrThrow("created_at"))
                 )
                 when (a.kind) {
                     AttachmentKind.photo -> photos.add(a)
-                    AttachmentKind.pdf -> pdf = a
+                    AttachmentKind.pdfs -> pdfs.add(a)
+                    AttachmentKind.pdf -> pdfs.add(a) // для совместимости со старыми данными
                 }
             }
         }
-        DocumentRepository.FullDocument(doc!!, fields, photos, pdf)
+        DocumentRepository.FullDocument(doc!!, fields, photos, pdfs)
     }
 
     override suspend fun update(doc: Document, fields: List<DocumentField>, attachments: List<Attachment>) = withContext(Dispatchers.IO) {

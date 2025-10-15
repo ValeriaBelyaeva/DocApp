@@ -43,7 +43,7 @@ interface DocumentRepository {
         name: String,
         fields: List<Pair<String, String>>,
         photoUris: List<String>,
-        pdfsUri: List<String> = emptyList()
+        pdfUris: List<String>
     ): String
 
     suspend fun getDocument(id: String): FullDocument?
