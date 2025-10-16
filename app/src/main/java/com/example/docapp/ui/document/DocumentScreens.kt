@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.docapp.core.ServiceLocator
 import com.example.docapp.core.newId
 import com.example.docapp.domain.Attachment
@@ -29,6 +30,13 @@ import com.example.docapp.ui.widgets.FieldTile
 import com.example.docapp.ui.widgets.PrimaryButton
 import com.example.docapp.ui.widgets.copyToClipboard
 import kotlinx.coroutines.launch
+
+// Модель для файлов с именами
+data class NamedFile(
+    val uri: Uri,
+    val displayName: String,
+    val isPhoto: Boolean
+)
 
 /* -------- Просмотр ---------- */
 @Composable
@@ -79,13 +87,23 @@ fun DocumentViewScreen(
             item { Spacer(Modifier.height(12.dp)); Text("ФОТО", style = MaterialTheme.typography.titleMedium) }
             full?.photos?.let { photos ->
                 itemsIndexed(photos) { index, photo ->
-                    OutlinedButton(onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW).apply {
-                            setDataAndType(photo.uri, "image/*")
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-                        ctx.startActivity(intent)
-                    }) { Text("ОТКРЫТЬ ФОТО ${index + 1}") }
+                    val fileStore = ServiceLocator.files as com.example.docapp.core.EncryptedAttachmentStore
+                    val isAvailable = fileStore.retrieve(photo.uri) != null
+                    
+                    if (isAvailable) {
+                        OutlinedButton(onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                setDataAndType(photo.uri, "image/*")
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            ctx.startActivity(intent)
+                        }) { Text("ОТКРЫТЬ ФОТО ${index + 1}") }
+                    } else {
+                        Text(
+                            "ФОТО ${index + 1} - ФАЙЛ НЕ НАЙДЕН", 
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
 
@@ -93,13 +111,23 @@ fun DocumentViewScreen(
             item { Spacer(Modifier.height(12.dp)); Text("PDF", style = MaterialTheme.typography.titleMedium) }
             full?.pdfs?.let { pdfs ->
                 itemsIndexed(pdfs) { index, pdf ->
-                    OutlinedButton(onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW).apply {
-                            setDataAndType(pdf.uri, "application/pdf")
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-                        ctx.startActivity(intent)
-                    }) { Text("ОТКРЫТЬ PDF ${index + 1}") }
+                    val fileStore = ServiceLocator.files as com.example.docapp.core.EncryptedAttachmentStore
+                    val isAvailable = fileStore.retrieve(pdf.uri) != null
+                    
+                    if (isAvailable) {
+                        OutlinedButton(onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                setDataAndType(pdf.uri, "application/pdf")
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            ctx.startActivity(intent)
+                        }) { Text("ОТКРЫТЬ PDF ${index + 1}") }
+                    } else {
+                        Text(
+                            "PDF ${index + 1} - ФАЙЛ НЕ НАЙДЕН", 
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             } ?: item { Text("PDF не прикреплён") }
 
@@ -142,24 +170,34 @@ fun DocumentEditScreen(
     var name by remember { mutableStateOf("") }
     val fields = remember { mutableStateListOf<Pair<String, String>>() }
 
-    // несколько фото
-    val photoUris = remember { mutableStateListOf<Uri>() }
-    val pdfsUris = remember { mutableStateListOf<Uri>() }
+    // несколько фото и PDF с именами
+    val photoFiles = remember { mutableStateListOf<NamedFile>() }
+    val pdfFiles = remember { mutableStateListOf<NamedFile>() }
 
     var confirmDeleteIndex by remember { mutableStateOf<Int?>(null) }
+    var renameFileIndex by remember { mutableStateOf<Int?>(null) }
+    var newFileName by remember { mutableStateOf("") }
 
     LaunchedEffect(existingDocId, templateId) {
         fields.clear()
-        photoUris.clear()
-        pdfsUris.clear()
+        photoFiles.clear()
+        pdfFiles.clear()
 
         if (existingDocId != null) {
             val f = uc.getDoc(existingDocId)
             if (f != null) {
                 name = f.doc.name
                 fields.addAll(f.fields.map { it.name to (it.valueCipher?.toString(Charsets.UTF_8) ?: "") })
-                photoUris.addAll(f.photos.map { it.uri })
-                pdfsUris.addAll(f.pdfs.map { it.uri })
+                
+                // Загружаем фото с именами
+                f.photos.forEachIndexed { index, photo ->
+                    photoFiles.add(NamedFile(photo.uri, "Фото ${index + 1}", true))
+                }
+                
+                // Загружаем PDF с именами
+                f.pdfs.forEachIndexed { index, pdf ->
+                    pdfFiles.add(NamedFile(pdf.uri, "PDF ${index + 1}", false))
+                }
             }
         } else if (templateId != null) {
             val tf = uc.listTemplateFields(templateId)
@@ -170,10 +208,16 @@ fun DocumentEditScreen(
 
     // pickers
     val pickImages = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
-        if (uris != null) photoUris.addAll(uris)
+        uris.forEachIndexed { index, uri ->
+            val nextPhotoNumber = photoFiles.count { it.isPhoto } + 1
+            photoFiles.add(NamedFile(uri, "Фото $nextPhotoNumber", true))
+        }
     }
     val pickpdfs = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
-        if (uris != null) pdfsUris.addAll(uris)
+        uris.forEachIndexed { index, uri ->
+            val nextPdfNumber = pdfFiles.count { !it.isPhoto } + 1
+            pdfFiles.add(NamedFile(uri, "PDF $nextPdfNumber", false))
+        }
     }
 
     /*
@@ -223,46 +267,62 @@ fun DocumentEditScreen(
             }
             item {
                 Spacer(Modifier.height(12.dp))
-                Text("ФОТО (${photoUris.size}):", style = MaterialTheme.typography.titleMedium)
+                Text("ФОТО (${photoFiles.size}):", style = MaterialTheme.typography.titleMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = { pickImages.launch(arrayOf("image/*")) }) { Text("ДОБАВИТЬ ФОТО") }
-                    if (photoUris.isNotEmpty()) {
-                        OutlinedButton(onClick = { photoUris.clear() }) { Text("ОЧИСТИТЬ ФОТО") }
+                    if (photoFiles.isNotEmpty()) {
+                        OutlinedButton(onClick = { photoFiles.clear() }) { Text("ОЧИСТИТЬ ФОТО") }
                     }
                 }
-                if (photoUris.isNotEmpty()) {
+                if (photoFiles.isNotEmpty()) {
                     Spacer(Modifier.height(8.dp))
-                    photoUris.forEachIndexed { idx, uri ->
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                            Text("• ${uri}", modifier = Modifier.weight(1f))
-                            TextButton(onClick = { photoUris.removeAt(idx) }) { Text("УБРАТЬ") }
+                    photoFiles.forEachIndexed { idx, file ->
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                                Text("• ${file.displayName}", modifier = Modifier.weight(1f))
+                                Column {
+                                    TextButton(onClick = { 
+                                        renameFileIndex = idx
+                                        newFileName = file.displayName
+                                    }) { 
+                                        Text("ПЕРЕИМЕНОВАТЬ", fontSize = 12.sp) 
+                                    }
+                                    TextButton(onClick = { photoFiles.removeAt(idx) }) { 
+                                        Text("УБРАТЬ", fontSize = 12.sp) 
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
             item {
-                /*
                 Spacer(Modifier.height(12.dp))
-                Text("pdfs: ${pdfsUri?.toString() ?: "не прикреплён"}")
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { pickpdfs.launch(arrayOf("application/pdfs")) }) { Text("ПРИКРЕПИТЬ pdfs") }
-                    if (pdfsUri != null) OutlinedButton(onClick = { pdfsUri = null }) { Text("УБРАТЬ") }
-                }
-                */
-
-                Text("PDF (${pdfsUris.size}):", style = MaterialTheme.typography.titleMedium)
+                Text("PDF (${pdfFiles.size}):", style = MaterialTheme.typography.titleMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = { pickpdfs.launch(arrayOf("application/pdf")) }) { Text("ДОБАВИТЬ PDF") }
-                    if (pdfsUris.isNotEmpty()) {
-                        OutlinedButton(onClick = { pdfsUris.clear() }) { Text("ОЧИСТИТЬ PDF") }
+                    if (pdfFiles.isNotEmpty()) {
+                        OutlinedButton(onClick = { pdfFiles.clear() }) { Text("ОЧИСТИТЬ PDF") }
                     }
                 }
-                if (pdfsUris.isNotEmpty()) {
+                if (pdfFiles.isNotEmpty()) {
                     Spacer(Modifier.height(8.dp))
-                    pdfsUris.forEachIndexed { idx, uri ->
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                            Text("• ${uri}", modifier = Modifier.weight(1f))
-                            TextButton(onClick = { pdfsUris.removeAt(idx) }) { Text("УБРАТЬ") }
+                    pdfFiles.forEachIndexed { idx, file ->
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                                Text("• ${file.displayName}", modifier = Modifier.weight(1f))
+                                Column {
+                                    TextButton(onClick = { 
+                                        renameFileIndex = idx + photoFiles.size // Смещение для PDF файлов
+                                        newFileName = file.displayName
+                                    }) { 
+                                        Text("ПЕРЕИМЕНОВАТЬ", fontSize = 12.sp) 
+                                    }
+                                    TextButton(onClick = { pdfFiles.removeAt(idx) }) { 
+                                        Text("УБРАТЬ", fontSize = 12.sp) 
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -280,8 +340,8 @@ fun DocumentEditScreen(
                             folderId = folderId,
                             name = name.ifBlank { "Документ" },
                             fields = fields.toList(),
-                            photos = photoUris.map { it.toString() },
-                            pdfUris = pdfsUris.map { it.toString() }
+                            photos = photoFiles.map { it.uri.toString() },
+                            pdfUris = pdfFiles.map { it.uri.toString() }
                         )
                         onSaved(id)
                     } else {
@@ -298,10 +358,10 @@ fun DocumentEditScreen(
                                 ord = idx
                             )
                         }
-                        val attachments =
-                            photoUris.map { Attachment(newId(), existingDocId, AttachmentKind.photo, null, it, System.currentTimeMillis()) } +
-                                    pdfsUris.map { Attachment(newId(), existingDocId, AttachmentKind.pdfs, "document.pdfs", it, System.currentTimeMillis()) }
-                        uc.updateDoc(DocumentRepository.FullDocument(updatedDoc, updatedFields, attachments.filter { it.kind == AttachmentKind.photo }, attachments.filter {it.kind == AttachmentKind.pdfs}))
+                        val photoAttachments = photoFiles.map { Attachment(newId(), existingDocId, AttachmentKind.photo, null, it.uri, System.currentTimeMillis()) }
+                        val pdfAttachments = pdfFiles.map { Attachment(newId(), existingDocId, AttachmentKind.pdfs, "document.pdfs", it.uri, System.currentTimeMillis()) }
+                        val fullDocument = DocumentRepository.FullDocument(updatedDoc, updatedFields, photoAttachments, pdfAttachments)
+                        uc.updateDoc(fullDocument)
                         onSaved(existingDocId)
                     }
                 }
@@ -323,6 +383,43 @@ fun DocumentEditScreen(
             },
             dismissButton = {
                 TextButton(onClick = { confirmDeleteIndex = null }) { Text("Отмена") }
+            }
+        )
+    }
+
+    // Диалог переименования файла
+    renameFileIndex?.let { idx ->
+        AlertDialog(
+            onDismissRequest = { renameFileIndex = null; newFileName = "" },
+            title = { Text("Переименовать файл") },
+            text = {
+                OutlinedTextField(
+                    value = newFileName,
+                    onValueChange = { newFileName = it },
+                    label = { Text("Название файла") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (newFileName.isNotBlank()) {
+                        if (idx < photoFiles.size) {
+                            // Переименовываем фото
+                            val oldFile = photoFiles[idx]
+                            photoFiles[idx] = oldFile.copy(displayName = newFileName)
+                        } else {
+                            // Переименовываем PDF
+                            val pdfIdx = idx - photoFiles.size
+                            val oldFile = pdfFiles[pdfIdx]
+                            pdfFiles[pdfIdx] = oldFile.copy(displayName = newFileName)
+                        }
+                    }
+                    renameFileIndex = null
+                    newFileName = ""
+                }) { Text("Сохранить") }
+            },
+            dismissButton = {
+                TextButton(onClick = { renameFileIndex = null; newFileName = "" }) { Text("Отмена") }
             }
         )
     }

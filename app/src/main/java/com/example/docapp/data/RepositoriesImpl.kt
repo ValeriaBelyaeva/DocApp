@@ -15,18 +15,17 @@ class RepositoriesImpl(
 ) : Repositories {
 
     override val settings: SettingsRepository = object : SettingsRepository {
-        override suspend fun isPinSet(): Boolean = dao.settings.isPinSet()
+        override suspend fun isPinSet(): Boolean = crypto.isPinSet()
         override suspend fun verifyPin(pin: String): Boolean {
-            val s = dao.settings.get()
-            val hash = crypto.sha256(pin.toByteArray())
-            return s.pinHash.contentEquals(hash).also { if (it) crypto.deriveRuntimeKeysFromPin(pin) }
+            // Используем CryptoManager для проверки PIN
+            return crypto.verifyPin(pin)
         }
         override suspend fun setNewPin(pin: String) {
-            val hash = crypto.sha256(pin.toByteArray())
-            dao.settings.updatePin(hash)
-            crypto.deriveRuntimeKeysFromPin(pin)
+            // Используем CryptoManager для установки первого PIN
+            crypto.setInitialPin(pin)
         }
         override suspend fun disablePin() {
+            crypto.clearSecurityData()
             dao.settings.clearPin()
         }
     }
@@ -43,9 +42,21 @@ class RepositoriesImpl(
         override suspend fun getTemplate(id: String): Template? = dao.templates.get(id)
         override suspend fun listFields(templateId: String) = dao.templates.listFields(templateId)
         override suspend fun addTemplate(name: String, fields: List<String>) = dao.templates.add(name, fields)
-        override suspend fun updateTemplate(template: Template, fields: List<TemplateField>) { /* TODO */ }
-        override suspend fun deleteTemplate(id: String) { /* TODO */ }
-        override suspend fun pinTemplate(id: String, pinned: Boolean) { /* TODO */ }
+        override suspend fun updateTemplate(template: Template, fields: List<TemplateField>) {
+            // TODO: Implement template update functionality
+            // This would require updating the template record and its fields
+            throw NotImplementedError("Template update not yet implemented")
+        }
+        override suspend fun deleteTemplate(id: String) {
+            // TODO: Implement template deletion functionality
+            // This would require deleting the template and all its fields
+            throw NotImplementedError("Template deletion not yet implemented")
+        }
+        override suspend fun pinTemplate(id: String, pinned: Boolean) {
+            // TODO: Implement template pinning functionality
+            // This would require updating the is_pinned and pinned_order fields
+            throw NotImplementedError("Template pinning not yet implemented")
+        }
     }
 
     override val documents: DocumentRepository = object : DocumentRepository {

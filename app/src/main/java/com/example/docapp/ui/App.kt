@@ -13,11 +13,14 @@ import com.example.docapp.ui.home.HomePager
 import com.example.docapp.ui.pin.PinScreen
 import com.example.docapp.ui.template.TemplateSelectorScreen
 import com.example.docapp.ui.theme.DocTheme
+import com.example.docapp.core.AppLogger
 
 @Composable
 fun App() {
+    AppLogger.log("App", "App composable started")
     DocTheme {
         val nav = rememberNavController()
+        AppLogger.log("App", "Navigation controller created")
         NavHost(navController = nav, startDestination = "pin") {
             composable("pin") {
                 PinScreen(
@@ -58,7 +61,8 @@ fun App() {
                 route = "doc/view/{docId}",
                 arguments = listOf(navArgument("docId") { type = NavType.StringType })
             ) { backStack ->
-                val docId = backStack.arguments!!.getString("docId")!!
+                val docId = backStack.arguments?.getString("docId") 
+                    ?: throw IllegalStateException("Missing docId argument")
                 DocumentViewScreen(
                     docId = docId,
                     onEdit = {
@@ -78,12 +82,14 @@ fun App() {
                     navArgument("folderId") { type = NavType.StringType; defaultValue = "" },
                 )
             ) { backStack ->
+                val args = backStack.arguments 
+                    ?: throw IllegalStateException("Missing navigation arguments")
                 DocumentEditScreen(
-                    existingDocId = backStack.arguments!!.getString("docId")
+                    existingDocId = args.getString("docId")
                         ?.ifBlank { null },
-                    templateId = backStack.arguments!!.getString("templateId")
+                    templateId = args.getString("templateId")
                         ?.ifBlank { null },
-                    folderId = backStack.arguments!!.getString("folderId")
+                    folderId = args.getString("folderId")
                         ?.ifBlank { null },
                     onSaved = { id ->
                         nav.navigate("doc/view/$id") { popUpTo("home") }

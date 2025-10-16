@@ -94,4 +94,18 @@ fun copyToClipboard(ctx: Context, label: String, text: String) {
     val clip = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     clip.setPrimaryClip(ClipData.newPlainText(label, text))
     Toast.makeText(ctx, "Скопировано", Toast.LENGTH_SHORT).show()
+    
+    // Автоматическая очистка буфера через 30 секунд для безопасности
+    val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    val runnable = Runnable {
+        try {
+            clip.setPrimaryClip(ClipData.newPlainText("", ""))
+        } catch (e: Exception) {
+            // Игнорируем ошибки очистки
+        }
+    }
+    handler.postDelayed(runnable, 30_000) // 30 секунд
+    
+    // Отменяем предыдущие задачи очистки для предотвращения накопления
+    handler.removeCallbacks(runnable)
 }
