@@ -9,7 +9,7 @@ import androidx.security.crypto.MasterKey
 import com.example.docapp.data.AppDb
 import com.example.docapp.core.AppLogger
 import com.example.docapp.core.ErrorHandler
-import net.sqlcipher.database.SQLiteDatabase
+import android.database.sqlite.SQLiteDatabase
 import java.security.KeyStore
 import java.security.SecureRandom
 import java.security.spec.KeySpec
@@ -80,10 +80,11 @@ class CryptoManager(val context: Context) {
 
     fun initializeSQLCipher() {
         try {
-            SQLiteDatabase.loadLibs(context)
+            // SQLCipher loadLibs больше не нужен для стандартной SQLite
+            android.util.Log.d("CryptoManager", "SQLite database ready")
         } catch (e: Exception) {
-            android.util.Log.e("CryptoManager", "Failed to initialize SQLCipher: ${e.message}")
-            throw RuntimeException("SQLCipher initialization failed", e)
+            android.util.Log.e("CryptoManager", "Failed to initialize database: ${e.message}")
+            throw RuntimeException("Database initialization failed", e)
         }
     }
 
@@ -173,13 +174,15 @@ class CryptoManager(val context: Context) {
             throw SecurityException("Неверный текущий PIN")
         }
 
-        val newKey = deriveKeyFromPin(newPin)
+        // Сохраняем существующий ключ БД, а не создаем новый
         val newHash = sha256Pin(newPin)
         encryptedPrefs.edit()
             .putString("pin_hash", newHash.encodeToString())
+            .putString(DB_KEY_PREF, currentKey.encodeToString()) // Сохраняем существующий ключ БД
             .apply()
             
-        return newKey
+        AppLogger.log("CryptoManager", "PIN changed but DB key preserved")
+        return currentKey
     }
 
     fun setInitialPin(pin: String): ByteArray {
@@ -192,28 +195,38 @@ class CryptoManager(val context: Context) {
             ErrorHandler.showWarning("CryptoManager: PIN уже существует, перезаписываем...")
         }
         
-        ErrorHandler.showInfo("CryptoManager: Создаем ключ из PIN...")
-        val newKey = deriveKeyFromPin(pin)
         ErrorHandler.showInfo("CryptoManager: Создаем хеш PIN...")
         val hash = sha256Pin(pin)
         
         try {
-            ErrorHandler.showInfo("CryptoManager: Сохраняем PIN и ключ БД...")
-            // Атомарно сохраняем и PIN и ключ базы данных
+            ErrorHandler.showInfo("CryptoManager: Сохраняем PIN...")
             val editor = encryptedPrefs.edit()
             editor.putString("pin_hash", hash.encodeToString())
             
-            // Сохраняем ключ базы данных
-            saveDbKey(newKey, editor)
+            // Проверяем, есть ли уже ключ БД
+            val existingKey = getExistingDbKey()
+            if (existingKey != null) {
+                // Если ключ БД уже есть, сохраняем его (не перезаписываем)
+                AppLogger.log("CryptoManager", "Existing DB key found, preserving it...")
+                ErrorHandler.showInfo("CryptoManager: Сохраняем существующий ключ БД...")
+                saveDbKey(existingKey, editor)
+            } else {
+                // Если ключа БД нет, создаем новый
+                AppLogger.log("CryptoManager", "No existing DB key, creating new one...")
+                ErrorHandler.showInfo("CryptoManager: Создаем новый ключ БД...")
+                val newKey = deriveKeyFromPin(pin)
+                saveDbKey(newKey, editor)
+            }
             
             // Применяем все изменения атомарно
             if (!editor.commit()) {
                 throw RuntimeException("Failed to save PIN and database key")
             }
             
+            val finalKey = getExistingDbKey() ?: throw IllegalStateException("Failed to save DB key")
             AppLogger.log("CryptoManager", "PIN hash and database key saved atomically")
-            ErrorHandler.showSuccess("CryptoManager: PIN и ключ БД сохранены")
-            return newKey
+            ErrorHandler.showSuccess("CryptoManager: PIN сохранен, ключ БД сохранен")
+            return finalKey
         } catch (e: Exception) {
             AppLogger.log("CryptoManager", "ERROR: Failed to set initial PIN: ${e.message}")
             ErrorHandler.showError("CryptoManager: Ошибка установки PIN: ${e.message}", e)

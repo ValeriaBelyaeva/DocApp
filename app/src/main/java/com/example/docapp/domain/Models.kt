@@ -51,8 +51,10 @@ data class Attachment(
     val documentId: String,
     val kind: AttachmentKind,
     val fileName: String?,
+    val displayName: String?, // Добавляем поле для отображаемого имени
     val uri: Uri,
-    val createdAt: Long
+    val createdAt: Long,
+    val requiresPersist: Boolean = false
 )
 
 enum class FieldType { text }

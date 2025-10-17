@@ -46,6 +46,15 @@ interface DocumentRepository {
         pdfUris: List<String>
     ): String
 
+    suspend fun createDocumentWithNames(
+        templateId: String?,
+        folderId: String?,
+        name: String,
+        fields: List<Pair<String, String>>,
+        photoFiles: List<Pair<String, String>>, // URI, displayName
+        pdfFiles: List<Pair<String, String>> // URI, displayName
+    ): String
+
     suspend fun getDocument(id: String): FullDocument?
     suspend fun updateDocument(doc: Document, fields: List<DocumentField>, attachments: List<Attachment>)
     suspend fun deleteDocument(id: String)

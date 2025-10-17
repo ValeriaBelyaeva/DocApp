@@ -29,13 +29,17 @@ import com.example.docapp.domain.DocumentRepository
 import com.example.docapp.ui.widgets.FieldTile
 import com.example.docapp.ui.widgets.PrimaryButton
 import com.example.docapp.ui.widgets.copyToClipboard
+import com.example.docapp.core.ErrorHandler
 import kotlinx.coroutines.launch
 
 // Модель для файлов с именами
 data class NamedFile(
     val uri: Uri,
     val displayName: String,
-    val isPhoto: Boolean
+    val isPhoto: Boolean,
+    val attachmentId: String? = null,
+    val createdAt: Long? = null,
+    val isPersisted: Boolean = false
 )
 
 /* -------- Просмотр ---------- */
@@ -88,21 +92,43 @@ fun DocumentViewScreen(
             full?.photos?.let { photos ->
                 itemsIndexed(photos) { index, photo ->
                     val fileStore = ServiceLocator.files as com.example.docapp.core.EncryptedAttachmentStore
-                    val isAvailable = fileStore.retrieve(photo.uri) != null
+                    ErrorHandler.showInfo("DocumentScreens: Проверяем фото $index: ${photo.displayName ?: "Без имени"}")
+                    val isAvailable = fileStore.exists(photo.uri)
+                    ErrorHandler.showInfo("DocumentScreens: Фото $index доступно: $isAvailable")
                     
+                    val displayName = photo.displayName ?: "ФОТО ${index + 1}"
                     if (isAvailable) {
                         OutlinedButton(onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW).apply {
-                                setDataAndType(photo.uri, "image/*")
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            try {
+                                // Сначала проверяем, что файл действительно доступен
+                                val inputStream = fileStore.retrieve(photo.uri)
+                                if (inputStream != null) {
+                                    inputStream.close()
+                                    
+                                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                                        setDataAndType(photo.uri, "image/*")
+                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    }
+                                    ctx.startActivity(intent)
+                                } else {
+                                    ErrorHandler.showError("Файл недоступен: $displayName")
+                                }
+                            } catch (e: Exception) {
+                                ErrorHandler.showError("Не удалось открыть фото $displayName", e)
                             }
-                            ctx.startActivity(intent)
-                        }) { Text("ОТКРЫТЬ ФОТО ${index + 1}") }
+                        }) { Text("ОТКРЫТЬ $displayName") }
                     } else {
-                        Text(
-                            "ФОТО ${index + 1} - ФАЙЛ НЕ НАЙДЕН", 
-                            color = MaterialTheme.colorScheme.error
-                        )
+                        Column {
+                            Text(
+                                "$displayName - ФАЙЛ НЕ НАЙДЕН", 
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                "URI: ${photo.uri}", 
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
@@ -112,21 +138,43 @@ fun DocumentViewScreen(
             full?.pdfs?.let { pdfs ->
                 itemsIndexed(pdfs) { index, pdf ->
                     val fileStore = ServiceLocator.files as com.example.docapp.core.EncryptedAttachmentStore
-                    val isAvailable = fileStore.retrieve(pdf.uri) != null
+                    ErrorHandler.showInfo("DocumentScreens: Проверяем PDF $index: ${pdf.displayName ?: "Без имени"}")
+                    val isAvailable = fileStore.exists(pdf.uri)
+                    ErrorHandler.showInfo("DocumentScreens: PDF $index доступен: $isAvailable")
                     
+                    val displayName = pdf.displayName ?: "PDF ${index + 1}"
                     if (isAvailable) {
                         OutlinedButton(onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW).apply {
-                                setDataAndType(pdf.uri, "application/pdf")
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            try {
+                                // Сначала проверяем, что файл действительно доступен
+                                val inputStream = fileStore.retrieve(pdf.uri)
+                                if (inputStream != null) {
+                                    inputStream.close()
+                                    
+                                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                                        setDataAndType(pdf.uri, "application/pdf")
+                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    }
+                                    ctx.startActivity(intent)
+                                } else {
+                                    ErrorHandler.showError("Файл недоступен: $displayName")
+                                }
+                            } catch (e: Exception) {
+                                ErrorHandler.showError("Не удалось открыть PDF $displayName", e)
                             }
-                            ctx.startActivity(intent)
-                        }) { Text("ОТКРЫТЬ PDF ${index + 1}") }
+                        }) { Text("ОТКРЫТЬ $displayName") }
                     } else {
-                        Text(
-                            "PDF ${index + 1} - ФАЙЛ НЕ НАЙДЕН", 
-                            color = MaterialTheme.colorScheme.error
-                        )
+                        Column {
+                            Text(
+                                "$displayName - ФАЙЛ НЕ НАЙДЕН", 
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                "URI: ${pdf.uri}", 
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             } ?: item { Text("PDF не прикреплён") }
@@ -184,19 +232,43 @@ fun DocumentEditScreen(
         pdfFiles.clear()
 
         if (existingDocId != null) {
+            ErrorHandler.showInfo("DocumentScreens: Загружаем документ: $existingDocId")
             val f = uc.getDoc(existingDocId)
             if (f != null) {
                 name = f.doc.name
                 fields.addAll(f.fields.map { it.name to (it.valueCipher?.toString(Charsets.UTF_8) ?: "") })
                 
-                // Загружаем фото с именами
+                ErrorHandler.showInfo("DocumentScreens: Документ загружен: ${f.doc.name}")
+                ErrorHandler.showInfo("DocumentScreens: Фото: ${f.photos.size}, PDF: ${f.pdfs.size}")
+                
+                // Загружаем фото с сохраненными именами
                 f.photos.forEachIndexed { index, photo ->
-                    photoFiles.add(NamedFile(photo.uri, "Фото ${index + 1}", true))
+                    ErrorHandler.showInfo("DocumentScreens: Загружаем фото $index: ${photo.displayName}")
+                    photoFiles.add(
+                        NamedFile(
+                            uri = photo.uri,
+                            displayName = photo.fileName ?: "Фото ${index + 1}",
+                            isPhoto = true,
+                            attachmentId = photo.id,
+                            createdAt = photo.createdAt,
+                            isPersisted = !photo.requiresPersist
+                        )
+                    )
                 }
                 
-                // Загружаем PDF с именами
+                // Загружаем PDF с сохраненными именами
                 f.pdfs.forEachIndexed { index, pdf ->
-                    pdfFiles.add(NamedFile(pdf.uri, "PDF ${index + 1}", false))
+                    ErrorHandler.showInfo("DocumentScreens: Загружаем PDF $index: ${pdf.displayName}")
+                    pdfFiles.add(
+                        NamedFile(
+                            uri = pdf.uri,
+                            displayName = pdf.fileName ?: "PDF ${index + 1}",
+                            isPhoto = false,
+                            attachmentId = pdf.id,
+                            createdAt = pdf.createdAt,
+                            isPersisted = !pdf.requiresPersist
+                        )
+                    )
                 }
             }
         } else if (templateId != null) {
@@ -334,15 +406,23 @@ fun DocumentEditScreen(
             onClick = {
                 scope.launch {
                     if (existingDocId == null) {
-
-                        val id = uc.createDoc(
+                        ErrorHandler.showInfo("DocumentScreens: Создаем документ с ${photoFiles.size} фото и ${pdfFiles.size} PDF")
+                        photoFiles.forEachIndexed { index, file ->
+                            ErrorHandler.showInfo("DocumentScreens: Фото $index: ${file.displayName}")
+                        }
+                        pdfFiles.forEachIndexed { index, file ->
+                            ErrorHandler.showInfo("DocumentScreens: PDF $index: ${file.displayName}")
+                        }
+                        
+                        val id = uc.createDocWithNames(
                             tplId = templateId,
                             folderId = folderId,
                             name = name.ifBlank { "Документ" },
                             fields = fields.toList(),
-                            photos = photoFiles.map { it.uri.toString() },
-                            pdfUris = pdfFiles.map { it.uri.toString() }
+                            photoFiles = photoFiles.map { it.uri.toString() to it.displayName },
+                            pdfFiles = pdfFiles.map { it.uri.toString() to it.displayName }
                         )
+                        ErrorHandler.showInfo("DocumentScreens: Документ создан с ID: $id")
                         onSaved(id)
                     } else {
                         val full = uc.getDoc(existingDocId) ?: return@launch
@@ -358,8 +438,22 @@ fun DocumentEditScreen(
                                 ord = idx
                             )
                         }
-                        val photoAttachments = photoFiles.map { Attachment(newId(), existingDocId, AttachmentKind.photo, null, it.uri, System.currentTimeMillis()) }
-                        val pdfAttachments = pdfFiles.map { Attachment(newId(), existingDocId, AttachmentKind.pdfs, "document.pdfs", it.uri, System.currentTimeMillis()) }
+                        val nowTs = System.currentTimeMillis()
+                        fun NamedFile.toAttachment(kind: AttachmentKind): Attachment {
+                            val fileName = displayName.takeIf { it.isNotBlank() }
+                            val attachmentCreatedAt = createdAt ?: nowTs
+                            return Attachment(
+                                id = attachmentId ?: newId(),
+                                documentId = existingDocId,
+                                kind = kind,
+                                fileName = if (kind == AttachmentKind.photo) fileName else fileName ?: "document.pdfs",
+                                uri = uri,
+                                createdAt = attachmentCreatedAt,
+                                requiresPersist = !isPersisted
+                            )
+                        }
+                        val photoAttachments = photoFiles.map { it.toAttachment(AttachmentKind.photo) }
+                        val pdfAttachments = pdfFiles.map { it.toAttachment(AttachmentKind.pdfs) }
                         val fullDocument = DocumentRepository.FullDocument(updatedDoc, updatedFields, photoAttachments, pdfAttachments)
                         uc.updateDoc(fullDocument)
                         onSaved(existingDocId)

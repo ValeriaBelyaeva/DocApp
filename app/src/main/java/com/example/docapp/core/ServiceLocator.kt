@@ -1,7 +1,7 @@
 package com.example.docapp.core
 
 import android.content.Context
-import net.sqlcipher.database.SQLiteDatabase
+import android.database.sqlite.SQLiteDatabase
 import com.example.docapp.data.AppDb
 import com.example.docapp.data.RepositoriesImpl
 import com.example.docapp.data.SqlDaoFactory
@@ -27,20 +27,20 @@ object ServiceLocator {
         AppLogger.log("ServiceLocator", "Initializing ServiceLocator...")
         appContext = appCtx
         
-        // Инициализируем SQLCipher ПЕРВЫМ (только если еще не инициализирован)
+        // Инициализируем SQLite (SQLCipher больше не используется)
         try {
             if (!sqlCipherInitialized) {
-                ErrorHandler.showInfo("ServiceLocator: Загружаем SQLCipher библиотеки...")
+                ErrorHandler.showInfo("ServiceLocator: Инициализируем SQLite...")
                 synchronized(this) {
                     if (!sqlCipherInitialized) {
-                        SQLiteDatabase.loadLibs(appCtx)
+                        // Стандартная SQLite не требует loadLibs
                         sqlCipherInitialized = true
-                        AppLogger.log("ServiceLocator", "SQLCipher libraries loaded successfully")
-                        ErrorHandler.showSuccess("Библиотеки шифрования загружены")
+                        AppLogger.log("ServiceLocator", "SQLite database ready")
+                        ErrorHandler.showSuccess("База данных SQLite готова")
                     }
                 }
             } else {
-                AppLogger.log("ServiceLocator", "SQLCipher already initialized, skipping")
+                AppLogger.log("ServiceLocator", "SQLite already initialized, skipping")
             }
         } catch (e: Exception) {
             AppLogger.log("ServiceLocator", "ERROR: Failed to load SQLCipher libraries: ${e.message}")
@@ -103,10 +103,12 @@ object ServiceLocator {
                     throw SecurityException("Invalid current PIN")
                 }
                 
-                // Устанавливаем новый PIN (перезаписываем существующий)
-                AppLogger.log("ServiceLocator", "Current PIN verified, setting new PIN...")
+                // Устанавливаем новый PIN, но сохраняем существующий ключ БД
+                AppLogger.log("ServiceLocator", "Current PIN verified, setting new PIN but keeping DB key...")
                 ErrorHandler.showInfo("ServiceLocator: Текущий PIN проверен, устанавливаем новый...")
-                val newKey = crypto.setInitialPin(pin)
+                val currentKey = crypto.getExistingDbKey() ?: throw IllegalStateException("Current DB key is missing")
+                // Просто перезаписываем PIN, сохраняя существующий ключ БД
+                val newKey = crypto.setInitialPin(pin) // Используем setInitialPin, но он сохранит существующий ключ
                 ErrorHandler.showInfo("ServiceLocator: Новый PIN установлен")
                 newKey
             } else {
@@ -137,8 +139,9 @@ object ServiceLocator {
                 ErrorHandler.showInfo("ServiceLocator: БД создана, инициализируем компоненты...")
                 val daos = SqlDaoFactory(db)
                 files = EncryptedAttachmentStore(appContext)
+                (files as EncryptedAttachmentStore).initialize() // Инициализируем хранилище файлов
                 repos = RepositoriesImpl(daos, crypto, files, appContext)
-                useCases = UseCases(repos)
+                useCases = UseCases(repos, files)
                 AppLogger.log("ServiceLocator", "Database and components initialized successfully")
                 ErrorHandler.showSuccess("ServiceLocator: База данных и компоненты инициализированы")
             } else {

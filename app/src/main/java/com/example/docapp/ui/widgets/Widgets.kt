@@ -104,8 +104,8 @@ fun copyToClipboard(ctx: Context, label: String, text: String) {
             // Игнорируем ошибки очистки
         }
     }
-    handler.postDelayed(runnable, 30_000) // 30 секунд
     
     // Отменяем предыдущие задачи очистки для предотвращения накопления
     handler.removeCallbacks(runnable)
+    handler.postDelayed(runnable, 30_000) // 30 секунд
 }

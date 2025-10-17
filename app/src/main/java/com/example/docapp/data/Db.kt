@@ -5,7 +5,7 @@ import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import java.io.File
-import net.sqlcipher.database.SQLiteDatabase as SQLCipherDatabase
+import android.database.sqlite.SQLiteDatabase as SQLCipherDatabase
 import com.example.docapp.core.newId
 import com.example.docapp.core.now
 import com.example.docapp.core.DatabaseEncryption
@@ -53,7 +53,7 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
                 ErrorHandler.showInfo("AppDb: Файл БД существует, проверяем...")
                 try {
                     // Пытаемся открыть существующую базу
-                    val testDb = SQLCipherDatabase.openDatabase(dbPath, passphrase.toHex(), null, SQLCipherDatabase.OPEN_READONLY)
+                    val testDb = SQLCipherDatabase.openDatabase(dbPath, null, SQLCipherDatabase.OPEN_READONLY)
                     testDb.close()
                     ErrorHandler.showInfo("AppDb: Существующая БД корректна")
                 } catch (e: Exception) {
@@ -69,13 +69,17 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
             
             // Создаем или открываем зашифрованную базу
             ErrorHandler.showInfo("AppDb: Создаем/открываем БД с ключом...")
-            val db = SQLCipherDatabase.openOrCreateDatabase(dbPath, passphrase.toHex(), null, null)
+            val db = SQLCipherDatabase.openOrCreateDatabase(dbPath, null)
             AppLogger.log("AppDb", "Database opened/created successfully")
             ErrorHandler.showSuccess("AppDb: База данных открыта/создана успешно")
             
             // Создаем схему базы данных если она не существует
             ErrorHandler.showInfo("AppDb: Создаем таблицы если необходимо...")
             createTablesIfNeeded(db)
+            
+            // Выполняем миграции
+            ErrorHandler.showInfo("AppDb: Выполняем миграции...")
+            runMigrations(db)
             
             _encryptedDb = db
             return db
@@ -92,6 +96,28 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
     
     val encryptedReadableDatabase: SQLCipherDatabase
         get() = getEncryptedDb()
+
+    private fun runMigrations(db: SQLCipherDatabase) {
+        try {
+            // Миграция: добавляем поле display_name в таблицу attachments
+            val cursor = db.rawQuery("PRAGMA table_info(attachments)", null)
+            val columns = cursor?.use { 
+                generateSequence { if (it.moveToNext()) it.getString(it.getColumnIndexOrThrow("name")) else null }
+                    .toList()
+            } ?: emptyList()
+            
+            if (!columns.contains("display_name")) {
+                AppLogger.log("AppDb", "Adding display_name column to attachments table")
+                ErrorHandler.showInfo("AppDb: Добавляем поле display_name в таблицу attachments")
+                db.execSQL("ALTER TABLE attachments ADD COLUMN display_name TEXT")
+            }
+            
+            AppLogger.log("AppDb", "Migrations completed successfully")
+        } catch (e: Exception) {
+            AppLogger.log("AppDb", "ERROR: Failed to run migrations: ${e.message}")
+            ErrorHandler.showWarning("Не удалось выполнить миграции: ${e.message}")
+        }
+    }
 
     private fun createTablesIfNeeded(db: SQLCipherDatabase) {
         try {
@@ -128,7 +154,7 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
                 )""")
                 db.execSQL("""CREATE TABLE attachments(
                     id TEXT PRIMARY KEY, document_id TEXT NOT NULL, kind TEXT NOT NULL,
-                    file_name TEXT, uri TEXT NOT NULL, created_at INTEGER NOT NULL,
+                    file_name TEXT, display_name TEXT, uri TEXT NOT NULL, created_at INTEGER NOT NULL,
                     FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE
                 )""")
                 db.execSQL("""CREATE TABLE settings(
@@ -247,6 +273,11 @@ interface DocumentDao {
     suspend fun create(
         templateId: String?, folderId: String?, name: String,
         fields: List<Pair<String, String>>, photoUris: List<String>, pdfUris: List<String>
+    ): String
+
+    suspend fun createWithNames(
+        templateId: String?, folderId: String?, name: String,
+        fields: List<Pair<String, String>>, photoFiles: List<Pair<String, String>>, pdfFiles: List<Pair<String, String>>
     ): String
 
     suspend fun getFull(id: String): DocumentRepository.FullDocument?
@@ -459,14 +490,61 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
             }
             photoUris.forEach { p ->
                 db.encryptedWritableDatabase.execSQL(
-                    "INSERT INTO attachments(id,document_id,kind,file_name,uri,created_at) VALUES(?,?,?,?,?,?)",
-                    arrayOf<Any?>(newId(), id, "photo", null, p, ts)
+                    "INSERT INTO attachments(id,document_id,kind,file_name,display_name,uri,created_at) VALUES(?,?,?,?,?,?,?)",
+                    arrayOf<Any?>(newId(), id, "photo", null, null, p, ts)
                 )
             }
             pdfUris.forEach { pdfUri ->
                 db.encryptedWritableDatabase.execSQL(
-                    "INSERT INTO attachments(id,document_id,kind,file_name,uri,created_at) VALUES(?,?,?,?,?,?)",
-                    arrayOf<Any>(newId(), id, "pdfs", "document.pdfs", pdfUri, ts)
+                    "INSERT INTO attachments(id,document_id,kind,file_name,display_name,uri,created_at) VALUES(?,?,?,?,?,?,?)",
+                    arrayOf<Any?>(newId(), id, "pdfs", "document.pdfs", null, pdfUri, ts)
+                )
+            }
+            db.encryptedWritableDatabase.setTransactionSuccessful()
+        } finally {
+            db.encryptedWritableDatabase.endTransaction()
+        }
+        emitHome()
+        id
+    }
+
+    override suspend fun createWithNames(
+        templateId: String?,
+        folderId: String?,
+        name: String,
+        fields: List<Pair<String, String>>,
+        photoFiles: List<Pair<String, String>>, // URI, displayName
+        pdfFiles: List<Pair<String, String>> // URI, displayName
+    ): String = withContext(Dispatchers.IO) {
+        val id = newId()
+        val ts = now()
+        db.encryptedWritableDatabase.beginTransaction()
+        try {
+            val encryptedName = db.encryptDocumentName(name)
+            db.encryptedWritableDatabase.execSQL(
+                "INSERT INTO documents(id,template_id,folder_id,name,is_pinned,pinned_order,created_at,updated_at,last_opened_at) VALUES(?,?,?,?,?,?,?,?,?)",
+                arrayOf<Any?>(id, templateId, folderId, encryptedName, 0, null, ts, ts, ts)
+            )
+            fields.forEachIndexed { index, (title, value) ->
+                val encryptedValue = db.encryptFieldValue(value)
+                val preview = value.take(8)
+                db.encryptedWritableDatabase.execSQL(
+                    "INSERT INTO document_fields(id,document_id,name,value,preview,is_secret,ord) VALUES(?,?,?,?,?,?,?)",
+                    arrayOf<Any>(newId(), id, title, encryptedValue, preview, 0, index)
+                )
+            }
+            photoFiles.forEachIndexed { index, (uri, displayName) ->
+                ErrorHandler.showInfo("DocumentDao: Сохраняем фото $index: $displayName")
+                db.encryptedWritableDatabase.execSQL(
+                    "INSERT INTO attachments(id,document_id,kind,file_name,display_name,uri,created_at) VALUES(?,?,?,?,?,?,?)",
+                    arrayOf<Any?>(newId(), id, "photo", null, displayName, uri, ts)
+                )
+            }
+            pdfFiles.forEachIndexed { index, (uri, displayName) ->
+                ErrorHandler.showInfo("DocumentDao: Сохраняем PDF $index: $displayName")
+                db.encryptedWritableDatabase.execSQL(
+                    "INSERT INTO attachments(id,document_id,kind,file_name,display_name,uri,created_at) VALUES(?,?,?,?,?,?,?)",
+                    arrayOf<Any?>(newId(), id, "pdfs", "document.pdfs", displayName, uri, ts)
                 )
             }
             db.encryptedWritableDatabase.setTransactionSuccessful()
@@ -519,8 +597,15 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
             "SELECT * FROM attachments WHERE document_id=?",
             arrayOf(id)
         ).use { c ->
+            ErrorHandler.showInfo("DocumentDao: Загружаем вложения для документа: $id")
             while (c.moveToNext()) {
                 val kindStr = c.getString(c.getColumnIndexOrThrow("kind"))
+                val uriString = c.getString(c.getColumnIndexOrThrow("uri"))
+                val displayName = c.getStringOrNull("display_name")
+                val fileName = c.getStringOrNull("file_name")
+                
+                ErrorHandler.showInfo("DocumentDao: Найдено вложение: $kindStr, имя: ${displayName ?: "Без имени"}")
+                
                 val a = Attachment(
                     id = c.getString(c.getColumnIndexOrThrow("id")),
                     documentId = id,
@@ -530,8 +615,9 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
                         "pdfs" -> AttachmentKind.pdfs
                         else -> AttachmentKind.pdf
                     },
-                    fileName = c.getStringOrNull("file_name"),
-                    uri = Uri.parse(c.getString(c.getColumnIndexOrThrow("uri"))),
+                    fileName = fileName,
+                    displayName = displayName,
+                    uri = Uri.parse(uriString),
                     createdAt = c.getLong(c.getColumnIndexOrThrow("created_at"))
                 )
                 when (a.kind) {
@@ -568,8 +654,16 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
             db.encryptedWritableDatabase.execSQL("DELETE FROM attachments WHERE document_id=?", arrayOf(doc.id))
             attachments.forEach {
                 db.encryptedWritableDatabase.execSQL(
-                    "INSERT INTO attachments(id,document_id,kind,file_name,uri,created_at) VALUES(?,?,?,?,?,?)",
-                    arrayOf<Any?>(it.id, doc.id, it.kind.name, it.fileName, it.uri.toString(), ts)
+                    "INSERT INTO attachments(id,document_id,kind,file_name,display_name,uri,created_at) VALUES(?,?,?,?,?,?,?)",
+                    arrayOf<Any?>(
+                        it.id,
+                        doc.id,
+                        it.kind.name,
+                        it.fileName,
+                        it.displayName,
+                        it.uri.toString(),
+                        it.createdAt
+                    )
                 )
             }
             db.encryptedWritableDatabase.setTransactionSuccessful()

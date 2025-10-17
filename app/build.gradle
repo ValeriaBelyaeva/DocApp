@@ -80,7 +80,10 @@ dependencies {
     implementation 'androidx.security:security-crypto:1.1.0-alpha04'
     
     // SQLCipher для шифрования базы данных
-    implementation 'net.zetetic:android-database-sqlcipher:4.5.0'
+    // implementation 'net.zetetic:sqlcipher-android:4.5.4'
+    
+    // Временно используем стандартную SQLite
+    implementation 'androidx.sqlite:sqlite:2.4.0'
 
     // Для Clipboard и т.д. — в составе AndroidX
     
