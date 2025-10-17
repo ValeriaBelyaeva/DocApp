@@ -2,7 +2,6 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'org.jetbrains.kotlin.plugin.compose'
     id 'kotlin-kapt'
 }
 
@@ -27,6 +26,17 @@ android {
     buildFeatures {
         compose true
         buildConfig true
+    }
+    
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.4"
+    }
+    
+    // Suppress Kotlin version compatibility check
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions {
+            freeCompilerArgs += ["-Xsuppress-version-warnings"]
+        }
     }
     
     // Используем bundle вместо splits для современного подхода
@@ -61,37 +71,37 @@ android {
 
 dependencies {
     // Compose BOM
-    implementation platform('androidx.compose:compose-bom:2024.12.01')
-    implementation 'com.google.android.material:material:1.12.0'
+    implementation platform('androidx.compose:compose-bom:2024.02.00')
+    implementation 'com.google.android.material:material:1.11.0'
 
     // Compose UI
     implementation 'androidx.compose.ui:ui'
     implementation 'androidx.compose.material3:material3'
     implementation 'androidx.compose.foundation:foundation'
-    implementation 'androidx.activity:activity-compose:1.9.2'
-    implementation 'androidx.navigation:navigation-compose:2.8.4'
+    implementation 'androidx.activity:activity-compose:1.8.2'
+    implementation 'androidx.navigation:navigation-compose:2.7.5'
     implementation 'androidx.compose.material:material-icons-extended'
 
     // Kotlin/AndroidX
-    implementation 'androidx.core:core-ktx:1.15.0'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.7'
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
 
     // Security & Encryption
-    implementation 'androidx.security:security-crypto:1.1.0-alpha04'
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
     
     // SQLCipher для шифрования базы данных
     // implementation 'net.zetetic:sqlcipher-android:4.5.4'
     
     // Временно используем стандартную SQLite
-    implementation 'androidx.sqlite:sqlite:2.4.0'
+    implementation 'androidx.sqlite:sqlite:2.3.0'
 
     // Для Clipboard и т.д. — в составе AndroidX
     
     // Тестирование
     testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.robolectric:robolectric:4.10.3'
-    testImplementation 'androidx.test:core:1.5.0'
-    testImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    testImplementation 'org.robolectric:robolectric:4.9.2'
+    testImplementation 'androidx.test:core:1.4.0'
+    testImplementation 'androidx.test.ext:junit:1.1.4'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.4'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }

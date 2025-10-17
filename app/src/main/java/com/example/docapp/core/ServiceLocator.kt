@@ -19,6 +19,8 @@ object ServiceLocator {
         private set
     lateinit var useCases: UseCases
         private set
+    lateinit var dao: SqlDaoFactory
+        private set
     
     private lateinit var appContext: Context
     private var sqlCipherInitialized = false
@@ -26,6 +28,9 @@ object ServiceLocator {
     fun init(appCtx: Context) {
         AppLogger.log("ServiceLocator", "Initializing ServiceLocator...")
         appContext = appCtx
+        
+        // Инициализируем дебаг системы
+        UriDebugger.init(appCtx)
         
         // Инициализируем SQLite (SQLCipher больше не используется)
         try {
@@ -137,11 +142,11 @@ object ServiceLocator {
                 ErrorHandler.showInfo("ServiceLocator: Создаем базу данных...")
                 db = AppDb(appContext, dbKey)
                 ErrorHandler.showInfo("ServiceLocator: БД создана, инициализируем компоненты...")
-                val daos = SqlDaoFactory(db)
-                files = EncryptedAttachmentStore(appContext)
-                (files as EncryptedAttachmentStore).initialize() // Инициализируем хранилище файлов
-                repos = RepositoriesImpl(daos, crypto, files, appContext)
-                useCases = UseCases(repos, files)
+                dao = SqlDaoFactory(db)
+                // Инициализируем совместимость со старым кодом
+                files = AttachmentStoreImpl(appContext)
+                repos = RepositoriesImpl(dao, crypto, files, appContext)
+                useCases = UseCases(repos, files, dao.documents)
                 AppLogger.log("ServiceLocator", "Database and components initialized successfully")
                 ErrorHandler.showSuccess("ServiceLocator: База данных и компоненты инициализированы")
             } else {

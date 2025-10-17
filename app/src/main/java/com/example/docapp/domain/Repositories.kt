@@ -1,5 +1,6 @@
 package com.example.docapp.domain
 
+import android.net.Uri
 import kotlinx.coroutines.flow.Flow
 
 interface SettingsRepository {
@@ -51,8 +52,8 @@ interface DocumentRepository {
         folderId: String?,
         name: String,
         fields: List<Pair<String, String>>,
-        photoFiles: List<Pair<String, String>>, // URI, displayName
-        pdfFiles: List<Pair<String, String>> // URI, displayName
+        photoFiles: List<Pair<Uri, String>>, // URI, displayName
+        pdfFiles: List<Pair<Uri, String>> // URI, displayName
     ): String
 
     suspend fun getDocument(id: String): FullDocument?
@@ -71,4 +72,5 @@ interface Repositories {
     val folders: FolderRepository
     val templates: TemplateRepository
     val documents: DocumentRepository
+    val attachments: com.example.docapp.domain.repo.AttachmentRepository
 }

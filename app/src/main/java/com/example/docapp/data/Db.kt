@@ -112,6 +112,31 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
                 db.execSQL("ALTER TABLE attachments ADD COLUMN display_name TEXT")
             }
             
+            // Миграция Mx_AddAttachments: создаем новую таблицу для современных вложений
+            val newAttachmentsExists = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='attachments_new'", null)
+                ?.use { it.count > 0 } ?: false
+            
+            if (!newAttachmentsExists) {
+                AppLogger.log("AppDb", "Creating new attachments table for modern attachment system")
+                ErrorHandler.showInfo("AppDb: Создаем новую таблицу attachments_new для современной системы вложений")
+                db.execSQL("""
+                    CREATE TABLE attachments_new(
+                        id TEXT PRIMARY KEY,
+                        docId TEXT,
+                        name TEXT NOT NULL,
+                        mime TEXT NOT NULL,
+                        size INTEGER NOT NULL,
+                        sha256 TEXT NOT NULL,
+                        path TEXT NOT NULL,
+                        uri TEXT NOT NULL,
+                        createdAt INTEGER NOT NULL,
+                        FOREIGN KEY(docId) REFERENCES documents(id) ON DELETE CASCADE
+                    )
+                """)
+                db.execSQL("CREATE INDEX idx_attachments_new_docId ON attachments_new(docId)")
+                db.execSQL("CREATE INDEX idx_attachments_new_sha256 ON attachments_new(sha256)")
+            }
+            
             AppLogger.log("AppDb", "Migrations completed successfully")
         } catch (e: Exception) {
             AppLogger.log("AppDb", "ERROR: Failed to run migrations: ${e.message}")
@@ -126,6 +151,7 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
             val tableExists = cursor?.use { it.count > 0 } ?: false
             
             if (!tableExists) {
+                ErrorHandler.showInfo("AppDb: Создаем таблицы БД...")
                 db.execSQL("""CREATE TABLE templates(
                     id TEXT PRIMARY KEY, name TEXT NOT NULL,
                     is_pinned INTEGER NOT NULL, pinned_order INTEGER,
@@ -164,7 +190,21 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
                 db.execSQL("PRAGMA foreign_keys=ON")
                 // строка настроек по умолчанию
                 db.execSQL("INSERT INTO settings(id,pin_hash,pin_salt,db_key_salt,version) VALUES(1, x'', x'', x'', '1.0.0')")
-                seedBasics(db)
+                
+                // Проверяем, есть ли уже базовые данные
+                val templatesCount = db.rawQuery("SELECT COUNT(*) FROM templates", null)?.use { 
+                    it.moveToFirst()
+                    it.getInt(0)
+                } ?: 0
+                
+                if (templatesCount == 0) {
+                    ErrorHandler.showInfo("AppDb: Заполняем БД базовыми данными...")
+                    seedBasics(db)
+            } else {
+                ErrorHandler.showInfo("AppDb: Базовые данные уже существуют, пропускаем заполнение")
+                ErrorHandler.showInfo("AppDb: Найдено шаблонов: $templatesCount")
+            }
+                
                 AppLogger.log("AppDb", "Database tables created successfully")
             }
         } catch (e: Exception) {
@@ -288,6 +328,7 @@ interface DocumentDao {
 
     suspend fun move(id: String, folderId: String?)
     suspend fun swapPinned(aId: String, bId: String)
+    suspend fun getAllDocumentIds(): List<String> // Для миграции
 }
 
 interface SettingsDao {
@@ -617,7 +658,12 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
                     },
                     fileName = fileName,
                     displayName = displayName,
-                    uri = Uri.parse(uriString),
+                    uri = try {
+                        Uri.parse(uriString)
+                    } catch (e: Exception) {
+                        AppLogger.log("Db", "ERROR: Failed to parse URI: $uriString")
+                        Uri.parse("file:///invalid")
+                    },
                     createdAt = c.getLong(c.getColumnIndexOrThrow("created_at"))
                 )
                 when (a.kind) {
@@ -738,6 +784,16 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
             db.encryptedWritableDatabase.endTransaction()
         }
         emitHome()
+    }
+
+    override suspend fun getAllDocumentIds(): List<String> = withContext(Dispatchers.IO) {
+        val ids = mutableListOf<String>()
+        db.encryptedReadableDatabase.rawQuery("SELECT id FROM documents", null).use { c ->
+            while (c.moveToNext()) {
+                ids.add(c.getString(0))
+            }
+        }
+        ids
     }
 
     private fun ensureSequentialPinnedOrders_NoThrow() {

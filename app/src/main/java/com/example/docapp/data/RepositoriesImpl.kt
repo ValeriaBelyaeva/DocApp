@@ -4,9 +4,13 @@ import android.content.Context
 import android.net.Uri
 import com.example.docapp.core.AttachmentStore
 import com.example.docapp.core.CryptoManager
-import com.example.docapp.core.EncryptedAttachmentStore
 import com.example.docapp.core.ErrorHandler
 import com.example.docapp.domain.*
+import com.example.docapp.domain.repo.AttachmentRepository
+import com.example.docapp.domain.repo.AttachmentRepositoryImpl
+import com.example.docapp.data.storage.AttachStorage
+import com.example.docapp.data.storage.AttachStorageImpl
+import com.example.docapp.data.storage.FileGc
 import kotlinx.coroutines.flow.Flow
 
 class RepositoriesImpl(
@@ -15,6 +19,15 @@ class RepositoriesImpl(
     private val files: AttachmentStore,
     private val ctx: Context
 ) : Repositories {
+    
+    private val attachStorage: AttachStorage = AttachStorageImpl(ctx)
+    private val fileGc: FileGc = FileGc(dao.attachments, attachStorage)
+    
+    override val attachments: AttachmentRepository = AttachmentRepositoryImpl(
+        dao.attachments,
+        attachStorage,
+        fileGc
+    )
 
     override val settings: SettingsRepository = object : SettingsRepository {
         override suspend fun isPinSet(): Boolean = crypto.isPinSet()
@@ -45,18 +58,15 @@ class RepositoriesImpl(
         override suspend fun listFields(templateId: String) = dao.templates.listFields(templateId)
         override suspend fun addTemplate(name: String, fields: List<String>) = dao.templates.add(name, fields)
         override suspend fun updateTemplate(template: Template, fields: List<TemplateField>) {
-            // TODO: Implement template update functionality
-            // This would require updating the template record and its fields
+            // Обновление шаблона пока не реализовано
             throw NotImplementedError("Template update not yet implemented")
         }
         override suspend fun deleteTemplate(id: String) {
-            // TODO: Implement template deletion functionality
-            // This would require deleting the template and all its fields
+            // Удаление шаблона пока не реализовано
             throw NotImplementedError("Template deletion not yet implemented")
         }
         override suspend fun pinTemplate(id: String, pinned: Boolean) {
-            // TODO: Implement template pinning functionality
-            // This would require updating the is_pinned and pinned_order fields
+            // Закрепление шаблона пока не реализовано
             throw NotImplementedError("Template pinning not yet implemented")
         }
     }
@@ -85,16 +95,16 @@ class RepositoriesImpl(
             folderId: String?,
             name: String,
             fields: List<Pair<String, String>>,
-            photoFiles: List<Pair<String, String>>, // URI, displayName
-            pdfFiles: List<Pair<String, String>> // URI, displayName
+            photoFiles: List<Pair<Uri, String>>, // URI, displayName
+            pdfFiles: List<Pair<Uri, String>> // URI, displayName
         ): String {
             ErrorHandler.showInfo("RepositoriesImpl: Создаем документ: $name")
             ErrorHandler.showInfo("RepositoriesImpl: Фото: ${photoFiles.size}, PDF: ${pdfFiles.size}")
             
             val photos = photoFiles.mapIndexed { index, (uri, displayName) -> 
                 ErrorHandler.showInfo("RepositoriesImpl: Обрабатываем фото $index: $displayName")
-                val originalUri = Uri.parse(uri)
-                val persistedUri = files.persist(originalUri)
+                ErrorHandler.showInfo("RepositoriesImpl: Исходный URI: $uri")
+                val persistedUri = files.persist(uri)
                 val persistedUriString = persistedUri.toString()
                 ErrorHandler.showInfo("RepositoriesImpl: Фото $index сохранено: ${persistedUriString.take(50)}...")
                 Pair(persistedUriString, displayName)
@@ -102,8 +112,8 @@ class RepositoriesImpl(
             
             val pdfs = pdfFiles.mapIndexed { index, (uri, displayName) -> 
                 ErrorHandler.showInfo("RepositoriesImpl: Обрабатываем PDF $index: $displayName")
-                val originalUri = Uri.parse(uri)
-                val persistedUri = files.persist(originalUri)
+                ErrorHandler.showInfo("RepositoriesImpl: Исходный URI: $uri")
+                val persistedUri = files.persist(uri)
                 val persistedUriString = persistedUri.toString()
                 ErrorHandler.showInfo("RepositoriesImpl: PDF $index сохранен: ${persistedUriString.take(50)}...")
                 Pair(persistedUriString, displayName)
@@ -124,14 +134,26 @@ class RepositoriesImpl(
                 
                 doc.photos.forEachIndexed { index, photo ->
                     ErrorHandler.showInfo("RepositoriesImpl: Фото $index: ${photo.displayName ?: "Без имени"}")
-                    val exists = (files as com.example.docapp.core.EncryptedAttachmentStore).exists(photo.uri)
-                    ErrorHandler.showInfo("RepositoriesImpl: Фото $index существует: $exists")
+                    // Проверяем существование файла через новую систему AttachStorage
+                    try {
+                        val file = java.io.File(photo.uri.path ?: "")
+                        val exists = file.exists() && file.canRead()
+                        ErrorHandler.showInfo("RepositoriesImpl: Фото $index существует: $exists")
+                    } catch (e: Exception) {
+                        ErrorHandler.showWarning("RepositoriesImpl: Ошибка проверки фото $index: ${e.message}")
+                    }
                 }
                 
                 doc.pdfs.forEachIndexed { index, pdf ->
                     ErrorHandler.showInfo("RepositoriesImpl: PDF $index: ${pdf.displayName ?: "Без имени"}")
-                    val exists = (files as com.example.docapp.core.EncryptedAttachmentStore).exists(pdf.uri)
-                    ErrorHandler.showInfo("RepositoriesImpl: PDF $index существует: $exists")
+                    // Проверяем существование файла через новую систему AttachStorage
+                    try {
+                        val file = java.io.File(pdf.uri.path ?: "")
+                        val exists = file.exists() && file.canRead()
+                        ErrorHandler.showInfo("RepositoriesImpl: PDF $index существует: $exists")
+                    } catch (e: Exception) {
+                        ErrorHandler.showWarning("RepositoriesImpl: Ошибка проверки PDF $index: ${e.message}")
+                    }
                 }
             }
         }

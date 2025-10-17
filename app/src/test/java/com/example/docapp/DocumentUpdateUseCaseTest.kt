@@ -3,6 +3,7 @@ package com.example.docapp
 import android.content.Context
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
+import com.example.docapp.core.AttachmentStore
 import com.example.docapp.core.EncryptedAttachmentStore
 import com.example.docapp.core.newId
 import com.example.docapp.core.now

@@ -1,14 +1,32 @@
 package com.example.docapp.domain.usecases
 
+import android.net.Uri
 import com.example.docapp.domain.Attachment
 import com.example.docapp.domain.DocumentRepository
 import com.example.docapp.domain.Repositories
 import com.example.docapp.core.AttachmentStore
+import com.example.docapp.core.ErrorHandler
+import com.example.docapp.core.UriDebugger
+import com.example.docapp.domain.usecase.ImportAttachmentsUseCase
+import com.example.docapp.domain.usecase.DeleteAttachmentUseCase
+import com.example.docapp.domain.usecase.CleanupOrphansUseCase
+import com.example.docapp.domain.usecase.MigrateExternalUrisUseCase
 
 class UseCases(
     private val repos: Repositories,
-    private val attachmentStore: AttachmentStore
+    private val attachmentStore: AttachmentStore,
+    private val documentDao: com.example.docapp.data.DocumentDao
 ) {
+    
+    // Attachment UseCases
+    val importAttachments = ImportAttachmentsUseCase(repos.attachments)
+    val deleteAttachment = DeleteAttachmentUseCase(repos.attachments)
+    val cleanupOrphans = CleanupOrphansUseCase(repos.attachments)
+    val migrateExternalUris = MigrateExternalUrisUseCase(repos.attachments, documentDao)
+    
+    // Attachment binding
+    suspend fun bindAttachmentsToDoc(attachmentIds: List<String>, docId: String) = 
+        repos.attachments.bindAttachmentsToDoc(attachmentIds, docId)
     // PIN
     suspend fun verifyPin(pin: String) = repos.settings.verifyPin(pin)
     suspend fun isPinSet() = repos.settings.isPinSet()
@@ -41,25 +59,32 @@ class UseCases(
         folderId: String?,
         name: String,
         fields: List<Pair<String, String>>,
-        photoFiles: List<Pair<String, String>>, // URI, displayName
-        pdfFiles: List<Pair<String, String>> // URI, displayName
+        photoFiles: List<Pair<Uri, String>>, // URI, displayName
+        pdfFiles: List<Pair<Uri, String>> // URI, displayName
     ) = repos.documents.createDocumentWithNames(tplId, folderId, name, fields, photoFiles, pdfFiles)
 
     suspend fun getDoc(id: String) = repos.documents.getDocument(id)
 
     suspend fun updateDoc(fd: DocumentRepository.FullDocument) {
+        ErrorHandler.showInfo("UseCases: Обновляем документ с ${fd.photos.size} фото и ${fd.pdfs.size} PDF")
+        
         val preparedAttachments = buildList {
             addAll(fd.photos)
             addAll(fd.pdfs)
         }.map { attachment ->
+            UriDebugger.showUriDebug("ВЛОЖЕНИЕ: ${attachment.displayName}", attachment.uri)
+            
             if (attachment.requiresPersist) {
+                UriDebugger.showUriDebug("СОХРАНИТЬ: ${attachment.displayName}", attachment.uri)
                 val persistedUri = attachmentStore.persist(attachment.uri)
+                UriDebugger.showUriSuccess("СОХРАНЕНО: ${attachment.displayName}", persistedUri)
                 attachment.copy(
                     uri = persistedUri,
                     createdAt = if (attachment.createdAt <= 0L) System.currentTimeMillis() else attachment.createdAt,
                     requiresPersist = false
                 )
             } else {
+                UriDebugger.showUriSuccess("УЖЕ СОХРАНЕНО: ${attachment.displayName}", attachment.uri)
                 attachment
             }
         }

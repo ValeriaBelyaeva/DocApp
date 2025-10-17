@@ -33,15 +33,15 @@ object ErrorHandler {
             AppLogger.log("ErrorHandler", "Stack trace: ${getStackTrace(throwable)}")
         }
         
-        // Показываем Toast
-        showToast("❌ $errorMessage", Toast.LENGTH_LONG)
+        // Показываем Toast с упрощенным форматом
+        showToast(errorMessage, Toast.LENGTH_LONG)
     }
     
     /**
      * Показывает критическую ошибку
      */
     fun showCriticalError(message: String, throwable: Throwable? = null) {
-        val errorMessage = "КРИТИЧЕСКАЯ ОШИБКА: $message"
+        val errorMessage = formatErrorMessage(message, throwable)
         
         // Логируем критическую ошибку
         AppLogger.log("ErrorHandler", "CRITICAL ERROR: $errorMessage")
@@ -49,16 +49,16 @@ object ErrorHandler {
             AppLogger.log("ErrorHandler", "Stack trace: ${getStackTrace(throwable)}")
         }
         
-        // Показываем Toast
-        showToast("🚨 $errorMessage", Toast.LENGTH_LONG)
+        // Показываем Toast с упрощенным форматом
+        showToast(errorMessage, Toast.LENGTH_LONG)
     }
     
     /**
-     * Показывает предупреждение
+     * Показывает предупреждение (только в логах)
      */
     fun showWarning(message: String) {
         AppLogger.log("ErrorHandler", "WARNING: $message")
-        showToast("⚠️ $message", Toast.LENGTH_SHORT)
+        // Не показываем Toast для предупреждений
     }
     
     /**
@@ -66,15 +66,16 @@ object ErrorHandler {
      */
     fun showSuccess(message: String) {
         AppLogger.log("ErrorHandler", "SUCCESS: $message")
-        showToast("✅ $message", Toast.LENGTH_SHORT)
+        showToast(message, Toast.LENGTH_SHORT)
     }
     
+    
     /**
-     * Показывает информационное сообщение
+     * Показывает информационное сообщение (только в логах)
      */
     fun showInfo(message: String) {
         AppLogger.log("ErrorHandler", "INFO: $message")
-        showToast("ℹ️ $message", Toast.LENGTH_SHORT)
+        // Не показываем Toast для информационных сообщений
     }
     
     /**
@@ -120,10 +121,11 @@ object ErrorHandler {
                 // Логируем стек-трейс
                 AppLogger.log("ErrorHandler", "Stack trace: ${getStackTrace(throwable)}")
                 
-                // Показываем Toast напрямую, без вызова showCriticalError
+                // Показываем Toast с упрощенным форматом
                 context?.let { ctx ->
                     handler.post {
-                        Toast.makeText(ctx, "🚨 КРИТИЧЕСКАЯ ОШИБКА: Необработанное исключение", Toast.LENGTH_LONG).show()
+                        val errorMessage = throwable.message ?: "Произошла ошибка при выполнении операции"
+                        Toast.makeText(ctx, errorMessage, Toast.LENGTH_LONG).show()
                     }
                 }
                 
@@ -147,7 +149,7 @@ object ErrorHandler {
         return try {
             action()
         } catch (e: Exception) {
-            showError("Произошла ошибка при выполнении операции", e)
+            showError("", e)
             null
         }
     }
@@ -159,7 +161,7 @@ object ErrorHandler {
         return try {
             action()
         } catch (e: Exception) {
-            showError("Произошла ошибка при выполнении операции", e)
+            showError("", e)
             null
         }
     }

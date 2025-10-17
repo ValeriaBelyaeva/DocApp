@@ -41,10 +41,11 @@ object AppLogger {
             Log.e("AppLogger", "Failed to write to log file: ${e.message}")
         }
         
-        // Показываем Toast для критических сообщений
-        if (message.contains("ERROR") || message.contains("FAILED")) {
+        // Показываем Toast только для критических ошибок с упрощенным форматом
+        if (message.contains("ERROR") || message.contains("FAILED") || message.contains("CRITICAL")) {
             context?.let { ctx ->
-                Toast.makeText(ctx, "$tag: $message", Toast.LENGTH_LONG).show()
+                val toastMessage = message.replace("ERROR: ", "").replace("FAILED: ", "").replace("CRITICAL: ", "")
+                Toast.makeText(ctx, toastMessage, Toast.LENGTH_LONG).show()
             }
         }
     }

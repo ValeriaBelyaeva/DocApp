@@ -1,27 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data-extraction-rules>
-    <cloud-backup>
-        <!-- Исключаем базу данных из бэкапа -->
-        <exclude domain="database" path="docapp.db"/>
-        <exclude domain="database" path="docapp.db-wal"/>
-        <exclude domain="database" path="docapp.db-shm"/>
-        
-        <!-- Исключаем файлы вложений -->
-        <exclude domain="file" path="attachments/"/>
-        
-        <!-- Исключаем зашифрованные настройки -->
-        <exclude domain="sharedpref" path="secure_prefs"/>
-        
-        <!-- Разрешаем только основные настройки приложения -->
-        <include domain="sharedpref" path="."/>
-    </cloud-backup>
-    
-    <device-transfer>
-        <!-- Те же правила для передачи на другое устройство -->
-        <exclude domain="database" path="docapp.db"/>
-        <exclude domain="database" path="docapp.db-wal"/>
-        <exclude domain="database" path="docapp.db-shm"/>
-        <exclude domain="file" path="attachments/"/>
-        <exclude domain="sharedpref" path="secure_prefs"/>
-    </device-transfer>
+  <cloud-backup>
+    <exclude domain="file" path="attachments/"/>
+    <exclude domain="database" path="*"/>
+  </cloud-backup>
 </data-extraction-rules>

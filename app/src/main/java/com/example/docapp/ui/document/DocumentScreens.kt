@@ -1,210 +1,241 @@
 package com.example.docapp.ui.document
-import android.content.ClipDescription
-import android.provider.OpenableColumns
 
-import android.content.Intent
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Photo
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
 import com.example.docapp.core.ServiceLocator
-import com.example.docapp.core.newId
-import com.example.docapp.domain.Attachment
-import com.example.docapp.domain.AttachmentKind
-import com.example.docapp.domain.DocumentField
-import com.example.docapp.domain.DocumentRepository
-import com.example.docapp.ui.widgets.FieldTile
-import com.example.docapp.ui.widgets.PrimaryButton
-import com.example.docapp.ui.widgets.copyToClipboard
 import com.example.docapp.core.ErrorHandler
+import com.example.docapp.domain.Attachment
 import kotlinx.coroutines.launch
 
-// Модель для файлов с именами
-data class NamedFile(
-    val uri: Uri,
-    val displayName: String,
-    val isPhoto: Boolean,
-    val attachmentId: String? = null,
-    val createdAt: Long? = null,
-    val isPersisted: Boolean = false
-)
+/**
+ * Экраны документов с интеграцией новой системы вложений
+ */
 
-/* -------- Просмотр ---------- */
 @Composable
 fun DocumentViewScreen(
     docId: String,
     onEdit: () -> Unit,
     onDeleted: () -> Unit
 ) {
-    val uc = ServiceLocator.useCases
-    val ctx = LocalContext.current
-    var full by remember { mutableStateOf<DocumentRepository.FullDocument?>(null) }
+    val useCases = ServiceLocator.useCases
     val scope = rememberCoroutineScope()
-
-    val revealed = remember { mutableStateMapOf<String, Boolean>() }
+    val context = LocalContext.current
+    var fullDoc by remember { mutableStateOf<com.example.docapp.domain.DocumentRepository.FullDocument?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(docId) {
-        full = uc.getDoc(docId)
-        uc.touchOpened(docId)
-        revealed.clear()
+        try {
+            val doc = useCases.getDoc(docId)
+            fullDoc = doc
+            useCases.touchOpened(docId)
+        } catch (e: Exception) {
+            ErrorHandler.showError("Не удалось загрузить документ: ${e.message}")
+        }
     }
 
-    Column(Modifier.fillMaxSize().padding(16.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(full?.doc?.name ?: "Документ", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
-            IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, contentDescription = "Edit") }
-            IconButton(onClick = { showDeleteDialog = true }) { Icon(Icons.Default.Delete, contentDescription = "Удалить документ") }
+    val doc = fullDoc
+    if (doc == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Загрузка...", style = MaterialTheme.typography.bodyLarge)
         }
-        Spacer(Modifier.height(8.dp))
+        return
+    }
 
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)) {
-            full?.fields?.let { fields ->
-                itemsIndexed(fields, key = { _, f -> f.id }) { _, f ->
-                    val fullValue = (f.valueCipher ?: ByteArray(0)).toString(Charsets.UTF_8)
-                    val show = revealed[f.id] == true
-                    FieldTile(
-                        title = f.name,
-                        preview = if (show) null else (f.preview ?: ""),
-                        value = if (show) fullValue else null,
-                        showValue = show,
-                        onCopy = { copyToClipboard(ctx, f.name, fullValue) },
-                        onToggleSecret = { revealed[f.id] = !show }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        // Заголовок с названием документа
+        Text(
+            text = doc.doc.name,
+            style = MaterialTheme.typography.headlineMedium,
+            color = Color.Black
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Поля документа
+        if (doc.fields.isNotEmpty()) {
+            Text(
+                text = "Поля документа:",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.Black
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            doc.fields.forEach { field ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = field.name,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                    Text(
+                        text = field.preview ?: "",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Black
                     )
                 }
+                Spacer(modifier = Modifier.height(4.dp))
             }
-
-            // Фото: список всех кнопок
-            item { Spacer(Modifier.height(12.dp)); Text("ФОТО", style = MaterialTheme.typography.titleMedium) }
-            full?.photos?.let { photos ->
-                itemsIndexed(photos) { index, photo ->
-                    val fileStore = ServiceLocator.files as com.example.docapp.core.EncryptedAttachmentStore
-                    ErrorHandler.showInfo("DocumentScreens: Проверяем фото $index: ${photo.displayName ?: "Без имени"}")
-                    val isAvailable = fileStore.exists(photo.uri)
-                    ErrorHandler.showInfo("DocumentScreens: Фото $index доступно: $isAvailable")
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+        
+        // Отображение прикрепленных файлов (только просмотр, без возможности удаления)
+        if (doc.photos.isNotEmpty() || doc.pdfs.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Фотографии - каждая в отдельной строке
+            doc.photos.forEach { photo ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Photo,
+                        contentDescription = "Фото",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                        text = photo.displayName ?: "Фото",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Black,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            
+            // PDF файлы - только кнопка "Открыть"
+            doc.pdfs.forEach { pdf ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.PictureAsPdf,
+                        contentDescription = "PDF",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = pdf.displayName ?: "PDF",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Black,
+                        modifier = Modifier.weight(1f)
+                    )
                     
-                    val displayName = photo.displayName ?: "ФОТО ${index + 1}"
-                    if (isAvailable) {
-                        OutlinedButton(onClick = {
+                    // Только кнопка "Открыть"
+                    Button(
+                        onClick = {
                             try {
-                                // Сначала проверяем, что файл действительно доступен
-                                val inputStream = fileStore.retrieve(photo.uri)
-                                if (inputStream != null) {
-                                    inputStream.close()
-                                    
-                                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                                        setDataAndType(photo.uri, "image/*")
-                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                    }
-                                    ctx.startActivity(intent)
-                                } else {
-                                    ErrorHandler.showError("Файл недоступен: $displayName")
-                                }
+                                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
+                                intent.setDataAndType(android.net.Uri.parse(pdf.uri.toString()), "application/pdf")
+                                intent.flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                context.startActivity(android.content.Intent.createChooser(intent, "Открыть PDF"))
                             } catch (e: Exception) {
-                                ErrorHandler.showError("Не удалось открыть фото $displayName", e)
+                                ErrorHandler.showError("Не удалось открыть PDF: ${e.message}")
                             }
-                        }) { Text("ОТКРЫТЬ $displayName") }
-                    } else {
-                        Column {
-                            Text(
-                                "$displayName - ФАЙЛ НЕ НАЙДЕН", 
-                                color = MaterialTheme.colorScheme.error
-                            )
-                            Text(
-                                "URI: ${photo.uri}", 
-                                fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
                         }
+                    ) {
+                        Text("Открыть")
                     }
                 }
+                Spacer(modifier = Modifier.height(8.dp))
             }
-
-            // PDF
-            item { Spacer(Modifier.height(12.dp)); Text("PDF", style = MaterialTheme.typography.titleMedium) }
-            full?.pdfs?.let { pdfs ->
-                itemsIndexed(pdfs) { index, pdf ->
-                    val fileStore = ServiceLocator.files as com.example.docapp.core.EncryptedAttachmentStore
-                    ErrorHandler.showInfo("DocumentScreens: Проверяем PDF $index: ${pdf.displayName ?: "Без имени"}")
-                    val isAvailable = fileStore.exists(pdf.uri)
-                    ErrorHandler.showInfo("DocumentScreens: PDF $index доступен: $isAvailable")
-                    
-                    val displayName = pdf.displayName ?: "PDF ${index + 1}"
-                    if (isAvailable) {
-                        OutlinedButton(onClick = {
-                            try {
-                                // Сначала проверяем, что файл действительно доступен
-                                val inputStream = fileStore.retrieve(pdf.uri)
-                                if (inputStream != null) {
-                                    inputStream.close()
-                                    
-                                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                                        setDataAndType(pdf.uri, "application/pdf")
-                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                    }
-                                    ctx.startActivity(intent)
-                                } else {
-                                    ErrorHandler.showError("Файл недоступен: $displayName")
-                                }
-                            } catch (e: Exception) {
-                                ErrorHandler.showError("Не удалось открыть PDF $displayName", e)
-                            }
-                        }) { Text("ОТКРЫТЬ $displayName") }
-                    } else {
-                        Column {
-                            Text(
-                                "$displayName - ФАЙЛ НЕ НАЙДЕН", 
-                                color = MaterialTheme.colorScheme.error
-                            )
-                            Text(
-                                "URI: ${pdf.uri}", 
-                                fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            } ?: item { Text("PDF не прикреплён") }
-
+        }
+        
+        // В режиме просмотра не показываем кнопку добавления файлов
+        
+        Spacer(modifier = Modifier.weight(1f))
+        
+        // Кнопки управления
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(
+                onClick = onEdit,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text(
+                    "Редактировать",
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+            
+            OutlinedButton(
+                onClick = { showDeleteDialog = true },
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                ),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Удалить")
+            }
         }
     }
 
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Удалить документ?") },
-            text = { Text("Действие необратимо. Подтвердить удаление?") },
+            title = { Text("Удалить документ") },
+            text = { Text("Вы уверены, что хотите удалить этот документ?") },
             confirmButton = {
-                val scope = rememberCoroutineScope()
-                TextButton(onClick = {
-                    showDeleteDialog = false
+                TextButton(
+                    onClick = {
                     scope.launch {
-                        uc.deleteDoc(docId)
+                            try {
+                                useCases.deleteDoc(docId)
+                                ErrorHandler.showSuccess("Документ удален")
                         onDeleted()
+                            } catch (e: Exception) {
+                                ErrorHandler.showError("Не удалось удалить документ: ${e.message}")
+                            }
+                        }
+                        showDeleteDialog = false
                     }
-                }) { Text("Удалить") }
+                ) {
+                    Text("Удалить")
+                }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Отмена") }
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Отмена")
+                }
             }
         )
     }
 }
 
-/* -------- Создание/Редактирование ---------- */
 @Composable
 fun DocumentEditScreen(
     existingDocId: String?,
@@ -212,309 +243,444 @@ fun DocumentEditScreen(
     folderId: String?,
     onSaved: (String) -> Unit
 ) {
-    val uc = ServiceLocator.useCases
+    val useCases = ServiceLocator.useCases
+    val repos = ServiceLocator.repos
     val scope = rememberCoroutineScope()
-
+    val context = LocalContext.current
     var name by remember { mutableStateOf("") }
+    var isSaving by remember { mutableStateOf(false) }
     val fields = remember { mutableStateListOf<Pair<String, String>>() }
-
-    // несколько фото и PDF с именами
-    val photoFiles = remember { mutableStateListOf<NamedFile>() }
-    val pdfFiles = remember { mutableStateListOf<NamedFile>() }
-
-    var confirmDeleteIndex by remember { mutableStateOf<Int?>(null) }
-    var renameFileIndex by remember { mutableStateOf<Int?>(null) }
-    var newFileName by remember { mutableStateOf("") }
+    var showAddFieldDialog by remember { mutableStateOf(false) }
+    var newFieldName by remember { mutableStateOf("") }
+    var importedAttachments by remember { mutableStateOf<List<String>>(emptyList()) }
+    var currentPhotos by remember { mutableStateOf<List<Attachment>>(emptyList()) }
+    var currentPdfs by remember { mutableStateOf<List<Attachment>>(emptyList()) }
+    
+    // Функции для работы с прикрепленными файлами
+    val deletePhoto: (String) -> Unit = { photoId: String ->
+        scope.launch {
+            try {
+                useCases.deleteAttachment(photoId)
+                currentPhotos = currentPhotos.filter { it.id != photoId }
+                // Также удаляем из списка импортированных файлов для новых документов
+                if (existingDocId == null) {
+                    importedAttachments = importedAttachments.filter { it != photoId }
+                }
+                ErrorHandler.showSuccess("Фотография удалена")
+            } catch (e: Exception) {
+                ErrorHandler.showError("Не удалось удалить фотографию: ${e.message}")
+            }
+        }
+    }
+    
+    val deletePdf: (String) -> Unit = { pdfId: String ->
+        scope.launch {
+            try {
+                useCases.deleteAttachment(pdfId)
+                currentPdfs = currentPdfs.filter { it.id != pdfId }
+                // Также удаляем из списка импортированных файлов для новых документов
+                if (existingDocId == null) {
+                    importedAttachments = importedAttachments.filter { it != pdfId }
+                }
+                ErrorHandler.showSuccess("PDF удален")
+            } catch (e: Exception) {
+                ErrorHandler.showError("Не удалось удалить PDF: ${e.message}")
+            }
+        }
+    }
+    
+    val openPdf = { pdfUri: String ->
+        try {
+            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
+            intent.setDataAndType(android.net.Uri.parse(pdfUri), "application/pdf")
+            intent.flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+            context.startActivity(android.content.Intent.createChooser(intent, "Открыть PDF"))
+        } catch (e: Exception) {
+            ErrorHandler.showError("Не удалось открыть PDF: ${e.message}")
+        }
+    }
 
     LaunchedEffect(existingDocId, templateId) {
-        fields.clear()
-        photoFiles.clear()
-        pdfFiles.clear()
-
         if (existingDocId != null) {
-            ErrorHandler.showInfo("DocumentScreens: Загружаем документ: $existingDocId")
-            val f = uc.getDoc(existingDocId)
-            if (f != null) {
-                name = f.doc.name
-                fields.addAll(f.fields.map { it.name to (it.valueCipher?.toString(Charsets.UTF_8) ?: "") })
-                
-                ErrorHandler.showInfo("DocumentScreens: Документ загружен: ${f.doc.name}")
-                ErrorHandler.showInfo("DocumentScreens: Фото: ${f.photos.size}, PDF: ${f.pdfs.size}")
-                
-                // Загружаем фото с сохраненными именами
-                f.photos.forEachIndexed { index, photo ->
-                    ErrorHandler.showInfo("DocumentScreens: Загружаем фото $index: ${photo.displayName}")
-                    photoFiles.add(
-                        NamedFile(
-                            uri = photo.uri,
-                            displayName = photo.fileName ?: "Фото ${index + 1}",
-                            isPhoto = true,
-                            attachmentId = photo.id,
-                            createdAt = photo.createdAt,
-                            isPersisted = !photo.requiresPersist
-                        )
-                    )
+            try {
+                val doc = useCases.getDoc(existingDocId)
+                name = doc?.doc?.name ?: ""
+                fields.clear()
+                doc?.fields?.forEach { field ->
+                    fields.add(field.name to (field.valueCipher?.decodeToString() ?: ""))
                 }
-                
-                // Загружаем PDF с сохраненными именами
-                f.pdfs.forEachIndexed { index, pdf ->
-                    ErrorHandler.showInfo("DocumentScreens: Загружаем PDF $index: ${pdf.displayName}")
-                    pdfFiles.add(
-                        NamedFile(
-                            uri = pdf.uri,
-                            displayName = pdf.fileName ?: "PDF ${index + 1}",
-                            isPhoto = false,
-                            attachmentId = pdf.id,
-                            createdAt = pdf.createdAt,
-                            isPersisted = !pdf.requiresPersist
-                        )
-                    )
-                }
+                // Загружаем прикрепленные файлы
+                currentPhotos = doc?.photos ?: emptyList()
+                currentPdfs = doc?.pdfs ?: emptyList()
+            } catch (e: Exception) {
+                ErrorHandler.showError("Не удалось загрузить документ: ${e.message}")
             }
-        } else if (templateId != null) {
-            val tf = uc.listTemplateFields(templateId)
-            fields.addAll(tf.sortedBy { it.ord }.map { it.name to "" })
-            name = "Документ"
+        } else {
+            // Для новых документов инициализируем пустые списки
+            name = ""
+            fields.clear()
+            currentPhotos = emptyList()
+            currentPdfs = emptyList()
+            importedAttachments = emptyList()
         }
     }
 
-    // pickers
-    val pickImages = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
-        uris.forEachIndexed { index, uri ->
-            val nextPhotoNumber = photoFiles.count { it.isPhoto } + 1
-            photoFiles.add(NamedFile(uri, "Фото $nextPhotoNumber", true))
-        }
-    }
-    val pickpdfs = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
-        uris.forEachIndexed { index, uri ->
-            val nextPdfNumber = pdfFiles.count { !it.isPhoto } + 1
-            pdfFiles.add(NamedFile(uri, "PDF $nextPdfNumber", false))
-        }
-    }
-
-    /*
-    val pickpdfs = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        uri?.let { pdfsUri = it }
-    }*/
-
-    Column(Modifier.fillMaxSize().padding(16.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = if (existingDocId != null) "Редактирование документа" else "Создание документа",
+            style = MaterialTheme.typography.headlineMedium,
+            color = Color.Black
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
         OutlinedTextField(
-            value = name, onValueChange = { name = it },
+            value = name,
+            onValueChange = { name = it },
             label = { Text("Название документа") },
-            textStyle = LocalTextStyle.current.copy(color = Color.Black),
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(8.dp))
-
-        var newFieldName by remember { mutableStateOf("") }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(
-                value = newFieldName, onValueChange = { newFieldName = it },
-                label = { Text("Введите название поля") },
-                textStyle = LocalTextStyle.current.copy(color = Color.Black),
-                modifier = Modifier.weight(1f)
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black
             )
-            Button(onClick = {
-                if (newFieldName.isNotBlank()) {
-                    fields.add(newFieldName to "")
-                    newFieldName = ""
-                }
-            }) { Text("+") }
-        }
-        Spacer(Modifier.height(8.dp))
-
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)) {
-            itemsIndexed(fields, key = { index, _ -> "field-$index" }) { i, (t, v) ->
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Управление полями документа
+        Text(
+            text = "Поля документа:",
+            style = MaterialTheme.typography.titleMedium,
+            color = Color.Black
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Список полей - единые поля с названием и содержимым
+        fields.forEachIndexed { index, (fieldName, fieldValue) ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Единое поле: название + содержимое (такая же высота как у названия документа)
                 OutlinedTextField(
-                    value = v,
-                    onValueChange = { nv -> fields[i] = t to nv },
-                    label = { Text(t) },
-                    trailingIcon = {
-                        IconButton(onClick = { confirmDeleteIndex = i }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Удалить поле")
-                        }
+                    value = fieldValue,
+                    onValueChange = { newValue ->
+                        fields[index] = fieldName to newValue
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    label = { Text(fieldName) },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
+                    )
                 )
-            }
-            item {
-                Spacer(Modifier.height(12.dp))
-                Text("ФОТО (${photoFiles.size}):", style = MaterialTheme.typography.titleMedium)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { pickImages.launch(arrayOf("image/*")) }) { Text("ДОБАВИТЬ ФОТО") }
-                    if (photoFiles.isNotEmpty()) {
-                        OutlinedButton(onClick = { photoFiles.clear() }) { Text("ОЧИСТИТЬ ФОТО") }
-                    }
+                
+                // Кнопка удаления поля
+                IconButton(
+                    onClick = { fields.removeAt(index) }
+                ) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Удалить поле",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
-                if (photoFiles.isNotEmpty()) {
-                    Spacer(Modifier.height(8.dp))
-                    photoFiles.forEachIndexed { idx, file ->
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                                Text("• ${file.displayName}", modifier = Modifier.weight(1f))
-                                Column {
-                                    TextButton(onClick = { 
-                                        renameFileIndex = idx
-                                        newFileName = file.displayName
-                                    }) { 
-                                        Text("ПЕРЕИМЕНОВАТЬ", fontSize = 12.sp) 
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+        
+        // Кнопка добавления поля
+        OutlinedButton(
+            onClick = { 
+                newFieldName = ""
+                showAddFieldDialog = true 
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Добавить поле")
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                onClick = { 
+                    // Отменяем создание/редактирование документа
+                    name = ""
+                    fields.clear()
+                },
+                enabled = !isSaving
+            ) {
+                Text("Отмена")
+            }
+            
+            Button(
+            onClick = {
+                    if (name.isNotBlank()) {
+                scope.launch {
+                            isSaving = true
+                            try {
+                                val id = if (existingDocId != null) {
+                                    // Обновляем существующий документ
+                                    try {
+                                        val existingDoc = useCases.getDoc(existingDocId)
+                                        if (existingDoc != null) {
+                                            useCases.updateDoc(existingDoc.copy(
+                                                doc = existingDoc.doc.copy(name = name),
+                                                fields = existingDoc.fields // Пока оставляем существующие поля
+                                            ))
+                                            existingDocId
+                                        } else {
+                                            throw Exception("Документ не найден")
+                                        }
+                                    } catch (e: Exception) {
+                                        throw Exception("Не удалось обновить документ: ${e.message}")
                                     }
-                                    TextButton(onClick = { photoFiles.removeAt(idx) }) { 
-                                        Text("УБРАТЬ", fontSize = 12.sp) 
+                                } else {
+                                    // Создаем новый документ
+                                    val newDocId = useCases.createDoc(
+                                        tplId = templateId,
+                                        folderId = folderId,
+                                        name = name,
+                                        fields = fields.toList(),
+                                        photos = emptyList(), // Файлы добавляются через ImportAttachmentsButton
+                                        pdfUris = emptyList()    // Файлы добавляются через ImportAttachmentsButton
+                                    )
+                                    
+                                    // Привязываем импортированные файлы к новому документу
+                                    if (importedAttachments.isNotEmpty()) {
+                                        useCases.bindAttachmentsToDoc(importedAttachments, newDocId)
                                     }
+                                    
+                                    newDocId
                                 }
+                                ErrorHandler.showSuccess("Документ сохранен")
+                                onSaved(id)
+                            } catch (e: Exception) {
+                                ErrorHandler.showError("Не удалось сохранить документ: ${e.message}")
+                            } finally {
+                                isSaving = false
                             }
                         }
                     }
-                }
-            }
-            item {
-                Spacer(Modifier.height(12.dp))
-                Text("PDF (${pdfFiles.size}):", style = MaterialTheme.typography.titleMedium)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { pickpdfs.launch(arrayOf("application/pdf")) }) { Text("ДОБАВИТЬ PDF") }
-                    if (pdfFiles.isNotEmpty()) {
-                        OutlinedButton(onClick = { pdfFiles.clear() }) { Text("ОЧИСТИТЬ PDF") }
-                    }
-                }
-                if (pdfFiles.isNotEmpty()) {
-                    Spacer(Modifier.height(8.dp))
-                    pdfFiles.forEachIndexed { idx, file ->
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                                Text("• ${file.displayName}", modifier = Modifier.weight(1f))
-                                Column {
-                                    TextButton(onClick = { 
-                                        renameFileIndex = idx + photoFiles.size // Смещение для PDF файлов
-                                        newFileName = file.displayName
-                                    }) { 
-                                        Text("ПЕРЕИМЕНОВАТЬ", fontSize = 12.sp) 
-                                    }
-                                    TextButton(onClick = { pdfFiles.removeAt(idx) }) { 
-                                        Text("УБРАТЬ", fontSize = 12.sp) 
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                },
+                enabled = !isSaving && name.isNotBlank()
+            ) {
+                Text(if (isSaving) "Сохранение..." else "Сохранить")
             }
         }
-
-        PrimaryButton(
-            text = if (existingDocId == null) "СОХРАНИТЬ ДОКУМЕНТ" else "СОХРАНИТЬ ИЗМЕНЕНИЯ",
-            onClick = {
-                scope.launch {
-                    if (existingDocId == null) {
-                        ErrorHandler.showInfo("DocumentScreens: Создаем документ с ${photoFiles.size} фото и ${pdfFiles.size} PDF")
-                        photoFiles.forEachIndexed { index, file ->
-                            ErrorHandler.showInfo("DocumentScreens: Фото $index: ${file.displayName}")
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Кнопки импорта файлов - работает и для создания, и для редактирования
+        ImportAttachmentsButton(
+            docId = existingDocId, // null для новых документов, но все равно можно прикреплять файлы
+            onImportComplete = { attachmentIds ->
+                if (existingDocId == null) {
+                    // Для новых документов сохраняем ID файлов
+                    importedAttachments = importedAttachments + attachmentIds
+                    
+                    // Немедленно показываем импортированные файлы
+                    scope.launch {
+                        try {
+                            // Получаем информацию о прикрепленных файлах из репозитория
+                            val attachments = attachmentIds.mapNotNull { id ->
+                                try {
+                                    // Преобразуем AttachmentEntity в Attachment
+                                    val entity = repos.attachments.getAttachment(id)
+                                    if (entity != null) {
+                                        // Определяем тип файла по MIME типу
+                                        val kind = when {
+                                            entity.mime.startsWith("image/") -> com.example.docapp.domain.AttachmentKind.photo
+                                            entity.mime == "application/pdf" -> com.example.docapp.domain.AttachmentKind.pdf
+                                            else -> com.example.docapp.domain.AttachmentKind.photo // По умолчанию фото
+                                        }
+                                        
+                                        com.example.docapp.domain.Attachment(
+                                            id = entity.id,
+                                            documentId = entity.docId ?: "", // Временно пустой для новых документов
+                                            kind = kind,
+                                            fileName = entity.name,
+                                            displayName = entity.name, // Используем name как displayName
+                                            uri = android.net.Uri.parse(entity.uri),
+                                            createdAt = entity.createdAt,
+                                            requiresPersist = false // Файлы уже сохранены
+                                        )
+                                    } else null
+                                } catch (e: Exception) {
+                                    null
+                                }
+                            }
+                            
+                            // Разделяем на фото и PDF
+                            val photos = attachments.filter { it.kind == com.example.docapp.domain.AttachmentKind.photo }
+                            val pdfs = attachments.filter { it.kind == com.example.docapp.domain.AttachmentKind.pdf }
+                            
+                            currentPhotos = currentPhotos + photos
+                            currentPdfs = currentPdfs + pdfs
+                        } catch (e: Exception) {
+                            ErrorHandler.showError("Не удалось обновить список файлов: ${e.message}")
                         }
-                        pdfFiles.forEachIndexed { index, file ->
-                            ErrorHandler.showInfo("DocumentScreens: PDF $index: ${file.displayName}")
+                    }
+                } else {
+                    // Для существующих документов перезагружаем файлы
+                    scope.launch {
+                        try {
+                            val doc = useCases.getDoc(existingDocId)
+                            currentPhotos = doc?.photos ?: emptyList()
+                            currentPdfs = doc?.pdfs ?: emptyList()
+                        } catch (e: Exception) {
+                            ErrorHandler.showError("Не удалось обновить список файлов: ${e.message}")
                         }
-                        
-                        val id = uc.createDocWithNames(
-                            tplId = templateId,
-                            folderId = folderId,
-                            name = name.ifBlank { "Документ" },
-                            fields = fields.toList(),
-                            photoFiles = photoFiles.map { it.uri.toString() to it.displayName },
-                            pdfFiles = pdfFiles.map { it.uri.toString() to it.displayName }
-                        )
-                        ErrorHandler.showInfo("DocumentScreens: Документ создан с ID: $id")
-                        onSaved(id)
-                    } else {
-                        val full = uc.getDoc(existingDocId) ?: return@launch
-                        val updatedDoc = full.doc.copy(name = name)
-                        val updatedFields = fields.mapIndexed { idx, (t, v) ->
-                            DocumentField(
-                                id = full.fields.getOrNull(idx)?.id ?: newId(),
-                                documentId = existingDocId,
-                                name = t,
-                                valueCipher = v.toByteArray(Charsets.UTF_8),
-                                preview = v.take(8),
-                                isSecret = false,
-                                ord = idx
-                            )
-                        }
-                        val nowTs = System.currentTimeMillis()
-                        fun NamedFile.toAttachment(kind: AttachmentKind): Attachment {
-                            val fileName = displayName.takeIf { it.isNotBlank() }
-                            val attachmentCreatedAt = createdAt ?: nowTs
-                            return Attachment(
-                                id = attachmentId ?: newId(),
-                                documentId = existingDocId,
-                                kind = kind,
-                                fileName = if (kind == AttachmentKind.photo) fileName else fileName ?: "document.pdfs",
-                                uri = uri,
-                                createdAt = attachmentCreatedAt,
-                                requiresPersist = !isPersisted
-                            )
-                        }
-                        val photoAttachments = photoFiles.map { it.toAttachment(AttachmentKind.photo) }
-                        val pdfAttachments = pdfFiles.map { it.toAttachment(AttachmentKind.pdfs) }
-                        val fullDocument = DocumentRepository.FullDocument(updatedDoc, updatedFields, photoAttachments, pdfAttachments)
-                        uc.updateDoc(fullDocument)
-                        onSaved(existingDocId)
                     }
                 }
+                ErrorHandler.showSuccess("Файлы импортированы успешно")
             }
+        )
+        
+        // Отображение прикрепленных файлов - ПРОСТОЙ СПИСОК ПОСЛЕ КНОПОК
+        if (currentPhotos.isNotEmpty() || currentPdfs.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Фотографии - каждая в отдельной строке
+            currentPhotos.forEach { photo ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Photo,
+                        contentDescription = "Фото",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = photo.displayName ?: "Фото",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Black,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                
+                // Кнопка удалить под фотографией
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Spacer(modifier = Modifier.width(32.dp)) // Отступ под иконку
+                    OutlinedButton(
+                        onClick = { deletePhoto(photo.id) },
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    ) {
+                        Text("Удалить")
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            
+            // PDF файлы - кнопки "Открыть" и "Удалить" в ряду
+            currentPdfs.forEach { pdf ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.PictureAsPdf,
+                        contentDescription = "PDF",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = pdf.displayName ?: "PDF",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Black,
+                        modifier = Modifier.weight(1f)
+                    )
+                    
+                    // Кнопки "Открыть" и "Удалить" в ряду
+                    Button(
+                        onClick = { openPdf(pdf.uri.toString()) },
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        Text("Открыть")
+                    }
+                    
+                    OutlinedButton(
+                        onClick = { deletePdf(pdf.id) },
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Удалить")
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "Используйте кнопку выше для добавления фото и PDF файлов",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 
-    // Подтверждение удаления поля
-    confirmDeleteIndex?.let { idx ->
+    // Диалог добавления поля
+    if (showAddFieldDialog) {
         AlertDialog(
-            onDismissRequest = { confirmDeleteIndex = null },
-            title = { Text("Удалить поле?") },
-            text = { Text("Поле будет удалено из документа.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    if (idx in 0 until fields.size) fields.removeAt(idx)
-                    confirmDeleteIndex = null
-                }) { Text("Удалить") }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmDeleteIndex = null }) { Text("Отмена") }
-            }
-        )
-    }
-
-    // Диалог переименования файла
-    renameFileIndex?.let { idx ->
-        AlertDialog(
-            onDismissRequest = { renameFileIndex = null; newFileName = "" },
-            title = { Text("Переименовать файл") },
+            onDismissRequest = { showAddFieldDialog = false },
+            title = { Text("Добавить поле") },
             text = {
                 OutlinedTextField(
-                    value = newFileName,
-                    onValueChange = { newFileName = it },
-                    label = { Text("Название файла") },
-                    modifier = Modifier.fillMaxWidth()
+                    value = newFieldName,
+                    onValueChange = { newFieldName = it },
+                    label = { Text("Название поля") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
                 )
             },
             confirmButton = {
-                TextButton(onClick = {
-                    if (newFileName.isNotBlank()) {
-                        if (idx < photoFiles.size) {
-                            // Переименовываем фото
-                            val oldFile = photoFiles[idx]
-                            photoFiles[idx] = oldFile.copy(displayName = newFileName)
-                        } else {
-                            // Переименовываем PDF
-                            val pdfIdx = idx - photoFiles.size
-                            val oldFile = pdfFiles[pdfIdx]
-                            pdfFiles[pdfIdx] = oldFile.copy(displayName = newFileName)
+                TextButton(
+                    onClick = {
+                        if (newFieldName.isNotBlank()) {
+                            fields.add(newFieldName to "")
+                            newFieldName = ""
+                            showAddFieldDialog = false
                         }
-                    }
-                    renameFileIndex = null
-                    newFileName = ""
-                }) { Text("Сохранить") }
+                    },
+                    enabled = newFieldName.isNotBlank()
+                ) {
+                    Text("Добавить")
+                }
             },
             dismissButton = {
-                TextButton(onClick = { renameFileIndex = null; newFileName = "" }) { Text("Отмена") }
+                TextButton(onClick = { showAddFieldDialog = false }) {
+                    Text("Отмена")
+                }
             }
         )
     }
 }
+
+
+// -------------------------------
+// ПРОСТАЯ СИСТЕМА ОТОБРАЖЕНИЯ ФАЙЛОВ
+// -------------------------------
+// Все компоненты удалены - используется простой inline код в экранах
