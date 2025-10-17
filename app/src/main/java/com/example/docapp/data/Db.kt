@@ -635,36 +635,37 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
             }
         }
         db.encryptedReadableDatabase.rawQuery(
-            "SELECT * FROM attachments WHERE document_id=?",
+            "SELECT * FROM attachments_new WHERE docId=?",
             arrayOf(id)
         ).use { c ->
             ErrorHandler.showInfo("DocumentDao: Загружаем вложения для документа: $id")
             while (c.moveToNext()) {
-                val kindStr = c.getString(c.getColumnIndexOrThrow("kind"))
+                val mime = c.getString(c.getColumnIndexOrThrow("mime"))
                 val uriString = c.getString(c.getColumnIndexOrThrow("uri"))
-                val displayName = c.getStringOrNull("display_name")
-                val fileName = c.getStringOrNull("file_name")
+                val name = c.getString(c.getColumnIndexOrThrow("name"))
                 
-                ErrorHandler.showInfo("DocumentDao: Найдено вложение: $kindStr, имя: ${displayName ?: "Без имени"}")
+                ErrorHandler.showInfo("DocumentDao: Найдено вложение: $mime, имя: $name")
+                
+                // Определяем тип файла по MIME типу
+                val kind = when {
+                    mime.startsWith("image/") -> AttachmentKind.photo
+                    mime == "application/pdf" -> AttachmentKind.pdf
+                    else -> AttachmentKind.photo // По умолчанию фото
+                }
                 
                 val a = Attachment(
                     id = c.getString(c.getColumnIndexOrThrow("id")),
                     documentId = id,
-                    kind = when (kindStr) {
-                        "photo" -> AttachmentKind.photo
-                        "pdf" -> AttachmentKind.pdf
-                        "pdfs" -> AttachmentKind.pdfs
-                        else -> AttachmentKind.pdf
-                    },
-                    fileName = fileName,
-                    displayName = displayName,
+                    kind = kind,
+                    fileName = name,
+                    displayName = name,
                     uri = try {
                         Uri.parse(uriString)
                     } catch (e: Exception) {
                         AppLogger.log("Db", "ERROR: Failed to parse URI: $uriString")
                         Uri.parse("file:///invalid")
                     },
-                    createdAt = c.getLong(c.getColumnIndexOrThrow("created_at"))
+                    createdAt = c.getLong(c.getColumnIndexOrThrow("createdAt"))
                 )
                 when (a.kind) {
                     AttachmentKind.photo -> photos.add(a)

@@ -1,5 +1,6 @@
 package com.example.docapp.ui.document
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,12 +14,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.docapp.core.ServiceLocator
 import com.example.docapp.core.ErrorHandler
+import com.example.docapp.core.AppLogger
+import com.example.docapp.core.PdfPreviewExtractor
 import com.example.docapp.domain.Attachment
 import kotlinx.coroutines.launch
 
@@ -59,10 +66,23 @@ fun DocumentViewScreen(
         return
     }
 
+    // Функция для открытия фотографий
+    val openPhoto = { photoUri: String ->
+        try {
+            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
+            intent.setDataAndType(android.net.Uri.parse(photoUri), "image/*")
+            intent.flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+            context.startActivity(android.content.Intent.createChooser(intent, "Открыть фото"))
+        } catch (e: Exception) {
+            ErrorHandler.showError("Не удалось открыть фото: ${e.message}")
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .verticalScroll(rememberScrollState())
     ) {
         // Заголовок с названием документа
         Text(
@@ -107,33 +127,45 @@ fun DocumentViewScreen(
         if (doc.photos.isNotEmpty() || doc.pdfs.isNotEmpty()) {
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Фотографии - каждая в отдельной строке
+            // Фотографии - каждая в отдельной строке с превью
             doc.photos.forEach { photo ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(
-                        Icons.Default.Photo,
-                        contentDescription = "Фото",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                        text = photo.displayName ?: "Фото",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Black,
-                        modifier = Modifier.weight(1f)
+                    // Превью фотографии (кликабельное)
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(photo.uri)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Фото: ${photo.displayName ?: "Фото"}",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(300.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { openPhoto(photo.uri.toString()) },
+                        contentScale = ContentScale.Fit
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
             }
             
-            // PDF файлы - только кнопка "Открыть"
+            // PDF файлы - кликабельная строка
             doc.pdfs.forEach { pdf ->
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            try {
+                                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
+                                intent.setDataAndType(android.net.Uri.parse(pdf.uri.toString()), "application/pdf")
+                                intent.flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                context.startActivity(android.content.Intent.createChooser(intent, "Открыть PDF"))
+                            } catch (e: Exception) {
+                                ErrorHandler.showError("Не удалось открыть PDF: ${e.message}")
+                            }
+                        }
+                        .padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -150,21 +182,12 @@ fun DocumentViewScreen(
                         modifier = Modifier.weight(1f)
                     )
                     
-                    // Только кнопка "Открыть"
-                    Button(
-                        onClick = {
-                            try {
-                                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
-                                intent.setDataAndType(android.net.Uri.parse(pdf.uri.toString()), "application/pdf")
-                                intent.flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                context.startActivity(android.content.Intent.createChooser(intent, "Открыть PDF"))
-                            } catch (e: Exception) {
-                                ErrorHandler.showError("Не удалось открыть PDF: ${e.message}")
-                            }
-                        }
-                    ) {
-                        Text("Открыть")
-                    }
+                    // Индикатор кликабельности
+                    Text(
+                        text = "Нажмите для открытия",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -186,7 +209,7 @@ fun DocumentViewScreen(
                     containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
-                Text(
+                            Text(
                     "Редактировать",
                     color = MaterialTheme.colorScheme.onPrimary
                 )
@@ -255,6 +278,7 @@ fun DocumentEditScreen(
     var importedAttachments by remember { mutableStateOf<List<String>>(emptyList()) }
     var currentPhotos by remember { mutableStateOf<List<Attachment>>(emptyList()) }
     var currentPdfs by remember { mutableStateOf<List<Attachment>>(emptyList()) }
+    var pdfPreviews by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     
     // Функции для работы с прикрепленными файлами
     val deletePhoto: (String) -> Unit = { photoId: String ->
@@ -299,6 +323,29 @@ fun DocumentEditScreen(
             ErrorHandler.showError("Не удалось открыть PDF: ${e.message}")
         }
     }
+    
+    val openPhoto = { photoUri: String ->
+        try {
+            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
+            intent.setDataAndType(android.net.Uri.parse(photoUri), "image/*")
+            intent.flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+            context.startActivity(android.content.Intent.createChooser(intent, "Открыть фото"))
+        } catch (e: Exception) {
+            ErrorHandler.showError("Не удалось открыть фото: ${e.message}")
+        }
+    }
+    
+    // Функция для загрузки превью PDF
+    val loadPdfPreview = { pdf: Attachment ->
+        scope.launch {
+            try {
+                val preview = PdfPreviewExtractor.extractPreview(context, pdf.uri, 3)
+                pdfPreviews = pdfPreviews + (pdf.id to preview)
+            } catch (e: Exception) {
+                AppLogger.log("DocumentEditScreen", "ERROR: Failed to load PDF preview: ${e.message}")
+            }
+        }
+    }
 
     LaunchedEffect(existingDocId, templateId) {
         if (existingDocId != null) {
@@ -328,7 +375,8 @@ fun DocumentEditScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -409,77 +457,6 @@ fun DocumentEditScreen(
             Text("Добавить поле")
         }
         
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            OutlinedButton(
-                onClick = { 
-                    // Отменяем создание/редактирование документа
-                    name = ""
-                    fields.clear()
-                },
-                enabled = !isSaving
-            ) {
-                Text("Отмена")
-            }
-            
-            Button(
-            onClick = {
-                    if (name.isNotBlank()) {
-                scope.launch {
-                            isSaving = true
-                            try {
-                                val id = if (existingDocId != null) {
-                                    // Обновляем существующий документ
-                                    try {
-                                        val existingDoc = useCases.getDoc(existingDocId)
-                                        if (existingDoc != null) {
-                                            useCases.updateDoc(existingDoc.copy(
-                                                doc = existingDoc.doc.copy(name = name),
-                                                fields = existingDoc.fields // Пока оставляем существующие поля
-                                            ))
-                                            existingDocId
-                                        } else {
-                                            throw Exception("Документ не найден")
-                                        }
-                                    } catch (e: Exception) {
-                                        throw Exception("Не удалось обновить документ: ${e.message}")
-                                    }
-                                } else {
-                                    // Создаем новый документ
-                                    val newDocId = useCases.createDoc(
-                                        tplId = templateId,
-                                        folderId = folderId,
-                                        name = name,
-                                        fields = fields.toList(),
-                                        photos = emptyList(), // Файлы добавляются через ImportAttachmentsButton
-                                        pdfUris = emptyList()    // Файлы добавляются через ImportAttachmentsButton
-                                    )
-                                    
-                                    // Привязываем импортированные файлы к новому документу
-                                    if (importedAttachments.isNotEmpty()) {
-                                        useCases.bindAttachmentsToDoc(importedAttachments, newDocId)
-                                    }
-                                    
-                                    newDocId
-                                }
-                                ErrorHandler.showSuccess("Документ сохранен")
-                                onSaved(id)
-                            } catch (e: Exception) {
-                                ErrorHandler.showError("Не удалось сохранить документ: ${e.message}")
-                            } finally {
-                                isSaving = false
-                            }
-                        }
-                    }
-                },
-                enabled = !isSaving && name.isNotBlank()
-            ) {
-                Text(if (isSaving) "Сохранение..." else "Сохранить")
-            }
-        }
         
         Spacer(modifier = Modifier.height(16.dp))
         
@@ -492,9 +469,12 @@ fun DocumentEditScreen(
                     importedAttachments = importedAttachments + attachmentIds
                     
                     // Немедленно показываем импортированные файлы
-                    scope.launch {
+                scope.launch {
                         try {
                             // Получаем информацию о прикрепленных файлах из репозитория
+                            
+                            // Для новых документов файлы могут быть не привязаны к документу
+                            // Попробуем получить их напрямую по ID
                             val attachments = attachmentIds.mapNotNull { id ->
                                 try {
                                     // Преобразуем AttachmentEntity в Attachment
@@ -507,7 +487,7 @@ fun DocumentEditScreen(
                                             else -> com.example.docapp.domain.AttachmentKind.photo // По умолчанию фото
                                         }
                                         
-                                        com.example.docapp.domain.Attachment(
+                                        val attachment = com.example.docapp.domain.Attachment(
                                             id = entity.id,
                                             documentId = entity.docId ?: "", // Временно пустой для новых документов
                                             kind = kind,
@@ -517,7 +497,10 @@ fun DocumentEditScreen(
                                             createdAt = entity.createdAt,
                                             requiresPersist = false // Файлы уже сохранены
                                         )
-                                    } else null
+                                        attachment
+                                    } else {
+                                        null
+                                    }
                                 } catch (e: Exception) {
                                     null
                                 }
@@ -549,36 +532,37 @@ fun DocumentEditScreen(
             }
         )
         
-        // Отображение прикрепленных файлов - ПРОСТОЙ СПИСОК ПОСЛЕ КНОПОК
+        // Отображение прикрепленных файлов
+        
         if (currentPhotos.isNotEmpty() || currentPdfs.isNotEmpty()) {
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Фотографии - каждая в отдельной строке
+            // Фотографии - каждая в отдельной строке с превью
             currentPhotos.forEach { photo ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(
-                        Icons.Default.Photo,
-                        contentDescription = "Фото",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = photo.displayName ?: "Фото",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Black,
-                        modifier = Modifier.weight(1f)
+                    // Превью фотографии (кликабельное)
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(photo.uri)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Фото: ${photo.displayName ?: "Фото"}",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(300.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { openPhoto(photo.uri.toString()) },
+                        contentScale = ContentScale.Fit
                     )
                 }
                 
                 // Кнопка удалить под фотографией
                 Row(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                    Spacer(modifier = Modifier.width(32.dp)) // Отступ под иконку
                     OutlinedButton(
                         onClick = { deletePhoto(photo.id) },
                         colors = ButtonDefaults.outlinedButtonColors(
@@ -592,54 +576,198 @@ fun DocumentEditScreen(
                 Spacer(modifier = Modifier.height(8.dp))
             }
             
-            // PDF файлы - кнопки "Открыть" и "Удалить" в ряду
+            // PDF файлы - превью с кнопками
             currentPdfs.forEach { pdf ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(
-                        Icons.Default.PictureAsPdf,
-                        contentDescription = "PDF",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = pdf.displayName ?: "PDF",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Black,
-                        modifier = Modifier.weight(1f)
-                    )
-                    
-                    // Кнопки "Открыть" и "Удалить" в ряду
-                    Button(
-                        onClick = { openPdf(pdf.uri.toString()) },
-                        modifier = Modifier.padding(end = 8.dp)
+                    // Превью PDF с текстом (кликабельное)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { openPdf(pdf.uri.toString()) },
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.White.copy(alpha = 0.9f)
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
-                        Text("Открыть")
+                        Column(
+                            modifier = Modifier.padding(12.dp)
+                        ) {
+                            // Заголовок PDF
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.PictureAsPdf,
+                                    contentDescription = "PDF",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = pdf.displayName ?: "PDF",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = Color.Black
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            // Превью текста
+                            val preview = pdfPreviews[pdf.id]
+                            if (preview != null) {
+                                Text(
+                                    text = preview,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Gray,
+                                    maxLines = 3,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                    } else {
+                                // Загружаем превью
+                                LaunchedEffect(pdf.id) {
+                                    loadPdfPreview(pdf)
+                                }
+                                Text(
+                                    text = "Загрузка превью...",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Gray,
+                                    fontStyle = FontStyle.Italic
+                                )
+                            }
+                        }
                     }
                     
-                    OutlinedButton(
-                        onClick = { deletePdf(pdf.id) },
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Кнопка "Удалить" (клик по карточке открывает PDF)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        Text("Удалить")
+                        OutlinedButton(
+                            onClick = { deletePdf(pdf.id) },
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Text("Удалить")
+                        }
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        Text(
-            text = "Используйте кнопку выше для добавления фото и PDF файлов",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Кнопки "Отмена" и "Сохранить" в самом низу
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+            onClick = {
+                    // Отменяем создание/редактирование документа
+                    if (existingDocId == null) {
+                        // При создании - отменяем создание и закрываем экран
+                        onSaved("") // Пустая строка означает отмену
+                    } else {
+                        // При редактировании - возвращаем исходные данные
+                        scope.launch {
+                            try {
+                                val originalDoc = useCases.getDoc(existingDocId)
+                                if (originalDoc != null) {
+                                    name = originalDoc.doc.name
+                                    fields.clear()
+                                    originalDoc.fields.forEach { field ->
+                                        fields.add(field.name to (field.valueCipher?.decodeToString() ?: ""))
+                                    }
+                                    // Восстанавливаем исходные прикрепленные файлы
+                                    currentPhotos = originalDoc.photos
+                                    currentPdfs = originalDoc.pdfs
+                                }
+                            } catch (e: Exception) {
+                                ErrorHandler.showError("Не удалось отменить изменения: ${e.message}")
+                            }
+                        }
+                    }
+                },
+                enabled = !isSaving,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Отмена")
+            }
+            
+            Button(
+                onClick = {
+                    if (name.isNotBlank()) {
+                        scope.launch {
+                            isSaving = true
+                            try {
+                                val id = if (existingDocId != null) {
+                                    // Обновляем существующий документ
+                                    try {
+                                        val existingDoc = useCases.getDoc(existingDocId)
+                                        if (existingDoc != null) {
+                                            useCases.updateDoc(existingDoc.copy(
+                                                doc = existingDoc.doc.copy(name = name),
+                                                fields = fields.map { (name, value) ->
+                                                    com.example.docapp.domain.DocumentField(
+                                                        id = "", // ID будет сгенерирован в репозитории
+                                                        documentId = existingDocId,
+                                                        name = name,
+                                                        valueCipher = value.encodeToByteArray(),
+                                                        preview = if (value.length > 20) "${value.take(20)}..." else value,
+                                                        isSecret = false,
+                                                        ord = 0
+                                                    )
+                                                }
+                                            ))
+                                            existingDocId
+                                        } else {
+                                            throw Exception("Документ не найден")
+                                        }
+                                    } catch (e: Exception) {
+                                        throw Exception("Не удалось обновить документ: ${e.message}")
+                                    }
+                                } else {
+                                    // Создаем новый документ
+                                    val newDocId = useCases.createDoc(
+                            tplId = templateId,
+                            folderId = folderId,
+                                        name = name,
+                            fields = fields.toList(),
+                                        photos = emptyList(), // Файлы добавляются через ImportAttachmentsButton
+                                        pdfUris = emptyList()    // Файлы добавляются через ImportAttachmentsButton
+                                    )
+                                    
+                                    // Привязываем импортированные файлы к новому документу
+                                    if (importedAttachments.isNotEmpty()) {
+                                        useCases.bindAttachmentsToDoc(importedAttachments, newDocId)
+                                    }
+                                    
+                                    newDocId
+                                }
+                                ErrorHandler.showSuccess("Документ сохранен")
+                        onSaved(id)
+                            } catch (e: Exception) {
+                                ErrorHandler.showError("Не удалось сохранить документ: ${e.message}")
+                            } finally {
+                                isSaving = false
+                            }
+                        }
+                    }
+                },
+                enabled = !isSaving && name.isNotBlank(),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(if (isSaving) "Сохранение..." else "Сохранить")
+            }
+        }
     }
 
     // Диалог добавления поля
