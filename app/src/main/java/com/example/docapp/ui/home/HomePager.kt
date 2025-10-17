@@ -22,6 +22,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import com.example.docapp.core.ServiceLocator
 import com.example.docapp.domain.Document
 import com.example.docapp.domain.DocumentRepository
@@ -70,7 +73,12 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
 
     fun toast(s: String) = Toast.makeText(ctx, s, Toast.LENGTH_SHORT).show()
 
-    Column(Modifier.fillMaxSize().padding(16.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.systemBars)
+            .padding(16.dp)
+    ) {
         IconButton(onClick = onCreate, modifier = Modifier.align(Alignment.CenterHorizontally)) {
             Icon(Icons.Default.Add, contentDescription = "Создать")
         }
@@ -365,7 +373,13 @@ private fun InfoScreen() {
     fun toast(msg: String) = Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show()
     fun isFourDigits(s: String) = s.matches(Regex("^\\d{4}$"))
 
-    Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.systemBars)
+            .padding(24.dp), 
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Text("INFO & SETTINGS", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(8.dp))
         TextButton(onClick = {
@@ -408,7 +422,11 @@ private fun InfoScreen() {
         Text("Подсказки для пользователя", style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(8.dp))
 
-        Column(Modifier.fillMaxSize().verticalScroll(scroll)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.systemBars)
+                .verticalScroll(scroll)
         ){
         // Навигация
         Text("• Перелистывай экраны свайпом по горизонтали:")

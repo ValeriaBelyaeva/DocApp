@@ -5,10 +5,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -42,6 +48,7 @@ fun DocumentViewScreen(
     val useCases = ServiceLocator.useCases
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
     var fullDoc by remember { mutableStateOf<com.example.docapp.domain.DocumentRepository.FullDocument?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
@@ -81,10 +88,12 @@ fun DocumentViewScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.systemBars)
             .padding(16.dp)
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        // Заголовок с названием документа
         Text(
             text = doc.doc.name,
             style = MaterialTheme.typography.headlineMedium,
@@ -93,37 +102,60 @@ fun DocumentViewScreen(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // Поля документа
+        // Поля документа (только если есть поля)
         if (doc.fields.isNotEmpty()) {
             Text(
                 text = "Поля документа:",
                 style = MaterialTheme.typography.titleMedium,
                 color = Color.Black
             )
+            
             Spacer(modifier = Modifier.height(8.dp))
             
-            doc.fields.forEach { field ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = field.name,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+            // Список полей - единые поля с названием и содержимым
+            doc.fields.forEachIndexed { index, field ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Единое поле: название + содержимое (такая же высота как у названия документа)
+                OutlinedTextField(
+                    value = field.valueCipher?.decodeToString() ?: "",
+                    onValueChange = { /* Не редактируем в режиме просмотра */ },
+                    label = { Text(field.name) },
+                    modifier = Modifier.weight(1f),
+                    enabled = false,
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedBorderColor = Color.Gray,
+                        unfocusedBorderColor = Color.Gray
                     )
-                    Text(
-                        text = field.preview ?: "",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Black
+                )
+
+                // Кнопка копирования поля
+                IconButton(
+                    onClick = {
+                        clipboardManager.setText(AnnotatedString(field.valueCipher?.decodeToString() ?: ""))
+                        ErrorHandler.showSuccess("Скопировано: ${field.name}")
+                    }
+                ) {
+                    Icon(
+                        Icons.Default.ContentCopy,
+                        contentDescription = "Копировать",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
-                Spacer(modifier = Modifier.height(4.dp))
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
         }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
         
-        // Отображение прикрепленных файлов (только просмотр, без возможности удаления)
+        // Отображение прикрепленных файлов
         if (doc.photos.isNotEmpty() || doc.pdfs.isNotEmpty()) {
             Spacer(modifier = Modifier.height(16.dp))
             
@@ -150,69 +182,80 @@ fun DocumentViewScreen(
                 Spacer(modifier = Modifier.height(8.dp))
             }
             
-            // PDF файлы - кликабельная строка
+            // PDF файлы - превью с кнопками
             doc.pdfs.forEach { pdf ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            try {
-                                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
-                                intent.setDataAndType(android.net.Uri.parse(pdf.uri.toString()), "application/pdf")
-                                intent.flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                context.startActivity(android.content.Intent.createChooser(intent, "Открыть PDF"))
-                            } catch (e: Exception) {
-                                ErrorHandler.showError("Не удалось открыть PDF: ${e.message}")
-                            }
-                        }
-                        .padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(
-                        Icons.Default.PictureAsPdf,
-                        contentDescription = "PDF",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = pdf.displayName ?: "PDF",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Black,
-                        modifier = Modifier.weight(1f)
-                    )
-                    
-                    // Индикатор кликабельности
-                    Text(
-                        text = "Нажмите для открытия",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
-                    )
+                    // Превью PDF с текстом (кликабельное)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                try {
+                                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
+                                    intent.setDataAndType(android.net.Uri.parse(pdf.uri.toString()), "application/pdf")
+                                    intent.flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                    context.startActivity(android.content.Intent.createChooser(intent, "Открыть PDF"))
+                                } catch (e: Exception) {
+                                    ErrorHandler.showError("Не удалось открыть PDF: ${e.message}")
+                                }
+                            },
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.White.copy(alpha = 0.9f)
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp)
+                        ) {
+                            // Заголовок PDF
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.PictureAsPdf,
+                                    contentDescription = "PDF",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = pdf.displayName ?: "PDF",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = Color.Black
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            // Превью текста
+                            Text(
+                                text = "PDF документ\n(содержимое недоступно для предварительного просмотра)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
         
-        // В режиме просмотра не показываем кнопку добавления файлов
+        Spacer(modifier = Modifier.height(32.dp))
         
-        Spacer(modifier = Modifier.weight(1f))
-        
-        // Кнопки управления
+        // Кнопки "Редактировать" и "Удалить" в самом низу
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Button(
+            OutlinedButton(
                 onClick = onEdit,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                modifier = Modifier.weight(1f)
             ) {
-                            Text(
-                    "Редактировать",
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
+                Text("Редактировать")
             }
             
             OutlinedButton(
@@ -375,6 +418,7 @@ fun DocumentEditScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.systemBars)
             .padding(16.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,

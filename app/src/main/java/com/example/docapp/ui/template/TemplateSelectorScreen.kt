@@ -10,6 +10,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import com.example.docapp.core.ServiceLocator
 import com.example.docapp.domain.Template
 import kotlinx.coroutines.launch
@@ -39,7 +42,12 @@ fun TemplateSelectorScreen(
     }
 
     Box(Modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxSize().padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.systemBars)
+                .padding(16.dp)
+        ) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = { onCreateEmpty(folderId) }, modifier = Modifier.weight(1f)) { Text("СОЗДАТЬ ДОКУМЕНТ") }
                 Button(onClick = { showDialog = true }, modifier = Modifier.weight(1f)) { Text("СОЗДАТЬ ШАБЛОН") }
