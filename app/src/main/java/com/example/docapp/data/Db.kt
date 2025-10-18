@@ -276,8 +276,8 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
             }
             return tplId
         }
-        insTpl("ПАСПОРТ", listOf("СЕРИЯ", "НОМЕР"))
-        insTpl("КАРТОЧКИ", listOf("БАНК", "НОМЕР"))
+        insTpl("Паспорт", listOf("Серия", "Номер", "Кем выдан", "Дата выдачи", "Код подразделения"))
+        insTpl("Карточка", listOf("Номер", "Годен до", "CVC"))
 
         val p1 = newId()
         db.execSQL("INSERT INTO folders(id,parent_id,name,ord) VALUES(?,?,?,?)",
@@ -296,6 +296,7 @@ interface TemplateDao {
     suspend fun get(id: String): Template?
     suspend fun listFields(templateId: String): List<TemplateField>
     suspend fun add(name: String, fields: List<String>): String
+    suspend fun delete(id: String)
 }
 
 interface FolderDao {
@@ -422,6 +423,19 @@ class TemplateDaoSql(private val db: AppDb) : TemplateDao {
             db.encryptedWritableDatabase.endTransaction()
         }
         tplId
+    }
+
+    override suspend fun delete(id: String) = withContext(Dispatchers.IO) {
+        db.encryptedWritableDatabase.beginTransaction()
+        try {
+            // Удаляем поля шаблона
+            db.encryptedWritableDatabase.execSQL("DELETE FROM template_fields WHERE template_id=?", arrayOf(id))
+            // Удаляем сам шаблон
+            db.encryptedWritableDatabase.execSQL("DELETE FROM templates WHERE id=?", arrayOf(id))
+            db.encryptedWritableDatabase.setTransactionSuccessful()
+        } finally {
+            db.encryptedWritableDatabase.endTransaction()
+        }
     }
 }
 

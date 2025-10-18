@@ -12,6 +12,7 @@ import com.example.docapp.ui.document.DocumentViewScreen
 import com.example.docapp.ui.home.HomePager
 import com.example.docapp.ui.pin.PinScreen
 import com.example.docapp.ui.template.TemplateSelectorScreen
+import com.example.docapp.ui.template.TemplateFillScreen
 import com.example.docapp.ui.theme.DocTheme
 import com.example.docapp.core.AppLogger
 
@@ -50,10 +51,34 @@ fun App() {
                 TemplateSelectorScreen(
                     folderId = folderIdArg,
                     onCreateDocFromTemplate = { templateId, fId ->
-                        nav.navigate("doc/edit?docId=&templateId=$templateId&folderId=${fId ?: ""}")
+                        nav.navigate("template/fill?templateId=$templateId&folderId=${fId ?: ""}")
                     },
                     onCreateEmpty = { fId ->
                         nav.navigate("doc/edit?docId=&templateId=&folderId=${fId ?: ""}")
+                    }
+                )
+            }
+            composable(
+                route = "template/fill?templateId={templateId}&folderId={folderId}",
+                arguments = listOf(
+                    navArgument("templateId") { type = NavType.StringType },
+                    navArgument("folderId") { type = NavType.StringType; defaultValue = "" }
+                )
+            ) { backStack ->
+                val args = backStack.arguments 
+                    ?: throw IllegalStateException("Missing navigation arguments")
+                val templateId = args.getString("templateId")
+                    ?: throw IllegalStateException("Missing templateId argument")
+                val folderIdArg = args.getString("folderId")
+                    ?.ifBlank { null }
+                TemplateFillScreen(
+                    templateId = templateId,
+                    folderId = folderIdArg,
+                    onDocumentCreated = { docId ->
+                        nav.navigate("home") { popUpTo("home") }
+                    },
+                    onCancel = {
+                        nav.popBackStack()
                     }
                 )
             }

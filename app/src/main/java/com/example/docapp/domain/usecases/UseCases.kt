@@ -43,6 +43,7 @@ class UseCases(
     suspend fun listTemplateFields(id: String) = repos.templates.listFields(id)
     suspend fun addTemplate(name: String, fields: List<String>) =
         repos.templates.addTemplate(name, fields)
+    suspend fun deleteTemplate(id: String) = repos.templates.deleteTemplate(id)
 
     // Documents
     suspend fun createDoc(

@@ -62,8 +62,7 @@ class RepositoriesImpl(
             throw NotImplementedError("Template update not yet implemented")
         }
         override suspend fun deleteTemplate(id: String) {
-            // Удаление шаблона пока не реализовано
-            throw NotImplementedError("Template deletion not yet implemented")
+            dao.templates.delete(id)
         }
         override suspend fun pinTemplate(id: String, pinned: Boolean) {
             // Закрепление шаблона пока не реализовано

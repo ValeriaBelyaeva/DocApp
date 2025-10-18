@@ -3,17 +3,26 @@ package com.example.docapp.ui.template
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import com.example.docapp.core.ServiceLocator
+import com.example.docapp.core.ErrorHandler
 import com.example.docapp.domain.Template
 import kotlinx.coroutines.launch
 
@@ -33,7 +42,9 @@ fun TemplateSelectorScreen(
     val fieldNames = remember { mutableStateListOf<String>() }
     var newField by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) { list = uc.listTemplates() }
+        LaunchedEffect(Unit) {
+            list = uc.listTemplates()
+        }
 
     fun resetDialog() {
         tplName = ""
@@ -46,20 +57,193 @@ fun TemplateSelectorScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.systemBars)
-                .padding(16.dp)
+                .padding(20.dp)
         ) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { onCreateEmpty(folderId) }, modifier = Modifier.weight(1f)) { Text("СОЗДАТЬ ДОКУМЕНТ") }
-                Button(onClick = { showDialog = true }, modifier = Modifier.weight(1f)) { Text("СОЗДАТЬ ШАБЛОН") }
+            // Заголовок
+            Text(
+                text = "Создание документа",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "Выберите способ создания документа",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Кнопки создания
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Кнопка создания пустого документа
+                Card(
+                    onClick = { onCreateEmpty(folderId) },
+                    modifier = Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            Icons.Default.Description,
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Пустой документ",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = "Начать с нуля",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+                
+                // Кнопка создания шаблона
+                Card(
+                    onClick = { showDialog = true },
+                    modifier = Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            Icons.Default.ContentCopy,
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp),
+                            tint = MaterialTheme.colorScheme.secondary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Новый шаблон",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = "Создать шаблон",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
             }
-            Spacer(Modifier.height(16.dp))
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f, true)) {
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // Секция шаблонов
+            if (list.isNotEmpty()) {
+                Text(
+                    text = "Доступные шаблоны",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
                 items(list) { tpl ->
-                    ElevatedCard(onClick = { onCreateDocFromTemplate(tpl.id, folderId) }) {
-                        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(tpl.name, style = MaterialTheme.typography.titleMedium)
+                        Card(
+                            onClick = { onCreateDocFromTemplate(tpl.id, folderId) },
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = tpl.name,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                
+                                Spacer(modifier = Modifier.width(8.dp))
+                                
+                                // Кнопка удаления шаблона
+                                IconButton(
+                                    onClick = {
+                                        scope.launch {
+                                            try {
+                                                uc.deleteTemplate(tpl.id)
+                                                list = uc.listTemplates()
+                                                ErrorHandler.showSuccess("Шаблон удален")
+                                            } catch (e: Exception) {
+                                                ErrorHandler.showError("Не удалось удалить шаблон: ${e.message}")
+                                            }
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = "Удалить шаблон",
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                         }
                     }
+                }
+            } else {
+                // Пустое состояние
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Нет доступных шаблонов",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = "Создайте свой первый шаблон",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }
@@ -68,15 +252,29 @@ fun TemplateSelectorScreen(
         if (showDialog) {
             AlertDialog(
                 onDismissRequest = { showDialog = false },
-                title = { Text("Новый шаблон") },
+                title = { 
+                    Text(
+                        text = "Новый шаблон",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         OutlinedTextField(
                             value = tplName,
                             onValueChange = { tplName = it },
                             label = { Text("Название шаблона") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
                         )
+                        
+                        Text(
+                            text = "Добавьте поля для шаблона:",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium
+                        )
+                        
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -85,9 +283,10 @@ fun TemplateSelectorScreen(
                                 value = newField,
                                 onValueChange = { newField = it },
                                 label = { Text("Название поля") },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                singleLine = true
                             )
-                            IconButton(
+                            FilledIconButton(
                                 onClick = {
                                     val s = newField.trim()
                                     if (s.isNotEmpty()) {
@@ -99,16 +298,44 @@ fun TemplateSelectorScreen(
                                 Icon(Icons.Default.Add, contentDescription = "Добавить поле")
                             }
                         }
+                        
                         if (fieldNames.isNotEmpty()) {
-                            Text("Поля:", style = MaterialTheme.typography.titleSmall)
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                )
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text(
+                                        text = "Поля шаблона:",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
                             fieldNames.forEach { f ->
-                                Text("• $f", style = MaterialTheme.typography.bodySmall)
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = "• ",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                            Text(
+                                                text = f,
+                                                style = MaterialTheme.typography.bodyMedium
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 },
                 confirmButton = {
-                    TextButton(onClick = {
+                    Button(
+                        onClick = {
                         val name = tplName.trim()
                         if (name.isNotEmpty() && fieldNames.isNotEmpty()) {
                             scope.launch {
@@ -118,13 +345,19 @@ fun TemplateSelectorScreen(
                                 showDialog = false
                             }
                         }
-                    }) { Text("Создать") }
+                        },
+                        enabled = tplName.trim().isNotEmpty() && fieldNames.isNotEmpty()
+                    ) { 
+                        Text("Создать шаблон") 
+                    }
                 },
                 dismissButton = {
                     TextButton(onClick = {
                         resetDialog()
                         showDialog = false
-                    }) { Text("Отмена") }
+                    }) { 
+                        Text("Отмена") 
+                    }
                 }
             )
         }
