@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.docapp.core.ServiceLocator
@@ -100,11 +102,57 @@ fun DocumentViewScreen(
             color = Color.Black
         )
         
+        // Описание документа (только если не пустое)
+        if (doc.doc.description.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            OutlinedTextField(
+                value = doc.doc.description,
+                onValueChange = { /* Не редактируем в режиме просмотра */ },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = false,
+                singleLine = false,
+                maxLines = 3,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    disabledTextColor = Color.Black,
+                    focusedBorderColor = Color.Gray,
+                    unfocusedBorderColor = Color.Gray,
+                    disabledBorderColor = Color.Gray
+                )
+            )
+        }
+        
+        // Кнопка "Скопировать все" (только если есть поля)
+        if (doc.fields.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            OutlinedButton(
+                onClick = {
+                    val allFieldsText = doc.fields.joinToString("\n") { field ->
+                        "${field.name}: ${field.valueCipher?.decodeToString() ?: ""}"
+                    }
+                    clipboardManager.setText(AnnotatedString(allFieldsText))
+                    ErrorHandler.showSuccess("Все поля скопированы в буфер обмена")
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    Icons.Default.ContentCopy,
+                    contentDescription = "Скопировать все",
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Скопировать все поля")
+            }
+        }
+        
         Spacer(modifier = Modifier.height(16.dp))
         
         // Поля документа (только если есть поля)
         if (doc.fields.isNotEmpty()) {
-            Text(
+                            Text(
                 text = "Поля документа:",
                 style = MaterialTheme.typography.titleMedium,
                 color = Color.Black
@@ -319,6 +367,7 @@ fun DocumentEditScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     var name by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
     var isSaving by remember { mutableStateOf(false) }
     val fields = remember { mutableStateListOf<Pair<String, String>>() }
     var showAddFieldDialog by remember { mutableStateOf(false) }
@@ -400,6 +449,7 @@ fun DocumentEditScreen(
             try {
                 val doc = useCases.getDoc(existingDocId)
                 name = doc?.doc?.name ?: ""
+                description = doc?.doc?.description ?: ""
                 fields.clear()
                 doc?.fields?.forEach { field ->
                     fields.add(field.name to (field.valueCipher?.decodeToString() ?: ""))
@@ -413,6 +463,7 @@ fun DocumentEditScreen(
         } else {
             // Для новых документов инициализируем пустые списки
             name = ""
+            description = ""
             fields.clear()
             currentPhotos = emptyList()
             currentPdfs = emptyList()
@@ -442,6 +493,20 @@ fun DocumentEditScreen(
             onValueChange = { name = it },
             label = { Text("Название документа") },
             modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black
+            )
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+            OutlinedTextField(
+            value = description,
+            onValueChange = { description = it },
+            label = { Text("Описание документа") },
+            modifier = Modifier.fillMaxWidth(),
+            maxLines = 3,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = Color.Black,
                 unfocusedTextColor = Color.Black
@@ -763,7 +828,7 @@ fun DocumentEditScreen(
                                         val existingDoc = useCases.getDoc(existingDocId)
                                         if (existingDoc != null) {
                                             useCases.updateDoc(existingDoc.copy(
-                                                doc = existingDoc.doc.copy(name = name),
+                                                doc = existingDoc.doc.copy(name = name, description = description),
                                                 fields = fields.map { (name, value) ->
                                                     com.example.docapp.domain.DocumentField(
                                                         id = "", // ID будет сгенерирован в репозитории
@@ -789,6 +854,7 @@ fun DocumentEditScreen(
                             tplId = templateId,
                             folderId = folderId,
                                         name = name,
+                                        description = description,
                             fields = fields.toList(),
                                         photos = emptyList(), // Файлы добавляются через ImportAttachmentsButton
                                         pdfUris = emptyList()    // Файлы добавляются через ImportAttachmentsButton

@@ -78,13 +78,14 @@ class RepositoriesImpl(
             templateId: String?,
             folderId: String?,
             name: String,
+            description: String,
             fields: List<Pair<String, String>>,
             photoUris: List<String>,
             pdfUris: List<String>
         ): String {
             val photos = photoUris.map { files.persist(Uri.parse(it)).toString() }
             val pdfs = pdfUris.map { files.persist(Uri.parse(it)).toString() }
-            val id = dao.documents.create(templateId, folderId, name, fields, photos, pdfs)
+            val id = dao.documents.create(templateId, folderId, name, description, fields, photos, pdfs)
             dao.documents.touch(id)
             return id
         }
@@ -93,6 +94,7 @@ class RepositoriesImpl(
             templateId: String?,
             folderId: String?,
             name: String,
+            description: String,
             fields: List<Pair<String, String>>,
             photoFiles: List<Pair<Uri, String>>, // URI, displayName
             pdfFiles: List<Pair<Uri, String>> // URI, displayName
@@ -119,7 +121,7 @@ class RepositoriesImpl(
             }
             
             ErrorHandler.showInfo("RepositoriesImpl: Сохраняем в БД: ${photos.size} фото, ${pdfs.size} PDF")
-            val id = dao.documents.createWithNames(templateId, folderId, name, fields, photos, pdfs)
+            val id = dao.documents.createWithNames(templateId, folderId, name, description, fields, photos, pdfs)
             ErrorHandler.showInfo("RepositoriesImpl: Документ создан с ID: $id")
             dao.documents.touch(id)
             return id

@@ -168,7 +168,7 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
                 )""")
                 db.execSQL("""CREATE TABLE documents(
                     id TEXT PRIMARY KEY, template_id TEXT, folder_id TEXT,
-                    name TEXT NOT NULL, is_pinned INTEGER NOT NULL, pinned_order INTEGER,
+                    name TEXT NOT NULL, description TEXT, is_pinned INTEGER NOT NULL, pinned_order INTEGER,
                     created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, last_opened_at INTEGER NOT NULL,
                     FOREIGN KEY(template_id) REFERENCES templates(id),
                     FOREIGN KEY(folder_id) REFERENCES folders(id)
@@ -206,6 +206,30 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
             }
                 
                 AppLogger.log("AppDb", "Database tables created successfully")
+            } else {
+                // Миграция: добавляем колонку description к существующим таблицам documents
+                try {
+                    val descriptionColumnExists = db.rawQuery("PRAGMA table_info(documents)", null).use { cursor ->
+                        var exists = false
+                        while (cursor.moveToNext()) {
+                            val columnName = cursor.getString(cursor.getColumnIndexOrThrow("name"))
+                            if (columnName == "description") {
+                                exists = true
+                                break
+                            }
+                        }
+                        exists
+                    }
+                    
+                    if (!descriptionColumnExists) {
+                        ErrorHandler.showInfo("AppDb: Добавляем колонку description к таблице documents...")
+                        db.execSQL("ALTER TABLE documents ADD COLUMN description TEXT")
+                        ErrorHandler.showInfo("AppDb: Колонка description добавлена успешно")
+                    }
+                } catch (e: Exception) {
+                    ErrorHandler.showInfo("AppDb: Ошибка при миграции: ${e.message}")
+                    // Не прерываем выполнение, так как это не критично
+                }
             }
         } catch (e: Exception) {
             AppLogger.log("AppDb", "ERROR: Error creating tables: ${e.message}")
@@ -312,12 +336,12 @@ interface DocumentDao {
     fun emitHome()
 
     suspend fun create(
-        templateId: String?, folderId: String?, name: String,
+        templateId: String?, folderId: String?, name: String, description: String,
         fields: List<Pair<String, String>>, photoUris: List<String>, pdfUris: List<String>
     ): String
 
     suspend fun createWithNames(
-        templateId: String?, folderId: String?, name: String,
+        templateId: String?, folderId: String?, name: String, description: String,
         fields: List<Pair<String, String>>, photoFiles: List<Pair<String, String>>, pdfFiles: List<Pair<String, String>>
     ): String
 
@@ -505,11 +529,19 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         val encryptedName = getString(getColumnIndexOrThrow("name"))
         val decryptedName = db.decryptDocumentName(encryptedName)
         
+        val encryptedDescription = getStringOrNull("description") ?: ""
+        val decryptedDescription = if (encryptedDescription.isNotEmpty()) {
+            db.decryptDocumentName(encryptedDescription)
+        } else {
+            ""
+        }
+        
         return Document(
             id = getString(getColumnIndexOrThrow("id")),
             templateId = getStringOrNull("template_id"),
             folderId = getStringOrNull("folder_id"),
             name = decryptedName,
+            description = decryptedDescription,
             isPinned = getInt(getColumnIndexOrThrow("is_pinned")) == 1,
             pinnedOrder = getStringOrNull("pinned_order")?.toInt(),
             createdAt = getLong(getColumnIndexOrThrow("created_at")),
@@ -522,6 +554,7 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         templateId: String?,
         folderId: String?,
         name: String,
+        description: String,
         fields: List<Pair<String, String>>,
         photoUris: List<String>,
         pdfUris: List<String>
@@ -531,9 +564,10 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         db.encryptedWritableDatabase.beginTransaction()
         try {
             val encryptedName = db.encryptDocumentName(name)
+            val encryptedDescription = db.encryptDocumentName(description)
             db.encryptedWritableDatabase.execSQL(
-                "INSERT INTO documents(id,template_id,folder_id,name,is_pinned,pinned_order,created_at,updated_at,last_opened_at) VALUES(?,?,?,?,?,?,?,?,?)",
-                arrayOf<Any?>(id, templateId, folderId, encryptedName, 0, null, ts, ts, ts)
+                "INSERT INTO documents(id,template_id,folder_id,name,description,is_pinned,pinned_order,created_at,updated_at,last_opened_at) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                arrayOf<Any?>(id, templateId, folderId, encryptedName, encryptedDescription, 0, null, ts, ts, ts)
             )
             fields.forEachIndexed { index, (title, value) ->
                 val encryptedValue = db.encryptFieldValue(value)
@@ -567,6 +601,7 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         templateId: String?,
         folderId: String?,
         name: String,
+        description: String,
         fields: List<Pair<String, String>>,
         photoFiles: List<Pair<String, String>>, // URI, displayName
         pdfFiles: List<Pair<String, String>> // URI, displayName
@@ -576,9 +611,10 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         db.encryptedWritableDatabase.beginTransaction()
         try {
             val encryptedName = db.encryptDocumentName(name)
+            val encryptedDescription = db.encryptDocumentName(description)
             db.encryptedWritableDatabase.execSQL(
-                "INSERT INTO documents(id,template_id,folder_id,name,is_pinned,pinned_order,created_at,updated_at,last_opened_at) VALUES(?,?,?,?,?,?,?,?,?)",
-                arrayOf<Any?>(id, templateId, folderId, encryptedName, 0, null, ts, ts, ts)
+                "INSERT INTO documents(id,template_id,folder_id,name,description,is_pinned,pinned_order,created_at,updated_at,last_opened_at) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                arrayOf<Any?>(id, templateId, folderId, encryptedName, encryptedDescription, 0, null, ts, ts, ts)
             )
             fields.forEachIndexed { index, (title, value) ->
                 val encryptedValue = db.encryptFieldValue(value)
@@ -696,9 +732,10 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         db.encryptedWritableDatabase.beginTransaction()
         try {
             val encryptedName = db.encryptDocumentName(doc.name)
+            val encryptedDescription = db.encryptDocumentName(doc.description)
             db.encryptedWritableDatabase.execSQL(
-                "UPDATE documents SET name=?, updated_at=? WHERE id=?",
-                arrayOf<Any>(encryptedName, ts, doc.id)
+                "UPDATE documents SET name=?, description=?, updated_at=? WHERE id=?",
+                arrayOf<Any>(encryptedName, encryptedDescription, ts, doc.id)
             )
             db.encryptedWritableDatabase.execSQL("DELETE FROM document_fields WHERE document_id=?", arrayOf(doc.id))
             fields.forEach {

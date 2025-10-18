@@ -28,6 +28,7 @@ data class Document(
     val templateId: String?,
     val folderId: String?,
     val name: String,
+    val description: String,
     val isPinned: Boolean,
     val pinnedOrder: Int?,
     val createdAt: Long,

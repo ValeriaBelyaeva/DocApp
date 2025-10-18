@@ -45,6 +45,7 @@ fun TemplateFillScreen(
     var templateFields by remember { mutableStateOf<List<com.example.docapp.domain.TemplateField>>(emptyList()) }
     var fieldValues by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var documentName by remember { mutableStateOf("") }
+    var documentDescription by remember { mutableStateOf("") }
     var isCreating by remember { mutableStateOf(false) }
     
     // Прикрепленные файлы
@@ -119,6 +120,21 @@ fun TemplateFillScreen(
             label = { Text("Название документа") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black
+            )
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Описание документа
+        OutlinedTextField(
+            value = documentDescription,
+            onValueChange = { documentDescription = it },
+            label = { Text("Описание документа") },
+            modifier = Modifier.fillMaxWidth(),
+            maxLines = 3,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = Color.Black,
                 unfocusedTextColor = Color.Black
@@ -314,6 +330,7 @@ fun TemplateFillScreen(
                                     tplId = templateId,
                                     folderId = folderId,
                                     name = nameValidation.getValue()!!,
+                                    description = documentDescription,
                                     fields = fields,
                                     photoFiles = attachedPhotos.map { (uriString, name) -> 
                                         Uri.parse(uriString) to name 

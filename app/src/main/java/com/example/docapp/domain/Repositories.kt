@@ -42,6 +42,7 @@ interface DocumentRepository {
         templateId: String?,
         folderId: String?,
         name: String,
+        description: String,
         fields: List<Pair<String, String>>,
         photoUris: List<String>,
         pdfUris: List<String>
@@ -51,6 +52,7 @@ interface DocumentRepository {
         templateId: String?,
         folderId: String?,
         name: String,
+        description: String,
         fields: List<Pair<String, String>>,
         photoFiles: List<Pair<Uri, String>>, // URI, displayName
         pdfFiles: List<Pair<Uri, String>> // URI, displayName

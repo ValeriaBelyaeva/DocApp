@@ -50,19 +50,21 @@ class UseCases(
         tplId: String?,
         folderId: String?,
         name: String,
+        description: String,
         fields: List<Pair<String, String>>,
         photos: List<String>,
         pdfUris: List<String>
-    ) = repos.documents.createDocument(tplId, folderId, name, fields, photos, pdfUris)
+    ) = repos.documents.createDocument(tplId, folderId, name, description, fields, photos, pdfUris)
 
     suspend fun createDocWithNames(
         tplId: String?,
         folderId: String?,
         name: String,
+        description: String,
         fields: List<Pair<String, String>>,
         photoFiles: List<Pair<Uri, String>>, // URI, displayName
         pdfFiles: List<Pair<Uri, String>> // URI, displayName
-    ) = repos.documents.createDocumentWithNames(tplId, folderId, name, fields, photoFiles, pdfFiles)
+    ) = repos.documents.createDocumentWithNames(tplId, folderId, name, description, fields, photoFiles, pdfFiles)
 
     suspend fun getDoc(id: String) = repos.documents.getDocument(id)
 
