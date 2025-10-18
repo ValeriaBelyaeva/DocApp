@@ -129,8 +129,13 @@ fun DocumentViewScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.Black,
                         unfocusedTextColor = Color.Black,
-                        focusedBorderColor = Color.Gray,
-                        unfocusedBorderColor = Color.Gray
+                        disabledTextColor = Color.Black,
+                        focusedLabelColor = Color.DarkGray,
+                        unfocusedLabelColor = Color.DarkGray,
+                        disabledLabelColor = Color.DarkGray,
+                        focusedBorderColor = Color.Black,
+                        unfocusedBorderColor = Color.Black,
+                        disabledBorderColor = Color.Black
                     )
                 )
 
@@ -825,7 +830,11 @@ fun DocumentEditScreen(
                     onValueChange = { newFieldName = it },
                     label = { Text("Название поля") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
+                    )
                 )
             },
             confirmButton = {

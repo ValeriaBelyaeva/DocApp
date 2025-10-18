@@ -16,6 +16,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
@@ -23,6 +25,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.systemBars
@@ -212,6 +215,9 @@ private fun TreeScreen(
     var showNewFolderDialog by remember { mutableStateOf(false) }
     var newFolderName by remember { mutableStateOf("") }
     var moveDocId by remember { mutableStateOf<String?>(null) }
+    
+    // Состояние сворачивания папок
+    var collapsedFolders by remember { mutableStateOf<Set<String>>(emptySet()) }
 
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
@@ -223,7 +229,21 @@ private fun TreeScreen(
         ) {
             items(folders) { folder ->
                 val docs = docsByFolderId[folder.id].orEmpty()
-                FolderBlock(folder = folder, docs = docs, openDoc = openDoc, createInFolder = createInFolder)
+                val isCollapsed = collapsedFolders.contains(folder.id)
+                FolderBlock(
+                    folder = folder, 
+                    docs = docs, 
+                    openDoc = openDoc, 
+                    createInFolder = createInFolder,
+                    isCollapsed = isCollapsed,
+                    onToggleCollapse = { 
+                        collapsedFolders = if (isCollapsed) {
+                            collapsedFolders - folder.id
+                        } else {
+                            collapsedFolders + folder.id
+                        }
+                    }
+                )
             }
 
             if (docsNoFolder.isNotEmpty()) {
@@ -280,7 +300,11 @@ private fun TreeScreen(
                     OutlinedTextField(
                         value = newFolderName,
                         onValueChange = { newFolderName = it },
-                        label = { Text("Название папки") }
+                        label = { Text("Название папки") },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black
+                        )
                     )
                 },
                 confirmButton = {
@@ -312,17 +336,39 @@ private fun FolderBlock(
     folder: Folder,
     docs: List<Document>,
     openDoc: (String) -> Unit,
-    createInFolder: (String?) -> Unit
+    createInFolder: (String?) -> Unit,
+    isCollapsed: Boolean,
+    onToggleCollapse: () -> Unit
 ) {
     ElevatedCard {
         Column(Modifier.fillMaxWidth().padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(folder.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                TextButton(onClick = { createInFolder(folder.id) }) { Text("+ Документ") }
+                // Кнопка сворачивания/разворачивания
+                IconButton(onClick = onToggleCollapse) {
+                    Icon(
+                        if (isCollapsed) Icons.Default.ExpandMore else Icons.Default.ExpandLess,
+                        contentDescription = if (isCollapsed) "Развернуть" else "Свернуть",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                
+                Text(
+                    folder.name, 
+                    style = MaterialTheme.typography.titleMedium, 
+                    modifier = Modifier.weight(1f)
+                )
+                
+                TextButton(onClick = { createInFolder(folder.id) }) { 
+                    Text("+ Документ") 
+                }
             }
-            docs.forEach { doc ->
-                TextButton(onClick = { openDoc(doc.id) }, modifier = Modifier.padding(start = 8.dp)) {
-                    Text("• ${doc.name}")
+            
+            // Показываем документы только если папка не свернута
+            if (!isCollapsed) {
+                docs.forEach { doc ->
+                    TextButton(onClick = { openDoc(doc.id) }, modifier = Modifier.padding(start = 8.dp)) {
+                        Text("• ${doc.name}")
+                    }
                 }
             }
         }

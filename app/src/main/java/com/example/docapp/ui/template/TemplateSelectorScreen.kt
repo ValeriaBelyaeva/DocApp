@@ -267,7 +267,11 @@ fun TemplateSelectorScreen(
                             onValueChange = { tplName = it },
                             label = { Text("Название шаблона") },
                             modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black
+                            )
                         )
                         
                         Text(
@@ -285,7 +289,11 @@ fun TemplateSelectorScreen(
                                 onValueChange = { newField = it },
                                 label = { Text("Название поля") },
                                 modifier = Modifier.weight(1f),
-                                singleLine = true
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = Color.Black,
+                                    unfocusedTextColor = Color.Black
+                                )
                             )
                             FilledIconButton(
                                 onClick = {
