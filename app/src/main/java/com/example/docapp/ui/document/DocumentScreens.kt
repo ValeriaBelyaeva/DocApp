@@ -33,6 +33,7 @@ import coil.request.ImageRequest
 import com.example.docapp.core.ServiceLocator
 import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.AppLogger
+import com.example.docapp.core.newId
 import com.example.docapp.core.PdfPreviewExtractor
 import com.example.docapp.domain.Attachment
 import kotlinx.coroutines.launch
@@ -829,17 +830,19 @@ fun DocumentEditScreen(
                                         if (existingDoc != null) {
                                             useCases.updateDoc(existingDoc.copy(
                                                 doc = existingDoc.doc.copy(name = name, description = description),
-                                                fields = fields.map { (name, value) ->
+                                                fields = fields.mapIndexed { index, (name, value) ->
                                                     com.example.docapp.domain.DocumentField(
-                                                        id = "", // ID будет сгенерирован в репозитории
+                                                        id = com.example.docapp.core.newId(), // Генерируем новый ID
                                                         documentId = existingDocId,
                                                         name = name,
                                                         valueCipher = value.encodeToByteArray(),
                                                         preview = if (value.length > 20) "${value.take(20)}..." else value,
                                                         isSecret = false,
-                                                        ord = 0
+                                                        ord = index
                                                     )
-                                                }
+                                                },
+                                                photos = currentPhotos,
+                                                pdfs = currentPdfs
                                             ))
                                             existingDocId
                                         } else {
