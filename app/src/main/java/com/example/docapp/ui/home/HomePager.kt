@@ -6,6 +6,8 @@ import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -13,6 +15,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
@@ -22,10 +25,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import com.example.docapp.core.ServiceLocator
+import com.example.docapp.core.DataValidator
+import com.example.docapp.core.ErrorHandler
 import com.example.docapp.domain.Document
 import com.example.docapp.domain.DocumentRepository
 import com.example.docapp.domain.Folder
@@ -76,7 +80,7 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.systemBars)
+            .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.systemBars)
             .padding(16.dp)
     ) {
         IconButton(onClick = onCreate, modifier = Modifier.align(Alignment.CenterHorizontally)) {
@@ -214,6 +218,7 @@ private fun TreeScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .fillMaxSize()
+                .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.systemBars)
                 .padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
             items(folders) { folder ->
@@ -243,18 +248,29 @@ private fun TreeScreen(
                         }
                     }
                 }
-                item { Spacer(Modifier.height(56.dp)) } // под FAB
+                item { Spacer(Modifier.height(180.dp)) } // под кнопки с учетом системных панелей
             }
         }
 
-        ExtendedFloatingActionButton(
-            onClick = { showNewFolderDialog = true },
-            icon = { Icon(Icons.Default.Add, contentDescription = null) },
-            text = { Text("Создать папку") },
+        Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(16.dp)
-        )
+                .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.systemBars)
+                .padding(horizontal = 32.dp, vertical = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            ExtendedFloatingActionButton(
+                onClick = { createInFolder(null) },
+                content = { Text("Добавить документ") },
+                modifier = Modifier.weight(1f)
+            )
+            
+            ExtendedFloatingActionButton(
+                onClick = { showNewFolderDialog = true },
+                content = { Text("Создать папку") },
+                modifier = Modifier.weight(1f)
+            )
+        }
 
         if (showNewFolderDialog) {
             AlertDialog(
@@ -269,13 +285,15 @@ private fun TreeScreen(
                 },
                 confirmButton = {
                     TextButton(onClick = {
-                        val name = newFolderName.trim()
-                        if (name.isNotEmpty()) {
+                        val validation = DataValidator.validateFolderName(newFolderName)
+                        if (validation.isSuccess) {
                             scope.launch {
-                                ServiceLocator.repos.folders.addFolder(name, null)
+                                ServiceLocator.repos.folders.addFolder(validation.getValue()!!, null)
                                 newFolderName = ""
                                 showNewFolderDialog = false
                             }
+                        } else {
+                            ErrorHandler.showError(validation.getError()!!)
                         }
                     }) { Text("Создать") }
                 },
@@ -376,7 +394,7 @@ private fun InfoScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.systemBars)
+            .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.systemBars)
             .padding(24.dp), 
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -425,7 +443,7 @@ private fun InfoScreen() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.systemBars)
+                .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.systemBars)
                 .verticalScroll(scroll)
         ){
         // Навигация

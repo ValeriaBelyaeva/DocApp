@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import com.example.docapp.core.ServiceLocator
 import com.example.docapp.core.ErrorHandler
+import com.example.docapp.core.DataValidator
 import com.example.docapp.domain.Template
 import kotlinx.coroutines.launch
 
@@ -334,22 +335,37 @@ fun TemplateSelectorScreen(
                     }
                 },
                 confirmButton = {
-                    Button(
-                        onClick = {
-                        val name = tplName.trim()
-                        if (name.isNotEmpty() && fieldNames.isNotEmpty()) {
-                            scope.launch {
-                                uc.addTemplate(name, fieldNames.toList())
-                                list = uc.listTemplates()
-                                resetDialog()
-                                showDialog = false
-                            }
+                        Button(
+                            onClick = {
+                                val nameValidation = DataValidator.validateTemplateName(tplName)
+                                val fieldValidations = fieldNames.map { DataValidator.validateFieldName(it) }
+                                
+                                if (nameValidation.isSuccess && fieldValidations.all { it.isSuccess }) {
+                                    scope.launch {
+                                        val normalizedName = nameValidation.getValue()!!
+                                        val normalizedFields = fieldValidations.map { it.getValue()!! }
+                                        uc.addTemplate(normalizedName, normalizedFields)
+                                        list = uc.listTemplates()
+                                        resetDialog()
+                                        showDialog = false
+                                    }
+                                } else {
+                                    val errors = mutableListOf<String>()
+                                    if (!nameValidation.isSuccess) {
+                                        errors.add(nameValidation.getError()!!)
+                                    }
+                                    fieldValidations.forEachIndexed { index, validation ->
+                                        if (!validation.isSuccess) {
+                                            errors.add("Поле ${index + 1}: ${validation.getError()}")
+                                        }
+                                    }
+                                    ErrorHandler.showError(errors.joinToString("\n"))
+                                }
+                            },
+                            enabled = tplName.trim().isNotEmpty() && fieldNames.isNotEmpty()
+                        ) {
+                            Text("Создать шаблон")
                         }
-                        },
-                        enabled = tplName.trim().isNotEmpty() && fieldNames.isNotEmpty()
-                    ) { 
-                        Text("Создать шаблон") 
-                    }
                 },
                 dismissButton = {
                     TextButton(onClick = {

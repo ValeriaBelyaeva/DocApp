@@ -13,6 +13,9 @@ import java.io.StringWriter
  */
 object ErrorHandler {
     
+    // Режим отладки - показывает всплывающие сообщения только в debug режиме
+    private const val DEBUG_MODE = false
+    
     private var context: Context? = null
     private val handler = Handler(Looper.getMainLooper())
     
@@ -33,8 +36,10 @@ object ErrorHandler {
             AppLogger.log("ErrorHandler", "Stack trace: ${getStackTrace(throwable)}")
         }
         
-        // Показываем Toast с упрощенным форматом
-        showToast(errorMessage, Toast.LENGTH_LONG)
+        // Показываем Toast с упрощенным форматом только в debug режиме
+        if (DEBUG_MODE) {
+            showToast(errorMessage, Toast.LENGTH_LONG)
+        }
     }
     
     /**
@@ -49,8 +54,10 @@ object ErrorHandler {
             AppLogger.log("ErrorHandler", "Stack trace: ${getStackTrace(throwable)}")
         }
         
-        // Показываем Toast с упрощенным форматом
-        showToast(errorMessage, Toast.LENGTH_LONG)
+        // Показываем Toast с упрощенным форматом только в debug режиме
+        if (DEBUG_MODE) {
+            showToast(errorMessage, Toast.LENGTH_LONG)
+        }
     }
     
     /**
@@ -66,7 +73,9 @@ object ErrorHandler {
      */
     fun showSuccess(message: String) {
         AppLogger.log("ErrorHandler", "SUCCESS: $message")
-        showToast(message, Toast.LENGTH_SHORT)
+        if (DEBUG_MODE) {
+            showToast(message, Toast.LENGTH_SHORT)
+        }
     }
     
     
@@ -121,11 +130,13 @@ object ErrorHandler {
                 // Логируем стек-трейс
                 AppLogger.log("ErrorHandler", "Stack trace: ${getStackTrace(throwable)}")
                 
-                // Показываем Toast с упрощенным форматом
-                context?.let { ctx ->
-                    handler.post {
-                        val errorMessage = throwable.message ?: "Произошла ошибка при выполнении операции"
-                        Toast.makeText(ctx, errorMessage, Toast.LENGTH_LONG).show()
+                // Показываем Toast с упрощенным форматом только в debug режиме
+                if (DEBUG_MODE) {
+                    context?.let { ctx ->
+                        handler.post {
+                            val errorMessage = throwable.message ?: "Произошла ошибка при выполнении операции"
+                            Toast.makeText(ctx, errorMessage, Toast.LENGTH_LONG).show()
+                        }
                     }
                 }
                 

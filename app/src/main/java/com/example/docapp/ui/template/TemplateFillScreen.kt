@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import com.example.docapp.core.ServiceLocator
 import com.example.docapp.core.ErrorHandler
+import com.example.docapp.core.DataValidator
 import kotlinx.coroutines.launch
 import android.net.Uri
 
@@ -293,20 +294,26 @@ fun TemplateFillScreen(
             
             Button(
                 onClick = {
-                    if (documentName.isNotBlank()) {
+                    val nameValidation = DataValidator.validateDocumentName(documentName)
+                    val fieldValidations = templateFields.map { field ->
+                        val value = fieldValues[field.name] ?: ""
+                        DataValidator.validateFieldValue(value)
+                    }
+                    
+                    if (nameValidation.isSuccess && fieldValidations.all { it.isSuccess }) {
                         scope.launch {
                             isCreating = true
                             try {
-                                // Преобразуем поля в нужный формат
-                                val fields = templateFields.map { field ->
-                                    field.name to (fieldValues[field.name] ?: "")
+                                // Преобразуем поля в нужный формат с валидированными значениями
+                                val fields = templateFields.mapIndexed { index, field ->
+                                    field.name to fieldValidations[index].getValue()!!
                                 }
                                 
                                 // Создаем документ
                                 val docId = useCases.createDocWithNames(
                                     tplId = templateId,
                                     folderId = folderId,
-                                    name = documentName,
+                                    name = nameValidation.getValue()!!,
                                     fields = fields,
                                     photoFiles = attachedPhotos.map { (uriString, name) -> 
                                         Uri.parse(uriString) to name 
@@ -324,6 +331,17 @@ fun TemplateFillScreen(
                                 isCreating = false
                             }
                         }
+                    } else {
+                        val errors = mutableListOf<String>()
+                        if (!nameValidation.isSuccess) {
+                            errors.add(nameValidation.getError()!!)
+                        }
+                        fieldValidations.forEachIndexed { index, validation ->
+                            if (!validation.isSuccess) {
+                                errors.add("Поле ${templateFields[index].name}: ${validation.getError()}")
+                            }
+                        }
+                        ErrorHandler.showError(errors.joinToString("\n"))
                     }
                 },
                 enabled = !isCreating && documentName.isNotBlank(),
