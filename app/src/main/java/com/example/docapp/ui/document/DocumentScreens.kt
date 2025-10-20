@@ -37,6 +37,7 @@ import com.example.docapp.core.newId
 import com.example.docapp.core.PdfPreviewExtractor
 import com.example.docapp.domain.Attachment
 import kotlinx.coroutines.launch
+import com.example.docapp.core.NamingRules
 
 /**
  * Экраны документов с интеграцией новой системы вложений
@@ -54,6 +55,7 @@ fun DocumentViewScreen(
     val clipboardManager = LocalClipboardManager.current
     var fullDoc by remember { mutableStateOf<com.example.docapp.domain.DocumentRepository.FullDocument?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showMoveDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(docId) {
         try {
@@ -322,6 +324,16 @@ fun DocumentViewScreen(
                 Text("Удалить")
             }
         }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Кнопка "Переместить" отдельно
+        OutlinedButton(
+            onClick = { showMoveDialog = true },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Переместить в папку")
+        }
     }
 
     if (showDeleteDialog) {
@@ -352,6 +364,15 @@ fun DocumentViewScreen(
                     Text("Отмена")
                 }
             }
+        )
+    }
+
+    // Диалог перемещения документа в папку
+    if (showMoveDialog) {
+        MoveToFolderDialog(
+            docId = docId,
+            currentFolderId = doc.doc.folderId,
+            onClose = { showMoveDialog = false }
         )
     }
 }
@@ -829,7 +850,7 @@ fun DocumentEditScreen(
                                         val existingDoc = useCases.getDoc(existingDocId)
                                         if (existingDoc != null) {
                                             useCases.updateDoc(existingDoc.copy(
-                                                doc = existingDoc.doc.copy(name = name, description = description),
+                                                doc = existingDoc.doc.copy(name = NamingRules.formatName(name, NamingRules.NameKind.Document), description = description),
                                                 fields = fields.mapIndexed { index, (name, value) ->
                                                     com.example.docapp.domain.DocumentField(
                                                         id = com.example.docapp.core.newId(), // Генерируем новый ID
@@ -856,7 +877,7 @@ fun DocumentEditScreen(
                                     val newDocId = useCases.createDoc(
                             tplId = templateId,
                             folderId = folderId,
-                                        name = name,
+                                        name = NamingRules.formatName(name, NamingRules.NameKind.Document),
                                         description = description,
                             fields = fields.toList(),
                                         photos = emptyList(), // Файлы добавляются через ImportAttachmentsButton
@@ -927,6 +948,64 @@ fun DocumentEditScreen(
             }
         )
     }
+}
+
+/* ===== Диалог перемещения документа в папку ===== */
+@Composable
+private fun MoveToFolderDialog(
+    docId: String,
+    currentFolderId: String?,
+    onClose: () -> Unit
+) {
+    val useCases = ServiceLocator.useCases
+    val scope = rememberCoroutineScope()
+    var folders by remember { mutableStateOf<List<com.example.docapp.domain.Folder>>(emptyList()) }
+    var selected by remember { mutableStateOf<String?>(currentFolderId) }
+
+    LaunchedEffect(Unit) {
+        folders = useCases.listFolders()
+    }
+
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text("Переместить в папку") },
+        text = {
+            Column {
+                // Опция "Без папки"
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(selected = selected == null, onClick = { selected = null })
+                    Text("Без папки")
+                }
+                Spacer(Modifier.height(8.dp))
+                folders.forEach { folder ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(selected = selected == folder.id, onClick = { selected = folder.id })
+                        Text(folder.name)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                scope.launch {
+                    try {
+                        useCases.moveDocToFolder(docId, selected)
+                        ErrorHandler.showSuccess("Документ перемещен")
+                        onClose()
+                    } catch (e: Exception) {
+                        ErrorHandler.showError("Не удалось переместить документ: ${e.message}")
+                    }
+                }
+            }) {
+                Text("Переместить")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onClose) {
+                Text("Отмена")
+            }
+        }
+    )
 }
 
 

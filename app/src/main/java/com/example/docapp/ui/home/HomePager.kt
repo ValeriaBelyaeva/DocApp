@@ -15,6 +15,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -27,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -40,6 +42,10 @@ import com.example.docapp.domain.usecases.UseCases
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import com.example.docapp.ui.theme.AppColors
+import com.example.docapp.ui.theme.AppDimens
+import com.example.docapp.ui.theme.AppLayout
+import com.example.docapp.ui.theme.VSpace
 
 
 
@@ -83,17 +89,17 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.systemBars)
-            .padding(16.dp)
+            .let { AppLayout.appScreenInsets(it) }
+            .let { AppLayout.appScreenPadding(it) }
     ) {
         IconButton(onClick = onCreate, modifier = Modifier.align(Alignment.CenterHorizontally)) {
             Icon(Icons.Default.Add, contentDescription = "Создать")
         }
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(AppDimens.spaceMd))
 
         Text("ЗАКРЕПЛЕННЫЕ", style = MaterialTheme.typography.titleSmall)
         if (reorderMode) {
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(AppDimens.spaceXs))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     "Режим перестановки: тапни по другому закреплённому для обмена местами",
@@ -102,7 +108,7 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
                 TextButton(onClick = { reorderMode = false; firstSelected = null }) { Text("Готово") }
             }
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(AppDimens.spaceSm))
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f, true)) {
             // --- Pinned ---
@@ -140,7 +146,7 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
                             }
                         )
                 ) {
-                    Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(AppLayout.appCardPadding(Modifier.fillMaxWidth()), verticalAlignment = Alignment.CenterVertically) {
                         Text(if (isSelected) "▶ ${doc.name}" else doc.name, modifier = Modifier.weight(1f))
                         IconButton(onClick = { scope.launch { uc.pinDoc(doc.id, false) } }) {
                             Icon(Icons.Default.Star, contentDescription = "Unpin")
@@ -160,14 +166,14 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
                 }
             }
 
-            item { Spacer(Modifier.height(16.dp)) }
+            item { Spacer(Modifier.height(AppDimens.spaceLg)) }
             item { Text("ПОСЛЕДНИЕ", style = MaterialTheme.typography.titleSmall) }
 
             // --- Recent ---
             items(home.recent) { doc ->
                 var menuOpen by remember { mutableStateOf(false) }
                 ElevatedCard(onClick = { openDoc(doc.id) }) {
-                    Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(AppLayout.appCardPadding(Modifier.fillMaxWidth()), verticalAlignment = Alignment.CenterVertically) {
                         Text(doc.name, modifier = Modifier.weight(1f))
                         IconButton(onClick = { scope.launch { uc.pinDoc(doc.id, true) } }) {
                             Icon(Icons.Outlined.StarOutline, contentDescription = "Pin")
@@ -215,17 +221,18 @@ private fun TreeScreen(
     var showNewFolderDialog by remember { mutableStateOf(false) }
     var newFolderName by remember { mutableStateOf("") }
     var moveDocId by remember { mutableStateOf<String?>(null) }
+    var deleteFolderId by remember { mutableStateOf<String?>(null) }
     
     // Состояние сворачивания папок
     var collapsedFolders by remember { mutableStateOf<Set<String>>(emptySet()) }
 
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(AppDimens.spaceSm),
             modifier = Modifier
                 .fillMaxSize()
-                .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.systemBars)
-                .padding(horizontal = 16.dp, vertical = 16.dp)
+                .let { AppLayout.appScreenInsets(it) }
+                .padding(horizontal = AppDimens.contentPaddingHorizontal, vertical = AppDimens.contentPaddingVertical)
         ) {
             items(folders) { folder ->
                 val docs = docsByFolderId[folder.id].orEmpty()
@@ -242,17 +249,19 @@ private fun TreeScreen(
                         } else {
                             collapsedFolders + folder.id
                         }
-                    }
+                    },
+                    onDeleteFolder = { deleteFolderId = folder.id },
+                    onMoveDoc = { moveDocId = it }
                 )
             }
 
             if (docsNoFolder.isNotEmpty()) {
-                item { Spacer(Modifier.height(12.dp)) }
+                item { Spacer(Modifier.height(AppDimens.spaceMd)) }
                 item { Text("БЕЗ ПАПКИ", style = MaterialTheme.typography.titleSmall) }
                 items(docsNoFolder) { doc ->
                     var menuOpen by remember { mutableStateOf(false) }
                     ElevatedCard(onClick = { openDoc(doc.id) }) {
-                        Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Row(AppLayout.appCardPadding(Modifier.fillMaxWidth()), verticalAlignment = Alignment.CenterVertically) {
                             Text(doc.name, Modifier.weight(1f))
                             Box {
                                 IconButton(onClick = { menuOpen = true }) {
@@ -268,16 +277,16 @@ private fun TreeScreen(
                         }
                     }
                 }
-                item { Spacer(Modifier.height(180.dp)) } // под кнопки с учетом системных панелей
+                item { Spacer(Modifier.height(AppDimens.bottomButtonsSpacer)) } // под кнопки с учетом системных панелей
             }
         }
 
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.systemBars)
-                .padding(horizontal = 32.dp, vertical = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                .let { AppLayout.appScreenInsets(it) }
+                .padding(horizontal = AppDimens.bottomButtonsHorizontalPadding, vertical = AppDimens.bottomButtonsVerticalPadding),
+            horizontalArrangement = Arrangement.spacedBy(AppDimens.bottomButtonsBetween)
         ) {
             ExtendedFloatingActionButton(
                 onClick = { createInFolder(null) },
@@ -297,13 +306,13 @@ private fun TreeScreen(
                 onDismissRequest = { showNewFolderDialog = false },
                 title = { Text("Новая папка") },
                 text = {
-                    OutlinedTextField(
+                        OutlinedTextField(
                         value = newFolderName,
                         onValueChange = { newFolderName = it },
                         label = { Text("Название папки") },
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                         )
                     )
                 },
@@ -329,6 +338,7 @@ private fun TreeScreen(
     }
 
     MoveToFolderDialogIfNeeded(moveDocId = moveDocId, onClose = { moveDocId = null })
+    DeleteFolderDialogIfNeeded(deleteFolderId = deleteFolderId, onClose = { deleteFolderId = null })
 }
 
 @Composable
@@ -338,10 +348,12 @@ private fun FolderBlock(
     openDoc: (String) -> Unit,
     createInFolder: (String?) -> Unit,
     isCollapsed: Boolean,
-    onToggleCollapse: () -> Unit
+    onToggleCollapse: () -> Unit,
+    onDeleteFolder: (String) -> Unit,
+    onMoveDoc: (String) -> Unit
 ) {
     ElevatedCard {
-        Column(Modifier.fillMaxWidth().padding(12.dp)) {
+        Column(Modifier.fillMaxWidth().padding(AppDimens.cardPadding)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // Кнопка сворачивания/разворачивания
                 IconButton(onClick = onToggleCollapse) {
@@ -358,7 +370,26 @@ private fun FolderBlock(
                     modifier = Modifier.weight(1f)
                 )
                 
-                TextButton(onClick = { createInFolder(folder.id) }) { 
+                // Кнопка удаления папки
+                IconButton(onClick = { onDeleteFolder(folder.id) }) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Удалить папку",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+            
+            // Кнопка "+ Документ" на уровне названия папки
+            Row(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Отступ такой же как у кнопки сворачивания (48dp)
+                Spacer(modifier = Modifier.width(48.dp))
+                TextButton(
+                    onClick = { createInFolder(folder.id) },
+                    contentPadding = PaddingValues(0.dp)
+                ) { 
                     Text("+ Документ") 
                 }
             }
@@ -366,8 +397,31 @@ private fun FolderBlock(
             // Показываем документы только если папка не свернута
             if (!isCollapsed) {
                 docs.forEach { doc ->
-                    TextButton(onClick = { openDoc(doc.id) }, modifier = Modifier.padding(start = 8.dp)) {
-                        Text("• ${doc.name}")
+                    Row(
+                        modifier = Modifier.padding(start = 48.dp), // Выравниваем с названием папки
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(
+                            onClick = { openDoc(doc.id) }, 
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text(
+                                "• ${doc.name}",
+                                textAlign = TextAlign.Start,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        IconButton(
+                            onClick = { onMoveDoc(doc.id) },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.MoreVert,
+                                contentDescription = "Переместить документ",
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -398,7 +452,7 @@ private fun MoveToFolderDialogIfNeeded(moveDocId: String?, onClose: () -> Unit) 
                     RadioButton(selected = selected == null, onClick = { selected = null })
                     Text("Без папки")
                 }
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(AppDimens.spaceSm))
                 folders.forEach { f ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         RadioButton(selected = selected == f.id, onClick = { selected = f.id })
@@ -445,24 +499,24 @@ private fun InfoScreen() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("INFO & SETTINGS", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(AppDimens.spaceSm))
         TextButton(onClick = {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/ValeriaBelyaeva/DOC_APP"))
             ctx.startActivity(intent)
         }) { Text("ОТКРЫТЬ GITHUB") }
         Text("TG: @irisus_r")
         Text("version: 1.0.0")
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(AppDimens.spaceLg))
 
         if (!changing) {
             Button(onClick = { changing = true }) { Text("СМЕНИТЬ ПИНКОД") }
         } else {
             OutlinedTextField(value = oldPin, onValueChange = { oldPin = it }, label = { Text("Старый PIN") })
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(AppDimens.spaceXs))
             OutlinedTextField(value = newPin, onValueChange = { newPin = it }, label = { Text("Новый PIN (4 цифры)") })
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(AppDimens.spaceXs))
             OutlinedTextField(value = newPin2, onValueChange = { newPin2 = it }, label = { Text("Повторите PIN") })
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(AppDimens.spaceSm))
             Button(onClick = {
                 scope.launch {
                     if (!isFourDigits(newPin)) { toast("PIN должен быть ровно 4 цифры"); return@launch }
@@ -475,16 +529,16 @@ private fun InfoScreen() {
                     oldPin = ""; newPin = ""; newPin2 = ""; changing = false
                 }
             }) { Text("ПРИМЕНИТЬ") }
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(AppDimens.spaceXxs))
             TextButton(onClick = { oldPin = ""; newPin = ""; newPin2 = ""; changing = false }) { Text("Отмена") }
         }
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(AppDimens.spaceXl))
 
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(AppDimens.spaceLg))
         Text("Подсказки для пользователя", style = MaterialTheme.typography.titleMedium)
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(AppDimens.spaceSm))
 
         Column(
             modifier = Modifier
@@ -497,7 +551,7 @@ private fun InfoScreen() {
         Text("    — ВЛЕВО: «Дерево» — папки + документы;")
         Text("    — СЕРЕДИНА: «Главная» — закреплённые и последние документы;")
         Text("    — ВПРАВО: «Info» — эта справка, ссылки, версия.")
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(AppDimens.spaceSm))
 
         // Главная
         Text("Главная")
@@ -506,13 +560,13 @@ private fun InfoScreen() {
         Text("• Долгий тап по закреплённому — режим перестановки; тап по другому — обмен местами.")
         Text("• Три точки на карточке — «Переместить в папку».")
         Text("• Блок «ПОСЛЕДНИЕ»: сортируются по времени последнего открытия (новые сверху).")
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(AppDimens.spaceSm))
 
         // Дерево/папки
         Text("Папки")
         Text("• Внутри каждой папки: список её документов и кнопка «+ Документ» для создания прямо в папке.")
         Text("• Раздел «БЕЗ ПАПКИ» внизу — документы без папки, их тоже можно переместить в папку через меню.")
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(AppDimens.spaceSm))
 
         // Документ
         Text("Документ")
@@ -524,7 +578,7 @@ private fun InfoScreen() {
         Text("• «Плюс» возле ввода названия поля — добавить поле; позиционирован по центру по вертикали.")
         Text("• Поддерживаются вложения: несколько фото из галереи + несколько PDF.")
         Text("• Есть удаление: корзина у документа (с подтверждением) и у каждого поля (с подтверждением).")
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(AppDimens.spaceSm))
 
         // Шаблоны
         Text("Шаблоны")
@@ -542,7 +596,74 @@ private fun InfoScreen() {
         Text("Безопасность (PIN)")
         Text("• На текущей версии управление PIN временно скрыто. Вход без ввода кода пока не возможен.")
         Text("• Функция выключения PIN будет в следующих версиях, как и формат скрытого контента для паролей.")
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(AppDimens.spaceMd))
 }
     }
+}
+
+/* ===== Диалог удаления папки ===== */
+@Composable
+private fun DeleteFolderDialogIfNeeded(deleteFolderId: String?, onClose: () -> Unit) {
+    if (deleteFolderId == null) return
+    
+    val uc: UseCases = ServiceLocator.useCases
+    val scope = rememberCoroutineScope()
+    val ctx = LocalContext.current
+    var documentsInFolder by remember { mutableStateOf<List<Document>>(emptyList()) }
+    var deleteDocuments by remember { mutableStateOf(false) }
+    
+    LaunchedEffect(deleteFolderId) {
+        documentsInFolder = uc.getDocumentsInFolder(deleteFolderId)
+    }
+    
+    fun toast(s: String) = Toast.makeText(ctx, s, Toast.LENGTH_SHORT).show()
+    
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text("Удалить папку") },
+        text = {
+            Column {
+                Text("Папка содержит ${documentsInFolder.size} документов.")
+                VSpace(AppDimens.spaceSm)
+                Text("Что делать с документами?")
+                VSpace(AppDimens.spaceSm)
+                
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = !deleteDocuments,
+                        onClick = { deleteDocuments = false }
+                    )
+                    Text("Переместить в \"Без папки\"", modifier = Modifier.padding(start = AppDimens.spaceSm))
+                }
+                
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = deleteDocuments,
+                        onClick = { deleteDocuments = true }
+                    )
+                    Text("Удалить вместе с папкой", modifier = Modifier.padding(start = AppDimens.spaceSm))
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    scope.launch {
+                        try {
+                            uc.deleteFolder(deleteFolderId, deleteDocuments)
+                            toast(if (deleteDocuments) "Папка и документы удалены" else "Папка удалена, документы перемещены")
+                            onClose()
+                        } catch (e: Exception) {
+                            toast("Ошибка: ${e.message}")
+                        }
+                    }
+                }
+            ) {
+                Text("Удалить")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onClose) { Text("Отмена") }
+        }
+    )
 }

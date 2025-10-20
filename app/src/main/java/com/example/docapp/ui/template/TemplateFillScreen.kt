@@ -28,6 +28,8 @@ import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.DataValidator
 import kotlinx.coroutines.launch
 import android.net.Uri
+import com.example.docapp.ui.theme.AppDimens
+import com.example.docapp.core.NamingRules
 
 @Composable
 fun TemplateFillScreen(
@@ -98,7 +100,7 @@ fun TemplateFillScreen(
         modifier = Modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.systemBars)
-            .padding(20.dp)
+            .padding(AppDimens.spaceXl)
             .verticalScroll(rememberScrollState())
     ) {
         // Заголовок
@@ -121,8 +123,8 @@ fun TemplateFillScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
+                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                unfocusedTextColor = MaterialTheme.colorScheme.onBackground
             )
         )
         
@@ -136,8 +138,8 @@ fun TemplateFillScreen(
             modifier = Modifier.fillMaxWidth(),
             maxLines = 3,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
+                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                unfocusedTextColor = MaterialTheme.colorScheme.onBackground
             )
         )
         
@@ -329,7 +331,7 @@ fun TemplateFillScreen(
                                 val docId = useCases.createDocWithNames(
                                     tplId = templateId,
                                     folderId = folderId,
-                                    name = nameValidation.getValue()!!,
+                                    name = NamingRules.formatName(nameValidation.getValue()!!, NamingRules.NameKind.Document),
                                     description = documentDescription,
                                     fields = fields,
                                     photoFiles = attachedPhotos.map { (uriString, name) -> 

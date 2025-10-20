@@ -6,5 +6,5 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun DocTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = darkColorScheme(), content = content)
+    MaterialTheme(colorScheme = darkColorScheme(), typography = AppTypography, content = content)
 }

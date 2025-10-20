@@ -354,6 +354,7 @@ interface DocumentDao {
     suspend fun move(id: String, folderId: String?)
     suspend fun swapPinned(aId: String, bId: String)
     suspend fun getAllDocumentIds(): List<String> // Для миграции
+    suspend fun getDocumentsInFolder(folderId: String): List<Document>
 }
 
 interface SettingsDao {
@@ -846,6 +847,19 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
             }
         }
         ids
+    }
+
+    override suspend fun getDocumentsInFolder(folderId: String): List<Document> = withContext(Dispatchers.IO) {
+        val docs = mutableListOf<Document>()
+        db.encryptedReadableDatabase.rawQuery(
+            "SELECT * FROM documents WHERE folder_id=? ORDER BY created_at DESC", 
+            arrayOf(folderId)
+        ).use { c -> 
+            while (c.moveToNext()) {
+                docs.add(c.toDoc())
+            }
+        }
+        docs
     }
 
     private fun ensureSequentialPinnedOrders_NoThrow() {

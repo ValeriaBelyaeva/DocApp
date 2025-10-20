@@ -189,5 +189,6 @@ class RepositoriesImpl(
 
         override suspend fun moveToFolder(id: String, folderId: String?) = dao.documents.move(id, folderId)
         override suspend fun swapPinned(aId: String, bId: String) = dao.documents.swapPinned(aId, bId)
+        override suspend fun getDocumentsInFolder(folderId: String) = dao.documents.getDocumentsInFolder(folderId)
     }
 }

@@ -66,6 +66,7 @@ interface DocumentRepository {
 
     suspend fun moveToFolder(id: String, folderId: String?)
     suspend fun swapPinned(aId: String, bId: String)
+    suspend fun getDocumentsInFolder(folderId: String): List<Document>
 }
 
 /** Интерфейс-агрегатор репозиториев */

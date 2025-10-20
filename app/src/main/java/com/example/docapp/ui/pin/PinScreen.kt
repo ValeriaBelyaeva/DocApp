@@ -15,6 +15,8 @@ import com.example.docapp.core.AppLogger
 import com.example.docapp.core.ErrorHandler
 import kotlinx.coroutines.launch
 import kotlin.UninitializedPropertyAccessException
+import com.example.docapp.ui.theme.AppDimens
+import com.example.docapp.ui.theme.AppLayout
 
 @Composable
 fun PinScreen(onSuccess: () -> Unit) {
@@ -62,13 +64,11 @@ fun PinScreen(onSuccess: () -> Unit) {
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.systemBars)
-            .padding(24.dp), 
+        modifier = AppLayout.appScreenInsets(Modifier.fillMaxSize())
+            .padding(AppDimens.spaceXl), 
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(AppDimens.space2Xl))
         Text(
             when (stage) {
                 PinStage.EnterExisting -> "ВВЕДИТЕ ПИН-КОД"
@@ -79,13 +79,13 @@ fun PinScreen(onSuccess: () -> Unit) {
             style = MaterialTheme.typography.titleLarge,
             textAlign = TextAlign.Center
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(AppDimens.spaceSm))
         Text(
             text = pin.padEnd(4, '•'),
             color = if (error != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground,
             style = MaterialTheme.typography.headlineMedium
         )
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(AppDimens.spaceXl))
         Numpad(
             onDigit = {
                 if (pin.length < 4) pin += it
@@ -184,7 +184,7 @@ private fun Numpad(onDigit: (String) -> Unit, onDelete: () -> Unit) {
         rows.forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 row.forEach { label ->
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(AppDimens.spaceSm))
                     OutlinedButton(
                         onClick = {
                             when (label) {
@@ -197,7 +197,7 @@ private fun Numpad(onDigit: (String) -> Unit, onDelete: () -> Unit) {
                     ) { Text(label) }
                 }
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(AppDimens.spaceSm))
         }
     }
 }
