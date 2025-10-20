@@ -29,7 +29,9 @@ import com.example.docapp.core.DataValidator
 import kotlinx.coroutines.launch
 import android.net.Uri
 import com.example.docapp.ui.theme.AppDimens
+import com.example.docapp.ui.theme.AppLayout
 import com.example.docapp.core.NamingRules
+import com.example.docapp.ui.theme.GlassCard
 
 @Composable
 fun TemplateFillScreen(
@@ -176,12 +178,7 @@ fun TemplateFillScreen(
         Spacer(modifier = Modifier.height(24.dp))
         
         // Секция прикрепленных файлов
-        Card(
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
+        GlassCard {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = "📎 Прикрепленные файлы",
@@ -277,7 +274,8 @@ fun TemplateFillScreen(
                 ) {
                     OutlinedButton(
                         onClick = { photoPickerLauncher.launch("image/*") },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        shape = AppLayout.largeButtonShape()
                     ) {
                         Icon(Icons.Default.Photo, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
@@ -286,7 +284,8 @@ fun TemplateFillScreen(
                     
                     OutlinedButton(
                         onClick = { documentPickerLauncher.launch(arrayOf("application/pdf")) },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        shape = AppLayout.largeButtonShape()
                     ) {
                         Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))

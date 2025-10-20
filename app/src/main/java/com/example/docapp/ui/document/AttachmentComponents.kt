@@ -22,6 +22,7 @@ import com.example.docapp.core.AppLogger
 import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.ServiceLocator
 import com.example.docapp.data.db.entities.AttachmentEntity
+import com.example.docapp.ui.theme.GlassCard
 import kotlinx.coroutines.launch
 
 @Composable
@@ -228,9 +229,8 @@ private fun AttachmentItem(
     onShare: () -> Unit,
     onDelete: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    GlassCard(
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier

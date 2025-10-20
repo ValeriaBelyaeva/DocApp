@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.example.docapp.core.AppLogger
 import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.ServiceLocator
+import com.example.docapp.ui.theme.GlassCard
 import kotlinx.coroutines.launch
 
 @Composable
@@ -280,7 +281,7 @@ fun ImportAttachmentsForNewDocument(
         if (importedPhotos.isNotEmpty() || importedPdfs.isNotEmpty()) {
             Spacer(modifier = Modifier.height(16.dp))
             
-            Card(
+            GlassCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(

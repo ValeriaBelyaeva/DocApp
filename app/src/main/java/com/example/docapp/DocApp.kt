@@ -4,6 +4,7 @@ import android.app.Application
 import com.example.docapp.core.ServiceLocator
 import com.example.docapp.core.AppLogger
 import com.example.docapp.core.ErrorHandler
+import com.example.docapp.core.ThemeManager
 
 class DocApp : Application() {
     override fun onCreate() {
@@ -16,6 +17,9 @@ class DocApp : Application() {
         // Инициализируем обработчик ошибок
         ErrorHandler.init(this)
         ErrorHandler.showInfo("Приложение запускается...")
+        
+        // Инициализируем менеджер темы
+        ThemeManager.initialize(this)
         
         try {
             ServiceLocator.init(this)

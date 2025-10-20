@@ -17,6 +17,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Stable
  
 
 /**
@@ -48,6 +52,10 @@ object AppDimens {
 
 object AppRadii {
     val cardCorner: Dp = 12.dp
+    val buttonCorner: Dp = 32.dp
+    val smallButtonCorner: Dp = 24.dp
+    val largeButtonCorner: Dp = 40.dp
+    val extraLargeButtonCorner: Dp = 48.dp
 }
 
 object AppDurations {
@@ -68,6 +76,33 @@ object AppColors {
 
     @Composable
     fun primary() = MaterialTheme.colorScheme.primary
+
+    @Composable
+    fun textSecondary() = MaterialTheme.colorScheme.onSurfaceVariant
+
+    @Composable
+    fun background() = MaterialTheme.colorScheme.background
+
+    @Composable
+    fun surface() = MaterialTheme.colorScheme.surface
+
+    @Composable
+    fun glassContainerTop() = LocalGlassColors.current.containerTop
+
+    @Composable
+    fun glassContainerBottom() = LocalGlassColors.current.containerBottom
+
+    @Composable
+    fun glassHighlight() = LocalGlassColors.current.highlight
+
+    @Composable
+    fun glassBorderBright() = LocalGlassColors.current.borderBright
+
+    @Composable
+    fun glassBorderShadow() = LocalGlassColors.current.borderShadow
+
+    @Composable
+    fun glassShadow() = LocalGlassColors.current.shadowColor
 }
 
 // Kept legacy color constants for possible references
@@ -101,6 +136,11 @@ object AppLayout {
     fun appScreenPadding(modifier: Modifier): Modifier = modifier.padding(AppDimens.screenPadding)
 
     fun appCardPadding(modifier: Modifier): Modifier = modifier.padding(AppDimens.cardPadding)
+    
+    fun buttonShape(): Shape = RoundedCornerShape(AppRadii.buttonCorner)
+    fun smallButtonShape(): Shape = RoundedCornerShape(AppRadii.smallButtonCorner)
+    fun largeButtonShape(): Shape = RoundedCornerShape(AppRadii.largeButtonCorner)
+    fun extraLargeButtonShape(): Shape = RoundedCornerShape(AppRadii.extraLargeButtonCorner)
 }
 
 @Composable
@@ -153,5 +193,36 @@ object AppColorsRef {
     fun iconPrimary() = AppColors.iconPrimary()
     @Composable
     fun primary() = AppColors.primary()
+    @Composable
+    fun textSecondary() = AppColors.textSecondary()
+    @Composable
+    fun background() = AppColors.background()
+    @Composable
+    fun surface() = AppColors.surface()
+    @Composable
+    fun glassContainerTop() = AppColors.glassContainerTop()
+    @Composable
+    fun glassContainerBottom() = AppColors.glassContainerBottom()
+    @Composable
+    fun glassHighlight() = AppColors.glassHighlight()
+    @Composable
+    fun glassBorderBright() = AppColors.glassBorderBright()
+    @Composable
+    fun glassBorderShadow() = AppColors.glassBorderShadow()
+    @Composable
+    fun glassShadow() = AppColors.glassShadow()
 }
+
+@Stable
+val GlassShape: Shape = RoundedCornerShape(AppRadii.cardCorner)
+
+@Composable
+fun glassGradient(): Brush = Brush.verticalGradient(
+    colors = listOf(
+        AppColors.glassContainerTop(),
+        AppColors.glassContainerBottom()
+    ),
+    startY = 0f,
+    endY = Float.POSITIVE_INFINITY
+)
 

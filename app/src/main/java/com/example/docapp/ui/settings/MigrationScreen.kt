@@ -15,6 +15,7 @@ import com.example.docapp.core.AppLogger
 import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.ServiceLocator
 import com.example.docapp.data.storage.FileGc
+import com.example.docapp.ui.theme.GlassCard
 import kotlinx.coroutines.launch
 
 @Composable
@@ -44,7 +45,7 @@ fun MigrationScreen() {
         )
         
         // Карточка миграции
-        Card(
+        GlassCard(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
@@ -137,7 +138,7 @@ fun MigrationScreen() {
         }
         
         // Карточка очистки
-        Card(
+        GlassCard(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
@@ -224,7 +225,7 @@ fun MigrationScreen() {
         }
         
         // Информационная карточка
-        Card(
+        GlassCard(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(

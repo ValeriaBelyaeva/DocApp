@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.example.docapp.core.AppLogger
+import com.example.docapp.ui.theme.GlassCard
 import java.io.File
 
 @Composable
@@ -51,7 +52,7 @@ fun LogViewerScreen() {
                 CircularProgressIndicator()
             }
         } else {
-            Card(
+            GlassCard(
                 modifier = Modifier.fillMaxSize()
             ) {
                 Text(

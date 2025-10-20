@@ -46,6 +46,8 @@ import com.example.docapp.ui.theme.AppColors
 import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.ui.theme.AppLayout
 import com.example.docapp.ui.theme.VSpace
+import com.example.docapp.ui.theme.GlassCard
+import com.example.docapp.core.ThemeManager
 
 
 
@@ -116,7 +118,7 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
                 var menuOpen by remember { mutableStateOf(false) }
                 val isSelected = reorderMode && firstSelected == doc.id
 
-                ElevatedCard(
+                GlassCard(
                     onClick = {
                         if (!reorderMode) openDoc(doc.id)
                         else {
@@ -136,15 +138,11 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
                             }
                         }
                     },
-                    modifier = Modifier
-                        .combinedClickable(
-                            onClick = {}, // используем onClick в ElevatedCard
-                            onLongClick = {
-                                // Вход в режим перестановки
-                                reorderMode = true
-                                firstSelected = doc.id
-                            }
-                        )
+                    onLongClick = {
+                        // Вход в режим перестановки
+                        reorderMode = true
+                        firstSelected = doc.id
+                    }
                 ) {
                     Row(AppLayout.appCardPadding(Modifier.fillMaxWidth()), verticalAlignment = Alignment.CenterVertically) {
                         Text(if (isSelected) "▶ ${doc.name}" else doc.name, modifier = Modifier.weight(1f))
@@ -172,7 +170,7 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
             // --- Recent ---
             items(home.recent) { doc ->
                 var menuOpen by remember { mutableStateOf(false) }
-                ElevatedCard(onClick = { openDoc(doc.id) }) {
+                GlassCard(onClick = { openDoc(doc.id) }) {
                     Row(AppLayout.appCardPadding(Modifier.fillMaxWidth()), verticalAlignment = Alignment.CenterVertically) {
                         Text(doc.name, modifier = Modifier.weight(1f))
                         IconButton(onClick = { scope.launch { uc.pinDoc(doc.id, true) } }) {
@@ -260,7 +258,7 @@ private fun TreeScreen(
                 item { Text("БЕЗ ПАПКИ", style = MaterialTheme.typography.titleSmall) }
                 items(docsNoFolder) { doc ->
                     var menuOpen by remember { mutableStateOf(false) }
-                    ElevatedCard(onClick = { openDoc(doc.id) }) {
+                    GlassCard(onClick = { openDoc(doc.id) }) {
                         Row(AppLayout.appCardPadding(Modifier.fillMaxWidth()), verticalAlignment = Alignment.CenterVertically) {
                             Text(doc.name, Modifier.weight(1f))
                             Box {
@@ -291,13 +289,17 @@ private fun TreeScreen(
             ExtendedFloatingActionButton(
                 onClick = { createInFolder(null) },
                 content = { Text("Добавить документ") },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             )
             
             ExtendedFloatingActionButton(
                 onClick = { showNewFolderDialog = true },
                 content = { Text("Создать папку") },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             )
         }
 
@@ -352,7 +354,7 @@ private fun FolderBlock(
     onDeleteFolder: (String) -> Unit,
     onMoveDoc: (String) -> Unit
 ) {
-    ElevatedCard {
+    GlassCard {
         Column(Modifier.fillMaxWidth().padding(AppDimens.cardPadding)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // Кнопка сворачивания/разворачивания
@@ -500,6 +502,48 @@ private fun InfoScreen() {
     ) {
         Text("INFO & SETTINGS", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(AppDimens.spaceSm))
+        
+        // Переключатель темы
+        GlassCard(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(AppDimens.spaceMd)
+            ) {
+                Text(
+                    text = "Тема приложения",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(Modifier.height(AppDimens.spaceSm))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (ThemeManager.isDarkTheme) "Темная тема" else "Светлая тема",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    Switch(
+                        checked = ThemeManager.isDarkTheme,
+                        onCheckedChange = { ThemeManager.toggleTheme(ctx) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = MaterialTheme.colorScheme.primary,
+                            checkedTrackColor = MaterialTheme.colorScheme.primaryContainer,
+                            uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                            uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    )
+                }
+            }
+        }
+        
+        Spacer(Modifier.height(AppDimens.spaceMd))
+        
         TextButton(onClick = {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/ValeriaBelyaeva/DOC_APP"))
             ctx.startActivity(intent)
@@ -509,7 +553,10 @@ private fun InfoScreen() {
         Spacer(Modifier.height(AppDimens.spaceLg))
 
         if (!changing) {
-            Button(onClick = { changing = true }) { Text("СМЕНИТЬ ПИНКОД") }
+            Button(
+                onClick = { changing = true },
+                shape = AppLayout.largeButtonShape()
+            ) { Text("СМЕНИТЬ ПИНКОД") }
         } else {
             OutlinedTextField(value = oldPin, onValueChange = { oldPin = it }, label = { Text("Старый PIN") })
             Spacer(Modifier.height(AppDimens.spaceXs))
@@ -517,20 +564,26 @@ private fun InfoScreen() {
             Spacer(Modifier.height(AppDimens.spaceXs))
             OutlinedTextField(value = newPin2, onValueChange = { newPin2 = it }, label = { Text("Повторите PIN") })
             Spacer(Modifier.height(AppDimens.spaceSm))
-            Button(onClick = {
-                scope.launch {
-                    if (!isFourDigits(newPin)) { toast("PIN должен быть ровно 4 цифры"); return@launch }
-                    if (newPin != newPin2)     { toast("Подтверждение PIN не совпало"); return@launch }
-                    if (oldPin == newPin)      { toast("Новый PIN не должен совпадать со старым"); return@launch }
-                    val ok = uc.verifyPin(oldPin)
-                    if (!ok) { toast("Старый PIN неверен"); return@launch }
-                    uc.setNewPin(newPin)
-                    toast("PIN обновлён")
-                    oldPin = ""; newPin = ""; newPin2 = ""; changing = false
-                }
-            }) { Text("ПРИМЕНИТЬ") }
+            Button(
+                onClick = {
+                    scope.launch {
+                        if (!isFourDigits(newPin)) { toast("PIN должен быть ровно 4 цифры"); return@launch }
+                        if (newPin != newPin2)     { toast("Подтверждение PIN не совпало"); return@launch }
+                        if (oldPin == newPin)      { toast("Новый PIN не должен совпадать со старым"); return@launch }
+                        val ok = uc.verifyPin(oldPin)
+                        if (!ok) { toast("Старый PIN неверен"); return@launch }
+                        uc.setNewPin(newPin)
+                        toast("PIN обновлён")
+                        oldPin = ""; newPin = ""; newPin2 = ""; changing = false
+                    }
+                },
+                shape = AppLayout.largeButtonShape()
+            ) { Text("ПРИМЕНИТЬ") }
             Spacer(Modifier.height(AppDimens.spaceXxs))
-            TextButton(onClick = { oldPin = ""; newPin = ""; newPin2 = ""; changing = false }) { Text("Отмена") }
+            TextButton(
+                onClick = { oldPin = ""; newPin = ""; newPin2 = ""; changing = false },
+                shape = AppLayout.smallButtonShape()
+            ) { Text("Отмена") }
         }
 
         Spacer(Modifier.height(AppDimens.spaceXl))

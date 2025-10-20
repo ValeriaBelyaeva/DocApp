@@ -25,6 +25,7 @@ import com.example.docapp.core.ServiceLocator
 import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.DataValidator
 import com.example.docapp.domain.Template
+import com.example.docapp.ui.theme.GlassCard
 import kotlinx.coroutines.launch
 
 @Composable
@@ -88,13 +89,9 @@ fun TemplateSelectorScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Кнопка создания пустого документа
-                Card(
+                GlassCard(
                     onClick = { onCreateEmpty(folderId) },
-                    modifier = Modifier.weight(1f),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    modifier = Modifier.weight(1f)
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -123,13 +120,9 @@ fun TemplateSelectorScreen(
                 }
                 
                 // Кнопка создания шаблона
-                Card(
+                GlassCard(
                     onClick = { showDialog = true },
-                    modifier = Modifier.weight(1f),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    modifier = Modifier.weight(1f)
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -176,13 +169,8 @@ fun TemplateSelectorScreen(
                     modifier = Modifier.weight(1f)
                 ) {
                 items(list) { tpl ->
-                        Card(
-                            onClick = { onCreateDocFromTemplate(tpl.id, folderId) },
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface
-                            ),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                            shape = RoundedCornerShape(12.dp)
+                        GlassCard(
+                            onClick = { onCreateDocFromTemplate(tpl.id, folderId) }
                         ) {
                             Row(
                                 modifier = Modifier.padding(16.dp),
@@ -309,11 +297,7 @@ fun TemplateSelectorScreen(
                         }
                         
                         if (fieldNames.isNotEmpty()) {
-                            Card(
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                                )
-                            ) {
+                            GlassCard {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Text(
                                         text = "Поля шаблона:",

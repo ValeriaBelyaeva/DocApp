@@ -25,6 +25,8 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -38,6 +40,8 @@ import com.example.docapp.core.PdfPreviewExtractor
 import com.example.docapp.domain.Attachment
 import kotlinx.coroutines.launch
 import com.example.docapp.core.NamingRules
+import com.example.docapp.ui.theme.GlassCard
+import com.example.docapp.ui.theme.AppLayout
 
 /**
  * Экраны документов с интеграцией новой системы вложений
@@ -102,7 +106,10 @@ fun DocumentViewScreen(
         Text(
             text = doc.doc.name,
             style = MaterialTheme.typography.headlineMedium,
-            color = Color.Black
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
         
         // Описание документа (только если не пустое)
@@ -116,14 +123,7 @@ fun DocumentViewScreen(
                 enabled = false,
                 singleLine = false,
                 maxLines = 3,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black,
-                    disabledTextColor = Color.Black,
-                    focusedBorderColor = Color.Gray,
-                    unfocusedBorderColor = Color.Gray,
-                    disabledBorderColor = Color.Gray
-                )
+                colors = docTextFieldColors()
             )
         }
         
@@ -158,7 +158,7 @@ fun DocumentViewScreen(
                             Text(
                 text = "Поля документа:",
                 style = MaterialTheme.typography.titleMedium,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onSurface
             )
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -177,17 +177,7 @@ fun DocumentViewScreen(
                     modifier = Modifier.weight(1f),
                     enabled = false,
                     singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black,
-                        disabledTextColor = Color.Black,
-                        focusedLabelColor = Color.DarkGray,
-                        unfocusedLabelColor = Color.DarkGray,
-                        disabledLabelColor = Color.DarkGray,
-                        focusedBorderColor = Color.Black,
-                        unfocusedBorderColor = Color.Black,
-                        disabledBorderColor = Color.Black
-                    )
+                    colors = docTextFieldColors()
                 )
 
                 // Кнопка копирования поля
@@ -244,23 +234,18 @@ fun DocumentViewScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     // Превью PDF с текстом (кликабельное)
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                try {
-                                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
-                                    intent.setDataAndType(android.net.Uri.parse(pdf.uri.toString()), "application/pdf")
-                                    intent.flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                    context.startActivity(android.content.Intent.createChooser(intent, "Открыть PDF"))
-                                } catch (e: Exception) {
-                                    ErrorHandler.showError("Не удалось открыть PDF: ${e.message}")
-                                }
-                            },
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color.White.copy(alpha = 0.9f)
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    GlassCard(
+                        onClick = {
+                            try {
+                                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
+                                intent.setDataAndType(android.net.Uri.parse(pdf.uri.toString()), "application/pdf")
+                                intent.flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                context.startActivity(android.content.Intent.createChooser(intent, "Открыть PDF"))
+                            } catch (e: Exception) {
+                                ErrorHandler.showError("Не удалось открыть PDF: ${e.message}")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(
                             modifier = Modifier.padding(12.dp)
@@ -279,7 +264,7 @@ fun DocumentViewScreen(
                                 Text(
                                     text = pdf.displayName ?: "PDF",
                                     style = MaterialTheme.typography.titleSmall,
-                                    color = Color.Black
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                             
@@ -309,7 +294,8 @@ fun DocumentViewScreen(
         ) {
             OutlinedButton(
                 onClick = onEdit,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                shape = AppLayout.largeButtonShape()
             ) {
                 Text("Редактировать")
             }
@@ -319,7 +305,8 @@ fun DocumentViewScreen(
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = MaterialTheme.colorScheme.error
                 ),
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                shape = AppLayout.largeButtonShape()
             ) {
                 Text("Удалить")
             }
@@ -330,7 +317,8 @@ fun DocumentViewScreen(
         // Кнопка "Переместить" отдельно
         OutlinedButton(
             onClick = { showMoveDialog = true },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            shape = AppLayout.extraLargeButtonShape()
         ) {
             Text("Переместить в папку")
         }
@@ -505,7 +493,10 @@ fun DocumentEditScreen(
         Text(
             text = if (existingDocId != null) "Редактирование документа" else "Создание документа",
             style = MaterialTheme.typography.headlineMedium,
-            color = Color.Black
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
         
         Spacer(modifier = Modifier.height(16.dp))
@@ -516,8 +507,8 @@ fun DocumentEditScreen(
             label = { Text("Название документа") },
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             )
         )
         
@@ -530,8 +521,8 @@ fun DocumentEditScreen(
             modifier = Modifier.fillMaxWidth(),
             maxLines = 3,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             )
         )
         
@@ -718,14 +709,9 @@ fun DocumentEditScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     // Превью PDF с текстом (кликабельное)
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { openPdf(pdf.uri.toString()) },
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color.White.copy(alpha = 0.9f)
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    GlassCard(
+                        onClick = { openPdf(pdf.uri.toString()) },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(
                             modifier = Modifier.padding(12.dp)
@@ -744,7 +730,7 @@ fun DocumentEditScreen(
                                 Text(
                                     text = pdf.displayName ?: "PDF",
                                     style = MaterialTheme.typography.titleSmall,
-                                    color = Color.Black
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                             
@@ -812,24 +798,8 @@ fun DocumentEditScreen(
                         // При создании - отменяем создание и закрываем экран
                         onSaved("") // Пустая строка означает отмену
                     } else {
-                        // При редактировании - возвращаем исходные данные
-                        scope.launch {
-                            try {
-                                val originalDoc = useCases.getDoc(existingDocId)
-                                if (originalDoc != null) {
-                                    name = originalDoc.doc.name
-                                    fields.clear()
-                                    originalDoc.fields.forEach { field ->
-                                        fields.add(field.name to (field.valueCipher?.decodeToString() ?: ""))
-                                    }
-                                    // Восстанавливаем исходные прикрепленные файлы
-                                    currentPhotos = originalDoc.photos
-                                    currentPdfs = originalDoc.pdfs
-                                }
-                            } catch (e: Exception) {
-                                ErrorHandler.showError("Не удалось отменить изменения: ${e.message}")
-                            }
-                        }
+                        // При редактировании - закрываем экран редактирования
+                        onSaved(existingDocId) // Возвращаем ID документа для закрытия экрана
                     }
                 },
                 enabled = !isSaving,
@@ -1008,6 +978,23 @@ private fun MoveToFolderDialog(
     )
 }
 
+
+@Composable
+private fun docTextFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+    disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+    focusedBorderColor = MaterialTheme.colorScheme.primary,
+    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+    disabledBorderColor = MaterialTheme.colorScheme.outline,
+    focusedLabelColor = MaterialTheme.colorScheme.primary,
+    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    focusedContainerColor = Color.Transparent,
+    unfocusedContainerColor = Color.Transparent,
+    disabledContainerColor = Color.Transparent,
+    cursorColor = MaterialTheme.colorScheme.primary
+)
 
 // -------------------------------
 // ПРОСТАЯ СИСТЕМА ОТОБРАЖЕНИЯ ФАЙЛОВ
