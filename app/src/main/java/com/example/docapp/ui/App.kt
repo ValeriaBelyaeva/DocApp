@@ -10,7 +10,8 @@ import androidx.navigation.navArgument
 import com.example.docapp.ui.document.DocumentEditScreen
 import com.example.docapp.ui.document.DocumentViewScreen
 import com.example.docapp.ui.home.HomePager
-import com.example.docapp.ui.pin.PinScreen
+import com.example.docapp.ui.pin.PinScreenNew
+import com.example.docapp.ui.design.DesignShowcase
 import com.example.docapp.ui.template.TemplateSelectorScreen
 import com.example.docapp.ui.template.TemplateFillScreen
 import com.example.docapp.ui.theme.DocTheme
@@ -24,13 +25,10 @@ fun App() {
         AppLogger.log("App", "Navigation controller created")
         NavHost(navController = nav, startDestination = "pin") {
             composable("pin") {
-                PinScreen(
-                    onSuccess = {
-                        nav.navigate("home") {
-                            popUpTo("pin") { inclusive = true }
-                        }
-                    }
-                )
+                PinScreenNew(onSuccess = { nav.navigate("home") })
+            }
+            composable("showcase") {
+                DesignShowcase()
             }
             composable("home") {
                 HomePager(

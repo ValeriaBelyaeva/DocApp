@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+
+    <!-- Группа для компактного позиционирования и масштабирования -->
+    <group
+        android:scaleX="0.85"
+        android:scaleY="0.85"
+        android:translateX="7.2"
+        android:translateY="7.2">
+
+        <!-- Основной лист -->
+        <path
+            android:fillColor="#C6FF00"
+            android:pathData="M20,16H60L76,32V80A6,6 0,0 1,70,86H20A6,6 0,0 1,14,80V22A6,6 0,0 1,20,16z"/>
+
+        <!-- Загиб (светлее) -->
+        <path
+            android:fillColor="#E3FFA6"
+            android:pathData="M60,16V28a4,4 0,0 0,4,4H76L60,16z"/>
+
+        <!-- «Строки» на документе (полупрозрачные) -->
+        <path
+            android:fillColor="#33000000"
+            android:pathData="M24,42H66V46H24zM24,52H66V56H24zM24,62H54V66H24z"/>
+    </group>
+</vector>

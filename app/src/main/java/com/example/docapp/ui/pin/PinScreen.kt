@@ -51,7 +51,7 @@ fun PinScreen(onSuccess: () -> Unit) {
                 ErrorHandler.showInfo("PIN установлен, введите существующий PIN")
                 PinStage.EnterExisting
             } else {
-                AppLogger.log("PinScreen", "PIN is not set, showing enter new PIN screen")
+                AppLogger.log("PinScreen", "PIN is not set, showing create new PIN screen")
                 ErrorHandler.showInfo("PIN не установлен, создайте новый PIN")
                 PinStage.EnterNew
             }
@@ -81,98 +81,105 @@ fun PinScreen(onSuccess: () -> Unit) {
         )
         Spacer(Modifier.height(AppDimens.spaceSm))
         Text(
-            text = pin.padEnd(4, '•'),
+            text = "•".repeat(pin.length),
             color = if (error != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground,
             style = MaterialTheme.typography.headlineMedium
         )
         Spacer(Modifier.height(AppDimens.spaceXl))
-        Numpad(
-            onDigit = {
-                if (pin.length < 4) pin += it
-                if (pin.length == 4 && !isProcessing) {
-                    isProcessing = true
-                    scope.launch {
-                        when (stage) {
-                            PinStage.EnterExisting -> {
-                                AppLogger.log("PinScreen", "Verifying existing PIN...")
-                                ErrorHandler.showInfo("Проверяем существующий PIN...")
-                                try {
-                                    AppLogger.log("PinScreen", "Verifying PIN and initializing database...")
-                                    ErrorHandler.showInfo("Вызываем ServiceLocator.initializeWithPin...")
-                                    // initializeWithPin() сам проверит PIN и инициализирует БД (без флага isNewPin)
-                                    ServiceLocator.initializeWithPin(pin, isNewPin = false)
-                                    AppLogger.log("PinScreen", "PIN verified and database initialized, proceeding to main screen")
-                                    ErrorHandler.showSuccess("PIN проверен! Переходим к основному экрану")
-                                    onSuccess()
-                                } catch (e: SecurityException) {
-                                    // Неверный PIN
-                                    AppLogger.log("PinScreen", "ERROR: Invalid PIN entered")
-                                    ErrorHandler.showWarning("Неверный PIN-код")
-                                    error = "Неверный PIN"
-                                    pin = ""
-                                } catch (e: Exception) {
-                                    AppLogger.log("PinScreen", "ERROR: Failed to initialize with PIN: ${e.message}")
-                                    ErrorHandler.showError("Ошибка инициализации: ${e.message}", e)
-                                    error = "Ошибка инициализации"
-                                    pin = ""
-                                } finally {
-                                    isProcessing = false
-                                }
-                            }
-                            PinStage.EnterNew -> { 
-                                AppLogger.log("PinScreen", "New PIN entered, setting PIN and asking for confirmation...")
-                                ErrorHandler.showInfo("Устанавливаем новый PIN...")
-                                try {
-                                    // Устанавливаем PIN и создаем базу данных при первом вводе
-                                    ErrorHandler.showInfo("Вызываем ServiceLocator.initializeWithPin...")
-                                    ServiceLocator.initializeWithPin(pin, isNewPin = true)
-                                    AppLogger.log("PinScreen", "PIN set and database created, asking for confirmation...")
-                                    ErrorHandler.showSuccess("PIN установлен! Подтвердите PIN")
-                                    firstNew = pin; pin = ""; stage = PinStage.ConfirmNew 
-                                } catch (e: Exception) {
-                                    AppLogger.log("PinScreen", "ERROR: Failed to set new PIN: ${e.message}")
-                                    ErrorHandler.showError("Ошибка установки нового PIN-кода: ${e.message}", e)
-                                    error = "Ошибка установки PIN"
-                                    pin = ""
-                                } finally {
-                                    isProcessing = false
-                                }
-                            }
-                            PinStage.ConfirmNew -> {
-                                try {
-                                    ErrorHandler.showInfo("Проверяем подтверждение PIN...")
-                                    if (firstNew == pin) {
-                                        AppLogger.log("PinScreen", "PIN confirmed, PIN already set from first entry, proceeding to main screen...")
-                                        ErrorHandler.showSuccess("PIN подтвержден! Переходим к основному экрану")
-                                        // PIN уже установлен при первом вводе, просто переходим к основному экрану
-                                        // База данных уже создана при первом вводе PIN
+        
+        // Кнопка подтверждения
+        if (pin.isNotEmpty()) {
+            Button(
+                onClick = {
+                    if (!isProcessing) {
+                        isProcessing = true
+                        scope.launch {
+                            when (stage) {
+                                PinStage.EnterExisting -> {
+                                    AppLogger.log("PinScreen", "Verifying existing PIN...")
+                                    ErrorHandler.showInfo("Проверяем существующий PIN...")
+                                    try {
+                                        AppLogger.log("PinScreen", "Verifying PIN and initializing database...")
+                                        ErrorHandler.showInfo("Вызываем ServiceLocator.initializeWithPin...")
+                                        ServiceLocator.initializeWithPin(pin, isNewPin = false)
+                                        AppLogger.log("PinScreen", "PIN verified and database initialized, proceeding to main screen")
+                                        ErrorHandler.showSuccess("PIN проверен! Переходим к основному экрану")
                                         onSuccess()
+                                    } catch (e: SecurityException) {
+                                        AppLogger.log("PinScreen", "ERROR: Invalid PIN entered")
+                                        ErrorHandler.showError("Неверный PIN")
+                                        error = "Неверный PIN"
+                                        pin = ""
+                                        isProcessing = false
+                                    } catch (e: Exception) {
+                                        AppLogger.log("PinScreen", "ERROR: Failed to verify PIN: ${e.message}")
+                                        ErrorHandler.showError("Ошибка проверки PIN: ${e.message}")
+                                        error = "Ошибка проверки PIN"
+                                        pin = ""
+                                        isProcessing = false
+                                    }
+                                }
+                                PinStage.EnterNew -> {
+                                    AppLogger.log("PinScreen", "New PIN entered, moving to confirmation")
+                                    ErrorHandler.showInfo("PIN введен, переходим к подтверждению")
+                                    firstNew = pin
+                                    pin = ""
+                                    stage = PinStage.ConfirmNew
+                                    isProcessing = false
+                                }
+                                PinStage.ConfirmNew -> {
+                                    AppLogger.log("PinScreen", "Confirming new PIN...")
+                                    ErrorHandler.showInfo("Подтверждаем новый PIN...")
+                                    if (pin == firstNew) {
+                                        AppLogger.log("PinScreen", "New PIN confirmed, initializing database...")
+                                        ErrorHandler.showInfo("PIN подтвержден, инициализируем базу данных...")
+                                        try {
+                                            ServiceLocator.initializeWithPin(pin, isNewPin = true)
+                                            AppLogger.log("PinScreen", "New PIN set and database initialized, proceeding to main screen")
+                                            ErrorHandler.showSuccess("Новый PIN установлен! Переходим к основному экрану")
+                                            onSuccess()
+                                        } catch (e: Exception) {
+                                            AppLogger.log("PinScreen", "ERROR: Failed to set new PIN: ${e.message}")
+                                            ErrorHandler.showError("Ошибка установки PIN: ${e.message}")
+                                            error = "Ошибка установки PIN"
+                                            pin = ""
+                                            firstNew = null
+                                            stage = PinStage.EnterNew
+                                            isProcessing = false
+                                        }
                                     } else {
                                         AppLogger.log("PinScreen", "ERROR: PIN confirmation failed")
-                                        ErrorHandler.showWarning("PIN-коды не совпадают")
-                                        error = "PIN не совпал"
-                                        pin = ""; firstNew = null; stage = PinStage.EnterNew
+                                        ErrorHandler.showError("PIN не совпадает")
+                                        error = "PIN не совпадает"
+                                        pin = ""
+                                        firstNew = null
+                                        stage = PinStage.EnterNew
+                                        isProcessing = false
                                     }
-                                } catch (e: Exception) {
-                                    AppLogger.log("PinScreen", "ERROR: Failed to confirm PIN: ${e.message}")
-                                    ErrorHandler.showError("Ошибка подтверждения PIN-кода: ${e.message}", e)
-                                    error = "Ошибка подтверждения PIN"
-                                    pin = ""; firstNew = null; stage = PinStage.EnterNew
-                                } finally {
+                                }
+                                PinStage.Loading -> {
                                     isProcessing = false
                                 }
                             }
-                            else -> {}
                         }
                     }
-                }
-            },
+                },
+                enabled = !isProcessing && pin.isNotEmpty(),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(if (isProcessing) "Обработка..." else "Подтвердить")
+            }
+            Spacer(Modifier.height(AppDimens.spaceMd))
+        }
+        
+        Numpad(
+            onDigit = { pin += it },
             onDelete = { if (pin.isNotEmpty()) pin = pin.dropLast(1) }
         )
     }
 }
 
-private enum class PinStage { Loading, EnterExisting, EnterNew, ConfirmNew }
+enum class PinStage { Loading, EnterExisting, EnterNew, ConfirmNew }
 
 @Composable
 private fun Numpad(onDigit: (String) -> Unit, onDelete: () -> Unit) {
@@ -201,3 +208,4 @@ private fun Numpad(onDigit: (String) -> Unit, onDelete: () -> Unit) {
         }
     }
 }
+
