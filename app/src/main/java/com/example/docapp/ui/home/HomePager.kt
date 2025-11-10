@@ -4,6 +4,8 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.systemBars
@@ -12,43 +14,45 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material.icons.outlined.CreateNewFolder
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
+import androidx.compose.material.icons.outlined.NoteAdd
 import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.windowInsetsPadding
-import com.example.docapp.core.ServiceLocator
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.docapp.core.DataValidator
 import com.example.docapp.core.ErrorHandler
+import com.example.docapp.core.ServiceLocator
+import com.example.docapp.core.ThemeManager
 import com.example.docapp.domain.Document
 import com.example.docapp.domain.DocumentRepository
 import com.example.docapp.domain.Folder
 import com.example.docapp.domain.usecases.UseCases
-import kotlinx.coroutines.launch
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import com.example.docapp.ui.theme.AppColors
 import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.ui.theme.AppLayout
 import com.example.docapp.ui.theme.VSpace
-import com.example.docapp.ui.theme.GlassCard
-import com.example.docapp.core.ThemeManager
-
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -88,115 +92,403 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
 
     fun toast(s: String) = Toast.makeText(ctx, s, Toast.LENGTH_SHORT).show()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .let { AppLayout.appScreenInsets(it) }
-            .let { AppLayout.appScreenPadding(it) }
-    ) {
-        IconButton(onClick = onCreate, modifier = Modifier.align(Alignment.CenterHorizontally)) {
-            Icon(Icons.Default.Add, contentDescription = "Создать")
-        }
-        Spacer(Modifier.height(AppDimens.spaceMd))
+    var pinnedCollapsed by remember { mutableStateOf(false) }
+    var recentCollapsed by remember { mutableStateOf(false) }
 
-        Text("ЗАКРЕПЛЕННЫЕ", style = MaterialTheme.typography.titleSmall)
-        if (reorderMode) {
-            Spacer(Modifier.height(AppDimens.spaceXs))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    "Режим перестановки: тапни по другому закреплённому для обмена местами",
-                    modifier = Modifier.weight(1f)
+    val density = LocalDensity.current
+    val bottomInset = WindowInsets.navigationBars.getBottom(density) / density.density
+    val topInset = WindowInsets.statusBars.getTop(density) / density.density
+
+    Surface(color = NeoPalette.background, modifier = Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(22.dp),
+                contentPadding = PaddingValues(
+                    start = 20.dp,
+                    end = 20.dp,
+                    top = 24.dp + topInset.dp,
+                    bottom = 160.dp + bottomInset.dp
                 )
-                TextButton(onClick = { reorderMode = false; firstSelected = null }) { Text("Готово") }
-            }
-        }
-        Spacer(Modifier.height(AppDimens.spaceSm))
-
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f, true)) {
-            // --- Pinned ---
-            items(home.pinned) { doc ->
-                var menuOpen by remember { mutableStateOf(false) }
-                val isSelected = reorderMode && firstSelected == doc.id
-
-                GlassCard(
-                    onClick = {
-                        if (!reorderMode) openDoc(doc.id)
-                        else {
-                            // Вторая точка обмена
-                            val a = firstSelected
-                            if (a == null) firstSelected = doc.id
-                            else if (a != doc.id) {
-                                scope.launch {
-                                    try {
-                                        uc.swapPinned(a, doc.id)
-                                        toast("Поменяли местами")
-                                        firstSelected = doc.id // остаёмся в режиме перестановки
-                                    } catch (e: Exception) {
-                                        toast("Не удалось переставить")
+            ) {
+                item {
+                    HistorySectionCard(
+                        title = "Закрепленные",
+                        icon = Icons.Default.Star,
+                        isCollapsed = pinnedCollapsed,
+                        onToggleCollapse = { pinnedCollapsed = !pinnedCollapsed }
+                    ) {
+                        if (home.pinned.isEmpty()) {
+                            HistoryEmptyPlaceholder("Пока нет закрепленных документов")
+                        } else {
+                            if (reorderMode) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(NeoShapes.row)
+                                        .background(NeoPalette.controlBackground)
+                                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.ExpandMore,
+                                            contentDescription = null,
+                                            tint = NeoPalette.neon
+                                        )
+                                        Spacer(Modifier.width(12.dp))
+                                        Text(
+                                            text = "Выбрали документ. Коснитесь другого закрепленного, чтобы поменять местами",
+                                            color = NeoPalette.textSecondary,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        TextButton(onClick = { reorderMode = false; firstSelected = null }) {
+                                            Text("Готово")
+                                        }
                                     }
+                                }
+                                Spacer(Modifier.height(16.dp))
+                            }
+
+                            home.pinned.forEachIndexed { index, document ->
+                                var menuOpen by remember(document.id) { mutableStateOf(false) }
+                                val isSelected = reorderMode && firstSelected == document.id
+                                HistoryDocumentRow(
+                                    document = document,
+                                    isPinned = true,
+                                    isSelected = isSelected,
+                                    onClick = {
+                                        if (!reorderMode) {
+                                            openDoc(document.id)
+                                        } else {
+                                            val first = firstSelected
+                                            if (first == null) {
+                                                firstSelected = document.id
+                                            } else if (first != document.id) {
+                                                scope.launch {
+                                                    try {
+                                                        uc.swapPinned(first, document.id)
+                                                        toast("Поменяли местами")
+                                                        firstSelected = document.id
+                                                    } catch (error: Exception) {
+                                                        toast("Не удалось переставить")
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    onTogglePin = {
+                                        scope.launch { uc.pinDoc(document.id, false) }
+                                    },
+                                    menuExpanded = menuOpen,
+                                    onMenuOpen = {
+                                        if (!reorderMode) menuOpen = true
+                                    },
+                                    onMenuDismiss = { menuOpen = false },
+                                    onMoveDocument = {
+                                        menuOpen = false
+                                        moveDocId = document.id
+                                    },
+                                    menuEnabled = !reorderMode
+                                )
+                                if (index != home.pinned.lastIndex) {
+                                    Spacer(Modifier.height(12.dp))
                                 }
                             }
                         }
-                    },
-                    onLongClick = {
-                        // Вход в режим перестановки
-                        reorderMode = true
-                        firstSelected = doc.id
                     }
-                ) {
-                    Row(AppLayout.appCardPadding(Modifier.fillMaxWidth()), verticalAlignment = Alignment.CenterVertically) {
-                        Text(if (isSelected) "▶ ${doc.name}" else doc.name, modifier = Modifier.weight(1f))
-                        IconButton(onClick = { scope.launch { uc.pinDoc(doc.id, false) } }) {
-                            Icon(Icons.Default.Star, contentDescription = "Unpin")
-                        }
-                        Box {
-                            IconButton(onClick = { menuOpen = true }) {
-                                Icon(Icons.Default.MoreVert, contentDescription = "Меню")
-                            }
-                            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                                DropdownMenuItem(
-                                    text = { Text("Переместить в папку") },
-                                    onClick = { menuOpen = false; moveDocId = doc.id }
+                }
+
+                item {
+                    HistorySectionCard(
+                        title = "Последние",
+                        icon = Icons.Default.Description,
+                        isCollapsed = recentCollapsed,
+                        onToggleCollapse = { recentCollapsed = !recentCollapsed }
+                    ) {
+                        if (home.recent.isEmpty()) {
+                            HistoryEmptyPlaceholder("Здесь появятся недавно открытые")
+                        } else {
+                            home.recent.forEachIndexed { index, document ->
+                                var menuOpen by remember(document.id) { mutableStateOf(false) }
+                                HistoryDocumentRow(
+                                    document = document,
+                                    isPinned = false,
+                                    isSelected = false,
+                                    onClick = { openDoc(document.id) },
+                                    onTogglePin = {
+                                        scope.launch { uc.pinDoc(document.id, true) }
+                                    },
+                                    menuExpanded = menuOpen,
+                                    onMenuOpen = { menuOpen = true },
+                                    onMenuDismiss = { menuOpen = false },
+                                    onMoveDocument = {
+                                        menuOpen = false
+                                        moveDocId = document.id
+                                    },
+                                    menuEnabled = true
                                 )
+                                if (index != home.recent.lastIndex) {
+                                    Spacer(Modifier.height(12.dp))
+                                }
                             }
                         }
                     }
                 }
             }
 
-            item { Spacer(Modifier.height(AppDimens.spaceLg)) }
-            item { Text("ПОСЛЕДНИЕ", style = MaterialTheme.typography.titleSmall) }
-
-            // --- Recent ---
-            items(home.recent) { doc ->
-                var menuOpen by remember { mutableStateOf(false) }
-                GlassCard(onClick = { openDoc(doc.id) }) {
-                    Row(AppLayout.appCardPadding(Modifier.fillMaxWidth()), verticalAlignment = Alignment.CenterVertically) {
-                        Text(doc.name, modifier = Modifier.weight(1f))
-                        IconButton(onClick = { scope.launch { uc.pinDoc(doc.id, true) } }) {
-                            Icon(Icons.Outlined.StarOutline, contentDescription = "Pin")
-                        }
-                        Box {
-                            IconButton(onClick = { menuOpen = true }) {
-                                Icon(Icons.Default.MoreVert, contentDescription = "Меню")
-                            }
-                            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                                DropdownMenuItem(
-                                    text = { Text("Переместить в папку") },
-                                    onClick = { menuOpen = false; moveDocId = doc.id }
-                                )
-                            }
+            HistoryBottomBar(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 36.dp + bottomInset.dp),
+                reorderMode = reorderMode,
+                onToggleReorder = {
+                    if (reorderMode) {
+                        reorderMode = false
+                        firstSelected = null
+                    } else {
+                        if (home.pinned.isEmpty()) {
+                            toast("Нечего переставлять")
+                        } else {
+                            reorderMode = true
+                            firstSelected = null
                         }
                     }
-                }
-            }
+                },
+                onCreateDocument = onCreate
+            )
         }
     }
 
     MoveToFolderDialogIfNeeded(moveDocId = moveDocId, onClose = { moveDocId = null })
 }
 
-/* ===== Дерево (папки + “без папки” в ОДНОЙ прокрутке) + перемещение в папку ===== */
+@Composable
+private fun HistorySectionCard(
+    title: String,
+    icon: ImageVector,
+    isCollapsed: Boolean,
+    onToggleCollapse: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(NeoShapes.section)
+            .background(NeoPalette.section)
+            .padding(horizontal = 20.dp, vertical = 18.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(
+                onClick = onToggleCollapse,
+                modifier = Modifier
+                    .size(40.dp)
+                        .clip(NeoShapes.dockButton)
+                        .background(NeoPalette.controlBackground)
+            ) {
+                Icon(
+                    imageVector = if (isCollapsed) Icons.Outlined.KeyboardArrowDown else Icons.Outlined.KeyboardArrowUp,
+                    contentDescription = if (isCollapsed) "Развернуть" else "Свернуть",
+                        tint = NeoPalette.neon
+                )
+            }
+            Spacer(Modifier.width(16.dp))
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                    tint = NeoPalette.neon,
+                modifier = Modifier
+                    .size(32.dp)
+                        .clip(NeoShapes.dockButton)
+                        .background(NeoPalette.iconBackground)
+                    .padding(6.dp)
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(
+                text = title,
+                    color = NeoPalette.textPrimary,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        if (!isCollapsed) {
+            Spacer(Modifier.height(18.dp))
+            content()
+        }
+    }
+}
+
+@Composable
+private fun HistoryEmptyPlaceholder(text: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(NeoShapes.row)
+            .background(NeoPalette.item.copy(alpha = 0.6f))
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.Description,
+            contentDescription = null,
+            tint = NeoPalette.textSecondary,
+            modifier = Modifier
+                .size(32.dp)
+                .clip(NeoShapes.dockButton)
+                .background(NeoPalette.iconBackground)
+                .padding(6.dp)
+        )
+        Spacer(Modifier.width(16.dp))
+        Text(
+            text = text,
+            color = NeoPalette.textSecondary,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun HistoryDocumentRow(
+    document: Document,
+    isPinned: Boolean,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    onTogglePin: () -> Unit,
+    menuExpanded: Boolean,
+    onMenuOpen: () -> Unit,
+    onMenuDismiss: () -> Unit,
+    onMoveDocument: () -> Unit,
+    menuEnabled: Boolean
+) {
+    var descriptionMasked by remember(document.id) { mutableStateOf(true) }
+
+    val rowBackground = if (isSelected) NeoPalette.item.copy(alpha = 0.9f) else NeoPalette.item
+    val borderColor = if (isSelected) NeoPalette.neon.copy(alpha = 0.6f) else Color.Transparent
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(NeoShapes.row)
+                .background(rowBackground)
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClick = {
+                        if (menuEnabled) onMenuOpen()
+                    }
+                )
+                .border(
+                    width = if (borderColor == Color.Transparent) 0.dp else 1.5.dp,
+                    color = borderColor,
+                    shape = NeoShapes.row
+                )
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = onTogglePin,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(NeoShapes.dockButton)
+                    .background(NeoPalette.controlBackground)
+            ) {
+                Icon(
+                    imageVector = if (isPinned) Icons.Default.Star else Icons.Outlined.StarOutline,
+                    contentDescription = if (isPinned) "Открепить" else "Закрепить",
+                    tint = NeoPalette.neon
+                )
+            }
+            Spacer(Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = document.name,
+                    color = NeoPalette.textPrimary,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                if (document.description.isNotBlank()) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = if (descriptionMasked) "＊＊＊＊＊＊" else document.description,
+                        color = NeoPalette.textSecondary,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+            Spacer(Modifier.width(12.dp))
+            IconButton(
+                onClick = { descriptionMasked = !descriptionMasked },
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(NeoShapes.dockButton)
+                    .background(NeoPalette.controlBackground)
+            ) {
+                Icon(
+                    imageVector = if (descriptionMasked) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+                    contentDescription = if (descriptionMasked) "Показать" else "Скрыть",
+                    tint = NeoPalette.neon
+                )
+            }
+        }
+        DropdownMenu(expanded = menuExpanded, onDismissRequest = onMenuDismiss) {
+            DropdownMenuItem(
+                text = { Text("Переместить в папку") },
+                onClick = onMoveDocument
+            )
+        }
+    }
+}
+
+@Composable
+private fun HistoryBottomBar(
+    modifier: Modifier = Modifier,
+    reorderMode: Boolean,
+    onToggleReorder: () -> Unit,
+    onCreateDocument: () -> Unit
+) {
+    Row(
+        modifier = modifier
+            .clip(NeoShapes.dock)
+            .background(NeoPalette.dockBackground)
+            .padding(horizontal = 32.dp, vertical = 18.dp),
+        horizontalArrangement = Arrangement.spacedBy(48.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        DockButton(
+            icon = Icons.Outlined.NoteAdd,
+            description = "Новый документ",
+            onClick = onCreateDocument
+        )
+        DockButton(
+            icon = if (reorderMode) Icons.Default.Check else Icons.Default.SwapVert,
+            description = if (reorderMode) "Завершить перестановку" else "Перестановка закрепленных",
+            onClick = onToggleReorder
+        )
+    }
+}
+
+/* ===== Дерево (папки + “без папки”) — новый визуал ===== */
+
+private object NeoPalette {
+    val background = Color(0xFF060B12)
+    val section = Color(0xFF202C3A)
+    val item = Color(0xFF151F2C)
+    val iconBackground = Color(0xFF0C141D)
+    val controlBackground = Color(0xFF121C27)
+    val dockBackground = Color(0xFF070D16)
+    val dockButtonBackground = Color(0xFF152130)
+    val neon = Color(0xFFC6FF00)
+    val textPrimary = Color(0xFFE8EEF6)
+    val textSecondary = Color(0xFF93A4B8)
+}
+
+private object NeoShapes {
+    val section = RoundedCornerShape(28.dp)
+    val row = RoundedCornerShape(24.dp)
+    val dock = RoundedCornerShape(26.dp)
+    val dockButton = CircleShape
+}
 
 @Composable
 private fun TreeScreen(
@@ -220,123 +512,106 @@ private fun TreeScreen(
     var newFolderName by remember { mutableStateOf("") }
     var moveDocId by remember { mutableStateOf<String?>(null) }
     var deleteFolderId by remember { mutableStateOf<String?>(null) }
-    
-    // Состояние сворачивания папок
+
     var collapsedFolders by remember { mutableStateOf<Set<String>>(emptySet()) }
 
-    Box(Modifier.fillMaxSize()) {
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(AppDimens.spaceSm),
-            modifier = Modifier
-                .fillMaxSize()
-                .let { AppLayout.appScreenInsets(it) }
-                .padding(horizontal = AppDimens.contentPaddingHorizontal, vertical = AppDimens.contentPaddingVertical)
-        ) {
-            items(folders) { folder ->
-                val docs = docsByFolderId[folder.id].orEmpty()
-                val isCollapsed = collapsedFolders.contains(folder.id)
-                FolderBlock(
-                    folder = folder, 
-                    docs = docs, 
-                    openDoc = openDoc, 
-                    createInFolder = createInFolder,
-                    isCollapsed = isCollapsed,
-                    onToggleCollapse = { 
-                        collapsedFolders = if (isCollapsed) {
-                            collapsedFolders - folder.id
-                        } else {
-                            collapsedFolders + folder.id
-                        }
-                    },
-                    onDeleteFolder = { deleteFolderId = folder.id },
-                    onMoveDoc = { moveDocId = it }
-                )
-            }
+    val density = LocalDensity.current
+    val bottomInset = WindowInsets.navigationBars.getBottom(density) / density.density
+    val topInset = WindowInsets.statusBars.getTop(density) / density.density
 
-            if (docsNoFolder.isNotEmpty()) {
-                item { Spacer(Modifier.height(AppDimens.spaceMd)) }
-                item { Text("БЕЗ ПАПКИ", style = MaterialTheme.typography.titleSmall) }
-                items(docsNoFolder) { doc ->
-                    var menuOpen by remember { mutableStateOf(false) }
-                    GlassCard(onClick = { openDoc(doc.id) }) {
-                        Row(AppLayout.appCardPadding(Modifier.fillMaxWidth()), verticalAlignment = Alignment.CenterVertically) {
-                            Text(doc.name, Modifier.weight(1f))
-                            Box {
-                                IconButton(onClick = { menuOpen = true }) {
-                                    Icon(Icons.Default.MoreVert, contentDescription = "Меню")
-                                }
-                                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                                    DropdownMenuItem(
-                                        text = { Text("Переместить в папку") },
-                                        onClick = { menuOpen = false; moveDocId = doc.id }
-                                    )
-                                }
+    Surface(color = NeoPalette.background, modifier = Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(22.dp),
+                contentPadding = PaddingValues(
+                    start = 20.dp,
+                    end = 20.dp,
+                    top = 24.dp + topInset.dp,
+                    bottom = 160.dp + bottomInset.dp
+                )
+            ) {
+                items(folders) { folder ->
+                    val docs = docsByFolderId[folder.id].orEmpty()
+                    val isCollapsed = collapsedFolders.contains(folder.id)
+                    FolderSectionCard(
+                        title = folder.name,
+                        documents = docs,
+                        isCollapsed = isCollapsed,
+                        onToggleCollapse = {
+                            collapsedFolders = if (isCollapsed) {
+                                collapsedFolders - folder.id
+                            } else {
+                                collapsedFolders + folder.id
                             }
-                        }
+                        },
+                        onCreateInFolder = { createInFolder(folder.id) },
+                        onDeleteFolder = { deleteFolderId = folder.id },
+                        openDoc = openDoc,
+                        onMoveDoc = { moveDocId = it }
+                    )
+                }
+
+                if (docsNoFolder.isNotEmpty()) {
+                    item {
+                        FolderSectionCard(
+                            title = "Without a folder",
+                            documents = docsNoFolder,
+                            isCollapsed = false,
+                            onToggleCollapse = {},
+                            onCreateInFolder = null,
+                            onDeleteFolder = null,
+                            openDoc = openDoc,
+                            onMoveDoc = { moveDocId = it },
+                            collapsible = false
+                        )
                     }
                 }
-                item { Spacer(Modifier.height(AppDimens.bottomButtonsSpacer)) } // под кнопки с учетом системных панелей
             }
-        }
 
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .let { AppLayout.appScreenInsets(it) }
-                .padding(horizontal = AppDimens.bottomButtonsHorizontalPadding, vertical = AppDimens.bottomButtonsVerticalPadding),
-            horizontalArrangement = Arrangement.spacedBy(AppDimens.bottomButtonsBetween)
-        ) {
-            ExtendedFloatingActionButton(
-                onClick = { createInFolder(null) },
-                content = { Text("Добавить документ") },
-                modifier = Modifier.weight(1f),
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-            
-            ExtendedFloatingActionButton(
-                onClick = { showNewFolderDialog = true },
-                content = { Text("Создать папку") },
-                modifier = Modifier.weight(1f),
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+            FloatingDock(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 36.dp + bottomInset.dp),
+                onCreateDoc = { createInFolder(null) },
+                onCreateFolder = { showNewFolderDialog = true }
             )
         }
+    }
 
-        if (showNewFolderDialog) {
-            AlertDialog(
-                onDismissRequest = { showNewFolderDialog = false },
-                title = { Text("Новая папка") },
-                text = {
-                        OutlinedTextField(
-                        value = newFolderName,
-                        onValueChange = { newFolderName = it },
-                        label = { Text("Название папки") },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground
-                        )
+    if (showNewFolderDialog) {
+        AlertDialog(
+            onDismissRequest = { showNewFolderDialog = false },
+            title = { Text("Новая папка") },
+            text = {
+                OutlinedTextField(
+                    value = newFolderName,
+                    onValueChange = { newFolderName = it },
+                    label = { Text("Название папки") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                     )
-                },
-                confirmButton = {
-                    TextButton(onClick = {
-                        val validation = DataValidator.validateFolderName(newFolderName)
-                        if (validation.isSuccess) {
-                            scope.launch {
-                                ServiceLocator.repos.folders.addFolder(validation.getValue()!!, null)
-                                newFolderName = ""
-                                showNewFolderDialog = false
-                            }
-                        } else {
-                            ErrorHandler.showError(validation.getError()!!)
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val validation = DataValidator.validateFolderName(newFolderName)
+                    if (validation.isSuccess) {
+                        scope.launch {
+                            ServiceLocator.repos.folders.addFolder(validation.getValue()!!, null)
+                            newFolderName = ""
+                            showNewFolderDialog = false
                         }
-                    }) { Text("Создать") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showNewFolderDialog = false }) { Text("Отмена") }
-                }
-            )
-        }
+                    } else {
+                        ErrorHandler.showError(validation.getError()!!)
+                    }
+                }) { Text("Создать") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showNewFolderDialog = false }) { Text("Отмена") }
+            }
+        )
     }
 
     MoveToFolderDialogIfNeeded(moveDocId = moveDocId, onClose = { moveDocId = null })
@@ -344,90 +619,236 @@ private fun TreeScreen(
 }
 
 @Composable
-private fun FolderBlock(
-    folder: Folder,
-    docs: List<Document>,
-    openDoc: (String) -> Unit,
-    createInFolder: (String?) -> Unit,
+private fun FolderSectionCard(
+    title: String,
+    documents: List<Document>,
     isCollapsed: Boolean,
     onToggleCollapse: () -> Unit,
-    onDeleteFolder: (String) -> Unit,
-    onMoveDoc: (String) -> Unit
+    onCreateInFolder: (() -> Unit)?,
+    onDeleteFolder: (() -> Unit)?,
+    openDoc: (String) -> Unit,
+    onMoveDoc: (String) -> Unit,
+    collapsible: Boolean = true
 ) {
-    GlassCard {
-        Column(Modifier.fillMaxWidth().padding(AppDimens.cardPadding)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Кнопка сворачивания/разворачивания
-                IconButton(onClick = onToggleCollapse) {
+    var menuOpen by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(NeoShapes.section)
+            .background(NeoPalette.section)
+            .padding(horizontal = 20.dp, vertical = 18.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (collapsible) {
+                IconButton(
+                    onClick = onToggleCollapse,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(NeoShapes.dockButton)
+                        .background(NeoPalette.controlBackground)
+                ) {
                     Icon(
-                        if (isCollapsed) Icons.Default.ExpandMore else Icons.Default.ExpandLess,
+                        imageVector = if (isCollapsed) Icons.Outlined.KeyboardArrowDown else Icons.Outlined.KeyboardArrowUp,
                         contentDescription = if (isCollapsed) "Развернуть" else "Свернуть",
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = NeoPalette.neon
                     )
                 }
-                
-                Text(
-                    folder.name, 
-                    style = MaterialTheme.typography.titleMedium, 
-                    modifier = Modifier.weight(1f)
+                Spacer(Modifier.width(12.dp))
+            } else {
+                Spacer(Modifier.width(4.dp))
+                Icon(
+                    imageVector = Icons.Outlined.NoteAdd,
+                    contentDescription = null,
+                    tint = NeoPalette.neon,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(NeoPalette.controlBackground, NeoShapes.dockButton)
+                        .padding(6.dp)
                 )
-                
-                // Кнопка удаления папки
-                IconButton(onClick = { onDeleteFolder(folder.id) }) {
+                Spacer(Modifier.width(12.dp))
+            }
+
+            Text(
+                text = title,
+                color = NeoPalette.textPrimary,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.weight(1f)
+            )
+
+            if (onCreateInFolder != null || onDeleteFolder != null) {
+                IconButton(
+                    onClick = { menuOpen = true },
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(NeoShapes.dockButton)
+                        .background(NeoPalette.controlBackground)
+                ) {
                     Icon(
-                        Icons.Default.Delete,
-                        contentDescription = "Удалить папку",
-                        tint = MaterialTheme.colorScheme.error
+                        imageVector = Icons.Outlined.Tune,
+                        contentDescription = "Настройки папки",
+                    tint = NeoPalette.neon
                     )
                 }
-            }
-            
-            // Кнопка "+ Документ" на уровне названия папки
-            Row(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // Отступ такой же как у кнопки сворачивания (48dp)
-                Spacer(modifier = Modifier.width(48.dp))
-                TextButton(
-                    onClick = { createInFolder(folder.id) },
-                    contentPadding = PaddingValues(0.dp)
-                ) { 
-                    Text("+ Документ") 
-                }
-            }
-            
-            // Показываем документы только если папка не свернута
-            if (!isCollapsed) {
-                docs.forEach { doc ->
-                    Row(
-                        modifier = Modifier.padding(start = 48.dp), // Выравниваем с названием папки
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TextButton(
-                            onClick = { openDoc(doc.id) }, 
-                            modifier = Modifier.weight(1f),
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text(
-                                "• ${doc.name}",
-                                textAlign = TextAlign.Start,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                        IconButton(
-                            onClick = { onMoveDoc(doc.id) },
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.MoreVert,
-                                contentDescription = "Переместить документ",
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
+                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                    if (onCreateInFolder != null) {
+                        DropdownMenuItem(
+                            text = { Text("Создать документ") },
+                            onClick = {
+                                menuOpen = false
+                                onCreateInFolder()
+                            }
+                        )
+                    }
+                    if (onDeleteFolder != null) {
+                        DropdownMenuItem(
+                            text = { Text("Удалить папку") },
+                            onClick = {
+                                menuOpen = false
+                                onDeleteFolder()
+                            }
+                        )
                     }
                 }
             }
         }
+
+        if (!isCollapsed || !collapsible) {
+            Spacer(Modifier.height(16.dp))
+            documents.forEachIndexed { index, doc ->
+                DocumentRow(
+                    document = doc,
+                    openDoc = openDoc,
+                    onMoveDoc = onMoveDoc
+                )
+                if (index != documents.lastIndex) {
+                    Spacer(Modifier.height(12.dp))
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun DocumentRow(
+    document: Document,
+    openDoc: (String) -> Unit,
+    onMoveDoc: (String) -> Unit
+) {
+    var menuOpen by remember { mutableStateOf(false) }
+    var isMasked by remember(document.id) { mutableStateOf(true) }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(NeoShapes.row)
+            .background(NeoPalette.item)
+            .combinedClickable(
+                onClick = { openDoc(document.id) },
+                onLongClick = { menuOpen = true }
+            )
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.Description,
+            contentDescription = null,
+            tint = NeoPalette.neon,
+            modifier = Modifier
+                .size(36.dp)
+                .clip(NeoShapes.dockButton)
+                .background(NeoPalette.iconBackground)
+                .padding(6.dp)
+        )
+        Spacer(Modifier.width(18.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = document.name,
+                color = NeoPalette.textPrimary,
+                style = MaterialTheme.typography.titleMedium
+            )
+            if (document.description.isNotBlank()) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = if (isMasked) "＊＊＊＊＊＊" else document.description,
+                    color = NeoPalette.textSecondary,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+        Spacer(Modifier.width(12.dp))
+        IconButton(
+            onClick = { isMasked = !isMasked },
+            modifier = Modifier
+                .size(40.dp)
+                .clip(NeoShapes.dockButton)
+                .background(NeoPalette.controlBackground)
+        ) {
+            Icon(
+                imageVector = if (isMasked) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+                contentDescription = if (isMasked) "Показать описание" else "Скрыть описание",
+                tint = NeoPalette.neon
+            )
+        }
+        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+            DropdownMenuItem(
+                text = { Text("Переместить в папку") },
+                onClick = {
+                    menuOpen = false
+                    onMoveDoc(document.id)
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun FloatingDock(
+    modifier: Modifier = Modifier,
+    onCreateDoc: () -> Unit,
+    onCreateFolder: () -> Unit
+) {
+    Row(
+        modifier = modifier
+            .clip(NeoShapes.dock)
+            .background(NeoPalette.dockBackground)
+            .padding(horizontal = 32.dp, vertical = 18.dp),
+        horizontalArrangement = Arrangement.spacedBy(48.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        DockButton(
+            icon = Icons.Outlined.NoteAdd,
+            description = "Новый документ",
+            onClick = onCreateDoc
+        )
+        DockButton(
+            icon = Icons.Outlined.CreateNewFolder,
+            description = "Новая папка",
+            onClick = onCreateFolder
+        )
+    }
+}
+
+@Composable
+private fun DockButton(
+    icon: ImageVector,
+    description: String,
+    onClick: () -> Unit
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier
+            .size(56.dp)
+            .clip(NeoShapes.dockButton)
+            .background(NeoPalette.dockButtonBackground)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = description,
+            tint = NeoPalette.neon,
+            modifier = Modifier.size(28.dp)
+        )
     }
 }
 
@@ -481,176 +902,361 @@ private fun MoveToFolderDialogIfNeeded(moveDocId: String?, onClose: () -> Unit) 
 
 @Composable
 private fun InfoScreen() {
-    val scroll = rememberScrollState()   // ← создаём состояние скролла здесь
-    val ctx = LocalContext.current
-    val uc = ServiceLocator.useCases
+    val context = LocalContext.current
+    val useCases = ServiceLocator.useCases
     var changing by remember { mutableStateOf(false) }
     var oldPin by remember { mutableStateOf("") }
     var newPin by remember { mutableStateOf("") }
-    var newPin2 by remember { mutableStateOf("") }
+    var confirmPin by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
 
-    fun toast(msg: String) = Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show()
-    fun isFourDigits(s: String) = s.matches(Regex("^\\d{4}$"))
+    fun toast(message: String) = Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    fun isFourDigits(value: String) = value.matches(Regex("^\\d{4}$"))
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.systemBars)
-            .padding(24.dp), 
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("INFO & SETTINGS", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(AppDimens.spaceSm))
-        
-        // Переключатель темы
-        GlassCard(
-            modifier = Modifier.fillMaxWidth()
+    val density = LocalDensity.current
+    val bottomInset = WindowInsets.navigationBars.getBottom(density) / density.density
+    val topInset = WindowInsets.statusBars.getTop(density) / density.density
+
+    Surface(color = NeoPalette.background, modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(22.dp),
+            contentPadding = PaddingValues(
+                start = 20.dp,
+                end = 20.dp,
+                top = 32.dp + topInset.dp,
+                bottom = 160.dp + bottomInset.dp
+            )
         ) {
-            Column(
-                modifier = Modifier.padding(AppDimens.spaceMd)
-            ) {
+            item {
                 Text(
-                    text = "Тема приложения",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    text = "INFO & SETTINGS",
+                    color = NeoPalette.textPrimary,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(horizontal = 8.dp)
                 )
-                Spacer(Modifier.height(AppDimens.spaceSm))
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+            }
+
+            item {
+                InformationSectionCard(title = "Тема приложения") {
                     Text(
-                        text = if (ThemeManager.isDarkTheme) "Темная тема" else "Светлая тема",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+                        text = "Оформи внешний вид, чтобы он подходил под настроение.",
+                        color = NeoPalette.textSecondary,
+                        style = MaterialTheme.typography.bodyMedium
                     )
-                    
-                    Switch(
-                        checked = ThemeManager.isDarkTheme,
-                        onCheckedChange = { ThemeManager.toggleTheme(ctx) },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = MaterialTheme.colorScheme.primary,
-                            checkedTrackColor = MaterialTheme.colorScheme.primaryContainer,
-                            uncheckedThumbColor = MaterialTheme.colorScheme.outline,
-                            uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                    Spacer(Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (ThemeManager.isDarkTheme) "Темная тема" else "Светлая тема",
+                            color = NeoPalette.textPrimary,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Switch(
+                            checked = ThemeManager.isDarkTheme,
+                            onCheckedChange = { ThemeManager.toggleTheme(context) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = NeoPalette.neon,
+                                checkedTrackColor = NeoPalette.neon.copy(alpha = 0.4f),
+                                uncheckedThumbColor = NeoPalette.controlBackground,
+                                uncheckedTrackColor = NeoPalette.controlBackground,
+                                uncheckedBorderColor = Color.Transparent,
+                                checkedBorderColor = Color.Transparent
+                            )
+                        )
+                    }
+                }
+            }
+
+            item {
+                InformationSectionCard(title = "Контакты и ссылки") {
+                    InformationLinkButton(
+                        text = "Открыть GitHub",
+                        onClick = {
+                            val intent = Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse("https://github.com/ValeriaBelyaeva/DOC_APP")
+                            )
+                            context.startActivity(intent)
+                        }
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = "Telegram: @irisus_r",
+                        color = NeoPalette.textSecondary,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "Версия: 1.0.0",
+                        color = NeoPalette.textSecondary,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
+            item {
+                InformationSectionCard(title = "Пинкод") {
+                    if (!changing) {
+                        InformationPrimaryButton(
+                            text = "Сменить пинкод",
+                            onClick = { changing = true }
+                        )
+                    } else {
+                        InformationTextField(
+                            value = oldPin,
+                            onValueChange = { oldPin = it },
+                            label = "Старый пинкод"
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        InformationTextField(
+                            value = newPin,
+                            onValueChange = { newPin = it },
+                            label = "Новый пинкод (4 цифры)"
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        InformationTextField(
+                            value = confirmPin,
+                            onValueChange = { confirmPin = it },
+                            label = "Повтори пинкод"
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        InformationPrimaryButton(
+                            text = "Применить",
+                            onClick = {
+                                scope.launch {
+                                    if (!isFourDigits(newPin)) {
+                                        toast("Пинкод должен состоять из четырех цифр")
+                                        return@launch
+                                    }
+                                    if (newPin != confirmPin) {
+                                        toast("Подтверждение пинкода не совпадает")
+                                        return@launch
+                                    }
+                                    if (oldPin == newPin) {
+                                        toast("Новый пинкод не должен совпадать со старым")
+                                        return@launch
+                                    }
+                                    val ok = useCases.verifyPin(oldPin)
+                                    if (!ok) {
+                                        toast("Старый пинкод неверный")
+                                        return@launch
+                                    }
+                                    useCases.setNewPin(newPin)
+                                    toast("Пинкод обновлен")
+                                    oldPin = ""
+                                    newPin = ""
+                                    confirmPin = ""
+                                    changing = false
+                                }
+                            }
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        InformationGhostButton(
+                            text = "Отмена",
+                            onClick = {
+                                oldPin = ""
+                                newPin = ""
+                                confirmPin = ""
+                                changing = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            item {
+                InformationSectionCard(title = "Подсказки для пользователя") {
+                    InformationHintBlock(
+                        title = "Навигация",
+                        hints = listOf(
+                            "Свайпай между экранами, чтобы быстро найти нужный раздел.",
+                            "Влево — экран «Дерево» с папками и документами.",
+                            "Середина — «Главная» со списком закрепленных и последних документов.",
+                            "Вправо — экран «Info», где лежат подсказки и ссылки."
+                        )
+                    )
+                    Spacer(Modifier.height(18.dp))
+                    InformationHintBlock(
+                        title = "Главная",
+                        hints = listOf(
+                            "Кнопка «плюс» сверху создает документ без папки.",
+                            "Закрепленные документы отмечаются звездой.",
+                            "Долгий тап включает режим перестановки закрепленных; потом тап по другой карточке меняет их местами.",
+                            "Меню на карточке помогает переместить документ в папку.",
+                            "Раздел «Последние» сортируется по времени последнего открытия."
+                        )
+                    )
+                    Spacer(Modifier.height(18.dp))
+                    InformationHintBlock(
+                        title = "Папки",
+                        hints = listOf(
+                            "Внутри папки лежит список ее документов и кнопка создания нового документа прямо внутри.",
+                            "Раздел «Без папки» собирает все документы без привязки; их тоже можно перенести в нужную папку."
+                        )
+                    )
+                    Spacer(Modifier.height(18.dp))
+                    InformationHintBlock(
+                        title = "Документ",
+                        hints = listOf(
+                            "Тапни по карточке, чтобы открыть документ.",
+                            "Описание скрывается звездочками; иконка глаза временно показывает текст.",
+                            "Иконка копии переносит значение поля в буфер обмена.",
+                            "Карандаш в шапке переводит в режим редактирования.",
+                            "Плюс рядом с названием поля добавляет новое поле.",
+                            "Документы поддерживают вложения: фото и PDF.",
+                            "Корзины позволяют удалять документы и отдельные поля."
+                        )
+                    )
+                    Spacer(Modifier.height(18.dp))
+                    InformationHintBlock(
+                        title = "Шаблоны",
+                        hints = listOf(
+                            "При создании документа можно выбрать готовый шаблон или начать с пустого листа.",
+                            "Свои шаблоны создаются на экране настройки шаблонов."
+                        )
+                    )
+                    Spacer(Modifier.height(18.dp))
+                    InformationHintBlock(
+                        title = "Закрепления",
+                        hints = listOf(
+                            "Звезда закрепляет документ и поднимает его в верх списка.",
+                            "Порядок закрепленных меняется в режиме перестановки через долгий тап."
+                        )
+                    )
+                    Spacer(Modifier.height(18.dp))
+                    InformationHintBlock(
+                        title = "Безопасность",
+                        hints = listOf(
+                            "Сейчас выключить пинкод нельзя.",
+                            "Расширенные настройки и скрытие содержимого появятся в следующих версиях."
                         )
                     )
                 }
             }
         }
-        
-        Spacer(Modifier.height(AppDimens.spaceMd))
-        
-        TextButton(onClick = {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/ValeriaBelyaeva/DOC_APP"))
-            ctx.startActivity(intent)
-        }) { Text("ОТКРЫТЬ GITHUB") }
-        Text("TG: @irisus_r")
-        Text("version: 1.0.0")
-        Spacer(Modifier.height(AppDimens.spaceLg))
-
-        if (!changing) {
-            Button(
-                onClick = { changing = true },
-                shape = AppLayout.largeButtonShape()
-            ) { Text("СМЕНИТЬ ПИНКОД") }
-        } else {
-            OutlinedTextField(value = oldPin, onValueChange = { oldPin = it }, label = { Text("Старый PIN") })
-            Spacer(Modifier.height(AppDimens.spaceXs))
-            OutlinedTextField(value = newPin, onValueChange = { newPin = it }, label = { Text("Новый PIN (4 цифры)") })
-            Spacer(Modifier.height(AppDimens.spaceXs))
-            OutlinedTextField(value = newPin2, onValueChange = { newPin2 = it }, label = { Text("Повторите PIN") })
-            Spacer(Modifier.height(AppDimens.spaceSm))
-            Button(
-                onClick = {
-                    scope.launch {
-                        if (!isFourDigits(newPin)) { toast("PIN должен быть ровно 4 цифры"); return@launch }
-                        if (newPin != newPin2)     { toast("Подтверждение PIN не совпало"); return@launch }
-                        if (oldPin == newPin)      { toast("Новый PIN не должен совпадать со старым"); return@launch }
-                        val ok = uc.verifyPin(oldPin)
-                        if (!ok) { toast("Старый PIN неверен"); return@launch }
-                        uc.setNewPin(newPin)
-                        toast("PIN обновлён")
-                        oldPin = ""; newPin = ""; newPin2 = ""; changing = false
-                    }
-                },
-                shape = AppLayout.largeButtonShape()
-            ) { Text("ПРИМЕНИТЬ") }
-            Spacer(Modifier.height(AppDimens.spaceXxs))
-            TextButton(
-                onClick = { oldPin = ""; newPin = ""; newPin2 = ""; changing = false },
-                shape = AppLayout.smallButtonShape()
-            ) { Text("Отмена") }
-        }
-
-        Spacer(Modifier.height(AppDimens.spaceXl))
-
-
-        Spacer(Modifier.height(AppDimens.spaceLg))
-        Text("Подсказки для пользователя", style = MaterialTheme.typography.titleMedium)
-        Spacer(Modifier.height(AppDimens.spaceSm))
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.systemBars)
-                .verticalScroll(scroll)
-        ){
-        // Навигация
-        Text("• Перелистывай экраны свайпом по горизонтали:")
-        Text("    — ВЛЕВО: «Дерево» — папки + документы;")
-        Text("    — СЕРЕДИНА: «Главная» — закреплённые и последние документы;")
-        Text("    — ВПРАВО: «Info» — эта справка, ссылки, версия.")
-        Spacer(Modifier.height(AppDimens.spaceSm))
-
-        // Главная
-        Text("Главная")
-        Text("• Кнопка «плюс» сверху по центру — создать документ без папки.")
-        Text("• Блок «ЗАКРЕПЛЕННЫЕ»: документы, закреплённые звездой.")
-        Text("• Долгий тап по закреплённому — режим перестановки; тап по другому — обмен местами.")
-        Text("• Три точки на карточке — «Переместить в папку».")
-        Text("• Блок «ПОСЛЕДНИЕ»: сортируются по времени последнего открытия (новые сверху).")
-        Spacer(Modifier.height(AppDimens.spaceSm))
-
-        // Дерево/папки
-        Text("Папки")
-        Text("• Внутри каждой папки: список её документов и кнопка «+ Документ» для создания прямо в папке.")
-        Text("• Раздел «БЕЗ ПАПКИ» внизу — документы без папки, их тоже можно переместить в папку через меню.")
-        Spacer(Modifier.height(AppDimens.spaceSm))
-
-        // Документ
-        Text("Документ")
-        Text("• Открыть документ — тап по карточке/строке.")
-        Text("• В режиме просмотра видно название поля и первые символы данных серым.")
-        Text("• Иконка «глаз» у поля — временно показать полные данные (название скрывается).")
-        Text("• Иконка «копия» — копировать ЗНАЧЕНИЕ поля в буфер.")
-        Text("• Иконка «карандаш» в шапке — перейти в редактирование: менять имя документа, добавлять/удалять поля, вложения.")
-        Text("• «Плюс» возле ввода названия поля — добавить поле; позиционирован по центру по вертикали.")
-        Text("• Поддерживаются вложения: несколько фото из галереи + несколько PDF.")
-        Text("• Есть удаление: корзина у документа (с подтверждением) и у каждого поля (с подтверждением).")
-        Spacer(Modifier.height(AppDimens.spaceSm))
-
-        // Шаблоны
-        Text("Шаблоны")
-        Text("• При создании документа можно выбрать шаблон (предзаданные имена полей) или начать с нуля.")
-        Text("• Свои шаблоны — через экран создания шаблона ")
-        Spacer(Modifier.height(8.dp))
-
-        // Закрепления
-        Text("Закрепления")
-        Text("• Звезда — закрепить/открепить. Закреплённые всегда наверху на «Главной».")
-        Text("• Порядок закреплённых регулируется долгим тапом и обменом мест.")
-        Spacer(Modifier.height(8.dp))
-
-        // Безопасность (кнопка скрыта)
-        Text("Безопасность (PIN)")
-        Text("• На текущей версии управление PIN временно скрыто. Вход без ввода кода пока не возможен.")
-        Text("• Функция выключения PIN будет в следующих версиях, как и формат скрытого контента для паролей.")
-        Spacer(Modifier.height(AppDimens.spaceMd))
+    }
 }
+
+@Composable
+private fun InformationSectionCard(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(NeoShapes.section)
+            .background(NeoPalette.section)
+            .padding(horizontal = 20.dp, vertical = 18.dp)
+    ) {
+        Text(
+            text = title,
+            color = NeoPalette.textPrimary,
+            style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(Modifier.height(16.dp))
+        content()
+    }
+}
+
+@Composable
+private fun InformationPrimaryButton(text: String, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = NeoPalette.neon,
+            contentColor = NeoPalette.background
+        ),
+        shape = NeoShapes.row
+    ) {
+        Text(text = text.uppercase())
+    }
+}
+
+@Composable
+private fun InformationGhostButton(text: String, onClick: () -> Unit) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        border = BorderStroke(1.dp, NeoPalette.neon),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = NeoPalette.neon),
+        shape = NeoShapes.row
+    ) {
+        Text(text = text.uppercase())
+    }
+}
+
+@Composable
+private fun InformationLinkButton(text: String, onClick: () -> Unit) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        border = BorderStroke(1.dp, NeoPalette.neon.copy(alpha = 0.6f)),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = NeoPalette.neon),
+        shape = NeoShapes.row
+    ) {
+        Text(text = text.uppercase())
+    }
+}
+
+@Composable
+private fun InformationTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = Modifier.fillMaxWidth(),
+        label = { Text(label, color = NeoPalette.textSecondary) },
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = NeoPalette.textPrimary,
+            unfocusedTextColor = NeoPalette.textPrimary,
+            cursorColor = NeoPalette.neon,
+            focusedBorderColor = NeoPalette.neon,
+            unfocusedBorderColor = NeoPalette.controlBackground,
+            focusedLabelColor = NeoPalette.neon,
+            unfocusedLabelColor = NeoPalette.textSecondary,
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent
+        )
+    )
+}
+
+@Composable
+private fun InformationHintBlock(title: String, hints: List<String>) {
+    Text(
+        text = title,
+        color = NeoPalette.textPrimary,
+        style = MaterialTheme.typography.titleSmall
+    )
+    Spacer(Modifier.height(10.dp))
+    hints.forEachIndexed { index, hint ->
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top
+        ) {
+            Text(
+                text = "•",
+                color = NeoPalette.neon,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+            Text(
+                text = hint,
+                color = NeoPalette.textSecondary,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f)
+            )
+        }
+        if (index != hints.lastIndex) {
+            Spacer(Modifier.height(8.dp))
+        }
     }
 }
 

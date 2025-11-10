@@ -1,31 +1,52 @@
 package com.example.docapp.ui.template
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.windowInsetsPadding
-import com.example.docapp.core.ServiceLocator
-import com.example.docapp.core.ErrorHandler
+import com.example.docapp.ui.theme.NeonColorScheme
+import com.example.docapp.ui.theme.NeonShapes
+import com.example.docapp.ui.theme.NeonTokens
 import com.example.docapp.core.DataValidator
+import com.example.docapp.core.ErrorHandler
+import com.example.docapp.core.ServiceLocator
 import com.example.docapp.domain.Template
-import com.example.docapp.ui.theme.GlassCard
 import kotlinx.coroutines.launch
 
 @Composable
@@ -37,337 +58,445 @@ fun TemplateSelectorScreen(
     val uc = ServiceLocator.useCases
     var list by remember { mutableStateOf<List<Template>>(emptyList()) }
     val scope = rememberCoroutineScope()
+    val colors = NeonTokens.darkColors
+    val shapes = NeonTokens.shapes
 
-    // Состояния для диалога создания шаблона
     var showDialog by remember { mutableStateOf(false) }
     var tplName by remember { mutableStateOf("") }
     val fieldNames = remember { mutableStateListOf<String>() }
     var newField by remember { mutableStateOf("") }
 
-        LaunchedEffect(Unit) {
-            list = uc.listTemplates()
-        }
-
-    fun resetDialog() {
-        tplName = ""
-        fieldNames.clear()
-        newField = ""
+    LaunchedEffect(Unit) {
+        list = uc.listTemplates()
     }
 
-    Box(Modifier.fillMaxSize()) {
-        Column(
+    Surface(color = colors.background, modifier = Modifier.fillMaxSize()) {
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.systemBars)
-                .padding(20.dp)
+                .padding(horizontal = 20.dp)
         ) {
-            // Заголовок
-            Text(
-                text = "Создание документа",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = "Выберите способ создания документа",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // Кнопки создания
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(22.dp),
+                contentPadding = PaddingValues(top = 32.dp, bottom = 140.dp)
             ) {
-                // Кнопка создания пустого документа
-                GlassCard(
-                    onClick = { onCreateEmpty(folderId) },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            Icons.Default.Description,
-                            contentDescription = null,
-                            modifier = Modifier.size(32.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+                item {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            text = "Пустой документ",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Medium,
-                            textAlign = TextAlign.Center
+                            text = "Создание документа",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = colors.textPrimary
                         )
+                        Spacer(Modifier.height(8.dp))
                         Text(
-                            text = "Начать с нуля",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            text = "Выбери способ: новый документ или заготовка",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.textSecondary,
                             textAlign = TextAlign.Center
                         )
                     }
                 }
-                
-                // Кнопка создания шаблона
-                GlassCard(
-                    onClick = { showDialog = true },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Icon(
-                            Icons.Default.ContentCopy,
-                            contentDescription = null,
-                            modifier = Modifier.size(32.dp),
-                            tint = MaterialTheme.colorScheme.secondary
+                        NeonTemplateOptionCard(
+                            icon = Icons.Default.Description,
+                            title = "Пустой документ",
+                            subtitle = "Начать с нуля",
+                            onClick = { onCreateEmpty(folderId) },
+                            modifier = Modifier.weight(1f),
+                            colors = colors,
+                            shapes = shapes
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Новый шаблон",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Medium,
-                            textAlign = TextAlign.Center
-                        )
-                        Text(
-                            text = "Создать шаблон",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
+                        NeonTemplateOptionCard(
+                            icon = Icons.Default.ContentCopy,
+                            title = "Новый шаблон",
+                            subtitle = "Сохранить структуру",
+                            onClick = { showDialog = true },
+                            modifier = Modifier.weight(1f),
+                            colors = colors,
+                            shapes = shapes
                         )
                     }
                 }
-            }
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            // Секция шаблонов
-            if (list.isNotEmpty()) {
-                Text(
-                    text = "Доступные шаблоны",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                
-                Spacer(modifier = Modifier.height(12.dp))
-                
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                items(list) { tpl ->
-                        GlassCard(
-                            onClick = { onCreateDocFromTemplate(tpl.id, folderId) }
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = tpl.name,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                
-                                Spacer(modifier = Modifier.width(8.dp))
-                                
-                                // Кнопка удаления шаблона
-                                IconButton(
-                                    onClick = {
-                                        scope.launch {
-                                            try {
-                                                uc.deleteTemplate(tpl.id)
-                                                list = uc.listTemplates()
-                                                ErrorHandler.showSuccess("Шаблон удален")
-                                            } catch (e: Exception) {
-                                                ErrorHandler.showError("Не удалось удалить шаблон: ${e.message}")
-                                            }
-                                        }
+
+                if (list.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "Доступные шаблоны",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = colors.textPrimary
+                        )
+                    }
+
+                    items(list) { tpl ->
+                        NeonTemplateListItem(
+                            template = tpl,
+                            onClick = { onCreateDocFromTemplate(tpl.id, folderId) },
+                            onDelete = {
+                                scope.launch {
+                                    try {
+                                        uc.deleteTemplate(tpl.id)
+                                        list = uc.listTemplates()
+                                        ErrorHandler.showSuccess("Шаблон удален")
+                                    } catch (e: Exception) {
+                                        ErrorHandler.showError("Не удалось удалить шаблон: ${e.message}")
                                     }
-                                ) {
-                                    Icon(
-                                        Icons.Default.Delete,
-                                        contentDescription = "Удалить шаблон",
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
                                 }
                             }
-                        }
+                        )
                     }
+                } else {
+                    item { NeonTemplateEmptyState() }
                 }
-            } else {
-                // Пустое состояние
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "Нет доступных шаблонов",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    Text(
-                        text = "Создайте свой первый шаблон",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        textAlign = TextAlign.Center
-                    )
-                }
+            }
+
+            if (showDialog) {
+                NeonTemplateDialog(
+                    tplName = tplName,
+                    onNameChange = { tplName = it },
+                    newField = newField,
+                    onFieldChange = { newField = it },
+                    fields = fieldNames,
+                    onAddField = {
+                        val trimmed = newField.trim()
+                        if (trimmed.isNotEmpty()) {
+                            fieldNames.add(trimmed)
+                            newField = ""
+                        }
+                    },
+                    onRemoveField = { fieldNames.remove(it) },
+                    onDismiss = {
+                        tplName = ""
+                        newField = ""
+                        fieldNames.clear()
+                        showDialog = false
+                    },
+                    onConfirm = {
+                        val nameValidation = DataValidator.validateTemplateName(tplName)
+                        val fieldValidations = fieldNames.map { DataValidator.validateFieldName(it) }
+
+                        if (nameValidation.isSuccess && fieldValidations.all { it.isSuccess }) {
+                            scope.launch {
+                                val normalizedName = nameValidation.getValue()!!
+                                val normalizedFields = fieldValidations.map { it.getValue()!! }
+                                uc.addTemplate(normalizedName, normalizedFields)
+                                list = uc.listTemplates()
+                                tplName = ""
+                                newField = ""
+                                fieldNames.clear()
+                                showDialog = false
+                            }
+                        } else {
+                            val errors = buildList {
+                                if (!nameValidation.isSuccess) add(nameValidation.getError()!!)
+                                fieldValidations.forEachIndexed { index, validation ->
+                                    if (!validation.isSuccess) add("Поле ${index + 1}: ${validation.getError()}")
+                                }
+                            }
+                            ErrorHandler.showError(errors.joinToString("\n"))
+                        }
+                    },
+                    confirmEnabled = tplName.trim().isNotEmpty() && fieldNames.isNotEmpty()
+                )
             }
         }
+    }
+}
 
-        // Диалог создания шаблона
-        if (showDialog) {
-            AlertDialog(
-                onDismissRequest = { showDialog = false },
-                title = { 
-                    Text(
-                        text = "Новый шаблон",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        OutlinedTextField(
-                            value = tplName,
-                            onValueChange = { tplName = it },
-                            label = { Text("Название шаблона") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = Color.Black,
-                                unfocusedTextColor = Color.Black
-                            )
-                        )
-                        
-                        Text(
-                            text = "Добавьте поля для шаблона:",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Medium
-                        )
-                        
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            OutlinedTextField(
-                                value = newField,
-                                onValueChange = { newField = it },
-                                label = { Text("Название поля") },
-                                modifier = Modifier.weight(1f),
-                                singleLine = true,
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedTextColor = Color.Black,
-                                    unfocusedTextColor = Color.Black
-                                )
-                            )
-                            FilledIconButton(
-                                onClick = {
-                                    val s = newField.trim()
-                                    if (s.isNotEmpty()) {
-                                        fieldNames.add(s)
-                                        newField = ""
-                                    }
-                                }
-                            ) {
-                                Icon(Icons.Default.Add, contentDescription = "Добавить поле")
-                            }
-                        }
-                        
-                        if (fieldNames.isNotEmpty()) {
-                            GlassCard {
-                                Column(modifier = Modifier.padding(12.dp)) {
-                                    Text(
-                                        text = "Поля шаблона:",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                            fieldNames.forEach { f ->
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier.padding(vertical = 2.dp)
-                                        ) {
-                                            Text(
-                                                text = "• ",
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.primary
-                                            )
-                                            Text(
-                                                text = f,
-                                                style = MaterialTheme.typography.bodyMedium
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                confirmButton = {
-                        Button(
-                            onClick = {
-                                val nameValidation = DataValidator.validateTemplateName(tplName)
-                                val fieldValidations = fieldNames.map { DataValidator.validateFieldName(it) }
-                                
-                                if (nameValidation.isSuccess && fieldValidations.all { it.isSuccess }) {
-                                    scope.launch {
-                                        val normalizedName = nameValidation.getValue()!!
-                                        val normalizedFields = fieldValidations.map { it.getValue()!! }
-                                        uc.addTemplate(normalizedName, normalizedFields)
-                                        list = uc.listTemplates()
-                                        resetDialog()
-                                        showDialog = false
-                                    }
-                                } else {
-                                    val errors = mutableListOf<String>()
-                                    if (!nameValidation.isSuccess) {
-                                        errors.add(nameValidation.getError()!!)
-                                    }
-                                    fieldValidations.forEachIndexed { index, validation ->
-                                        if (!validation.isSuccess) {
-                                            errors.add("Поле ${index + 1}: ${validation.getError()}")
-                                        }
-                                    }
-                                    ErrorHandler.showError(errors.joinToString("\n"))
-                                }
-                            },
-                            enabled = tplName.trim().isNotEmpty() && fieldNames.isNotEmpty()
-                        ) {
-                            Text("Создать шаблон")
-                        }
-                },
-                dismissButton = {
-                    TextButton(onClick = {
-                        resetDialog()
-                        showDialog = false
-                    }) { 
-                        Text("Отмена") 
-                    }
-                }
+private object NeonTemplatePalette {
+    val background = Color(0xFF060B12)
+    val card = Color(0xFF1B2633)
+    val cardHighlight = Color(0xFF212E3D)
+    val outline = Color(0xFF2F3A49)
+    val badge = Color(0xFF111A27)
+    val neon = Color(0xFFC6FF00)
+    val textPrimary = Color(0xFFE8EEF6)
+    val textSecondary = Color(0xFF93A4B8)
+    val danger = Color(0xFFFF4D67)
+}
+
+@Composable
+private fun NeonTemplateOptionCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    colors: NeonColorScheme = NeonTokens.darkColors,
+    shapes: NeonShapes = NeonTokens.shapes
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier,
+        shape = shapes.largeCard,
+        colors = CardDefaults.cardColors(containerColor = colors.surface),
+        border = BorderStroke(1.2.dp, colors.outline)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 24.dp, horizontal = 18.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(colors.badgePrimary),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = colors.accent,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            Spacer(Modifier.height(14.dp))
+            Text(
+                text = title.uppercase(),
+                style = MaterialTheme.typography.titleSmall,
+                color = colors.textPrimary,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.textSecondary,
+                textAlign = TextAlign.Center
             )
         }
     }
+}
+
+@Composable
+private fun NeonTemplateListItem(
+    template: Template,
+    onClick: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = NeonTemplatePalette.cardHighlight),
+        border = BorderStroke(1.dp, NeonTemplatePalette.outline)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 18.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = template.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = NeonTemplatePalette.textPrimary
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = "Шаблон",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = NeonTemplatePalette.textSecondary
+                )
+            }
+            IconButton(onClick = onDelete) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Удалить шаблон",
+                    tint = NeonTemplatePalette.danger
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun NeonTemplateEmptyState() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(26.dp))
+            .background(NeonTemplatePalette.card)
+            .padding(horizontal = 24.dp, vertical = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Нет доступных шаблонов",
+            style = MaterialTheme.typography.titleMedium,
+            color = NeonTemplatePalette.textPrimary,
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "Создай шаблон, чтобы ускорить повторяющиеся документы",
+            style = MaterialTheme.typography.bodyMedium,
+            color = NeonTemplatePalette.textSecondary,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun NeonTemplateDialog(
+    tplName: String,
+    onNameChange: (String) -> Unit,
+    newField: String,
+    onFieldChange: (String) -> Unit,
+    fields: List<String>,
+    onAddField: () -> Unit,
+    onRemoveField: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+    confirmEnabled: Boolean
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = NeonTemplatePalette.card,
+        title = {
+            Text(
+                text = "Новый шаблон",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = NeonTemplatePalette.textPrimary
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                OutlinedTextField(
+                    value = tplName,
+                    onValueChange = onNameChange,
+                    label = { Text("Название шаблона") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = NeonTemplatePalette.textPrimary,
+                        unfocusedTextColor = NeonTemplatePalette.textPrimary,
+                        cursorColor = NeonTemplatePalette.neon,
+                        focusedBorderColor = NeonTemplatePalette.neon,
+                        unfocusedBorderColor = NeonTemplatePalette.outline,
+                        focusedLabelColor = NeonTemplatePalette.neon,
+                        unfocusedLabelColor = NeonTemplatePalette.textSecondary,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent
+                    )
+                )
+
+                Text(
+                    text = "Добавь поля для шаблона",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Medium,
+                    color = NeonTemplatePalette.textPrimary
+                )
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = newField,
+                        onValueChange = onFieldChange,
+                        label = { Text("Название поля") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = NeonTemplatePalette.textPrimary,
+                            unfocusedTextColor = NeonTemplatePalette.textPrimary,
+                            cursorColor = NeonTemplatePalette.neon,
+                            focusedBorderColor = NeonTemplatePalette.neon,
+                            unfocusedBorderColor = NeonTemplatePalette.outline,
+                            focusedLabelColor = NeonTemplatePalette.neon,
+                            unfocusedLabelColor = NeonTemplatePalette.textSecondary,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent
+                        )
+                    )
+                    IconButton(
+                        onClick = onAddField,
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(NeonTemplatePalette.badge)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Добавить поле",
+                            tint = NeonTemplatePalette.neon
+                        )
+                    }
+                }
+
+                if (fields.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(NeonTemplatePalette.cardHighlight)
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text(
+                            text = "Поля шаблона",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = NeonTemplatePalette.textPrimary
+                        )
+                        fields.forEach { field ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = field,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = NeonTemplatePalette.textPrimary,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                IconButton(onClick = { onRemoveField(field) }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Удалить поле",
+                                        tint = NeonTemplatePalette.danger
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                enabled = confirmEnabled,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = NeonTemplatePalette.neon,
+                    contentColor = NeonTemplatePalette.background,
+                    disabledContainerColor = NeonTemplatePalette.neon.copy(alpha = 0.3f),
+                    disabledContentColor = NeonTemplatePalette.background.copy(alpha = 0.5f)
+                ),
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Text("Создать шаблон")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(contentColor = NeonTemplatePalette.textSecondary)
+            ) {
+                Text("Отмена")
+            }
+        }
+    )
 }

@@ -53,41 +53,39 @@ val LocalThemeManager = staticCompositionLocalOf { ThemeManager }
  * Dark theme colors for glassmorphism
  */
 object DarkGlassColors {
-    // Dark theme glass colors
-    val darkGlassTintTop = Color(0x1AFFFFFF)      // 10% white for glass top
-    val darkGlassTintBottom = Color(0x0DFFFFFF)   // 5% white for glass bottom
-    val darkGlassHighlight = Color(0x33FFFFFF)    // 20% white highlight
-    val darkGlassShadow = Color(0x40000000)       // 25% black shadow
-    val darkGlassBorderBright = Color(0x4DFFFFFF) // 30% white bright border
-    val darkGlassBorderShadow = Color(0x1AD7FC5A) // 10% lime green shadow border
+    val darkGlassTintTop = Color(0x33212C3A)
+    val darkGlassTintBottom = Color(0x33151F2C)
+    val darkGlassHighlight = Color(0x26C6FF00)
+    val darkGlassShadow = Color(0x4010151E)
+    val darkGlassBorderBright = Color(0x4DC6FF00)
+    val darkGlassBorderShadow = Color(0x1A0C141D)
 }
 
 /**
  * Dark theme color scheme
  */
 object DarkThemeColors {
-    // Dark theme with lime green accent
-    val darkPrimary = Color(0xFFD7FC5A)           // Bright lime green for dark theme
-    val darkOnPrimary = Color(0xFF000000)         // Black text on lime green
-    val darkPrimaryContainer = Color(0xFF2D3A00)  // Dark lime green container
-    val darkOnPrimaryContainer = Color(0xFFE8FF8A) // Light lime green text
-    
-    val darkSecondary = Color(0xFF81C784)         // Light green for secondary
-    val darkOnSecondary = Color(0xFF000000)      // Black text on light green
-    val darkSecondaryContainer = Color(0xFF1B5E20) // Very dark green container
-    val darkOnSecondaryContainer = Color(0xFFC8E6C9) // Light green text
-    
-    val darkTertiary = Color(0xFF80CBC4)         // Light teal for tertiary
-    val darkOnTertiary = Color(0xFF000000)       // Black text on teal
-    val darkTertiaryContainer = Color(0xFF004D40) // Dark teal container
-    val darkOnTertiaryContainer = Color(0xFFA6F2E2) // Light teal text
-    
-    val darkBackground = Color(0xFF121212)        // Very dark background
-    val darkOnBackground = Color(0xFFFFFFFF)     // White text on dark background
-    val darkSurface = Color(0xFF1E1E1E)          // Dark surface
-    val darkOnSurface = Color(0xFFFFFFFF)        // White text on dark surface
-    val darkSurfaceVariant = Color(0xFF2C2C2C)   // Darker surface variant
-    val darkOnSurfaceVariant = Color(0xFFB0B0B0)  // Light gray text
-    val darkOutline = Color(0xFFFFFFFF)          // White outline for dark theme
-    val darkOutlineVariant = Color(0xFFB0B0B0)   // Light gray outline variant
+    val darkPrimary = Color(0xFFC6FF00)
+    val darkOnPrimary = Color(0xFF050A02)
+    val darkPrimaryContainer = Color(0xFF121C27)
+    val darkOnPrimaryContainer = Color(0xFFC6FF00)
+
+    val darkSecondary = Color(0xFFC6FF00)
+    val darkOnSecondary = Color(0xFF050A02)
+    val darkSecondaryContainer = Color(0xFF202C3A)
+    val darkOnSecondaryContainer = Color(0xFFE8EEF6)
+
+    val darkTertiary = Color(0xFFC6FF00)
+    val darkOnTertiary = Color(0xFF050A02)
+    val darkTertiaryContainer = Color(0xFF152130)
+    val darkOnTertiaryContainer = Color(0xFFE8EEF6)
+
+    val darkBackground = Color(0xFF060B12)
+    val darkOnBackground = Color(0xFFE8EEF6)
+    val darkSurface = Color(0xFF202C3A)
+    val darkOnSurface = Color(0xFFE8EEF6)
+    val darkSurfaceVariant = Color(0xFF151F2C)
+    val darkOnSurfaceVariant = Color(0xFF93A4B8)
+    val darkOutline = Color(0xFF152130)
+    val darkOutlineVariant = Color(0xFF1E2A38)
 }
