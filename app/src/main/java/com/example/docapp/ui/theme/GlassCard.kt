@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
+import com.example.docapp.ui.theme.AppShapes
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -35,7 +36,7 @@ fun GlassCard(
 ) {
     val glassColors = LocalGlassColors.current
     val surfaceTokens = SurfaceTokens.current(ThemeConfig.surfaceStyle)
-    val targetShape = shape ?: surfaceTokens.shapes.largeCard
+    val targetShape = shape ?: AppShapes.panelLarge()
     val isInteractive = onClick != null || onLongClick != null
     val interactionSource = remember { MutableInteractionSource() }
     val ripple = rememberRipple(

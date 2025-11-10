@@ -54,11 +54,47 @@ object AppDimens {
 }
 
 object AppRadii {
-    val cardCorner: Dp = 12.dp
-    val buttonCorner: Dp = 32.dp
-    val smallButtonCorner: Dp = 24.dp
-    val largeButtonCorner: Dp = 40.dp
-    val extraLargeButtonCorner: Dp = 48.dp
+    val radiusLg: Dp = 24.dp
+    val radiusMd: Dp = 20.dp
+    val radiusSm: Dp = 16.dp
+    val radiusPill: Dp = 9999.dp
+
+    val cardCorner: Dp = radiusMd
+    val buttonCorner: Dp = radiusMd
+    val smallButtonCorner: Dp = radiusSm
+    val largeButtonCorner: Dp = radiusLg
+}
+
+object AppShapes {
+    @Composable
+    private fun tokens(): SurfaceShapeRefs = SurfaceTokens.current(ThemeConfig.surfaceStyle).refs
+
+    @Composable
+    fun panelLarge(): Shape = tokens().panelLarge
+
+    @Composable
+    fun panelMedium(): Shape = tokens().panelMedium
+
+    @Composable
+    fun panelSmall(): Shape = tokens().panelSmall
+
+    @Composable
+    fun listItem(): Shape = tokens().listItem
+
+    @Composable
+    fun iconButton(): Shape = tokens().icon
+
+    @Composable
+    fun primaryButton(): Shape = tokens().button
+
+    @Composable
+    fun secondaryButton(): Shape = tokens().buttonSmall
+
+    @Composable
+    fun chip(): Shape = tokens().chip
+
+    @Composable
+    fun badge(): Shape = tokens().badge
 }
 
 object AppDurations {
@@ -106,6 +142,18 @@ object AppColors {
 
     @Composable
     fun glassShadow() = LocalGlassColors.current.shadowColor
+
+    @Composable
+    fun iconAccent() = MaterialTheme.colorScheme.onSecondaryContainer
+
+    @Composable
+    fun iconAccentBackground() = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.55f)
+
+    @Composable
+    fun level2Background() = MaterialTheme.colorScheme.surfaceVariant
+
+    @Composable
+    fun level3Background() = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.35f)
 }
 
 // Kept legacy color constants for possible references
@@ -139,11 +187,18 @@ object AppLayout {
     fun appScreenPadding(modifier: Modifier): Modifier = modifier.padding(AppDimens.screenPadding)
 
     fun appCardPadding(modifier: Modifier): Modifier = modifier.padding(AppDimens.cardPadding)
-    
-    fun buttonShape(): Shape = RoundedCornerShape(AppRadii.buttonCorner)
-    fun smallButtonShape(): Shape = RoundedCornerShape(AppRadii.smallButtonCorner)
-    fun largeButtonShape(): Shape = RoundedCornerShape(AppRadii.largeButtonCorner)
-    fun extraLargeButtonShape(): Shape = RoundedCornerShape(AppRadii.extraLargeButtonCorner)
+
+    @Composable
+    fun buttonShape(): Shape = AppShapes.primaryButton()
+
+    @Composable
+    fun smallButtonShape(): Shape = AppShapes.secondaryButton()
+
+    @Composable
+    fun largeButtonShape(): Shape = AppShapes.panelLarge()
+
+    @Composable
+    fun extraLargeButtonShape(): Shape = AppShapes.panelLarge()
 }
 
 @Composable
@@ -220,6 +275,18 @@ object AppColorsRef {
     fun glassBorderShadow() = AppColors.glassBorderShadow()
     @Composable
     fun glassShadow() = AppColors.glassShadow()
+
+    @Composable
+    fun iconAccent() = AppColors.iconAccent()
+
+    @Composable
+    fun iconAccentBackground() = AppColors.iconAccentBackground()
+
+    @Composable
+    fun level2Background() = AppColors.level2Background()
+
+    @Composable
+    fun level3Background() = AppColors.level3Background()
 }
 
 @Stable

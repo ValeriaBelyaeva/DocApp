@@ -39,8 +39,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.text.KeyboardOptions
 import com.example.docapp.core.DataValidator
 import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.ServiceLocator
@@ -49,7 +49,9 @@ import com.example.docapp.domain.Document
 import com.example.docapp.domain.DocumentRepository
 import com.example.docapp.domain.Folder
 import com.example.docapp.domain.usecases.UseCases
+import com.example.docapp.ui.theme.AppColors
 import com.example.docapp.ui.theme.AppDimens
+import com.example.docapp.ui.theme.AppShapes
 import com.example.docapp.ui.theme.AppLayout
 import com.example.docapp.ui.theme.VSpace
 import kotlinx.coroutines.launch
@@ -58,6 +60,7 @@ import com.example.docapp.ui.theme.ThemeConfig
 import com.example.docapp.ui.theme.SurfaceStyle
 import com.example.docapp.ui.theme.SurfaceStyleTokens
 import com.example.docapp.ui.theme.SurfaceTokens
+import androidx.compose.foundation.shape.CircleShape
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -303,7 +306,7 @@ private fun HistorySectionCard(
                     tint = NeoPalette.neon,
                     modifier = Modifier
                         .size(32.dp)
-                        .clip(NeoShapes.dockButton)
+                        .clip(AppShapes.badge())
                         .background(NeoPalette.iconBackground)
                         .padding(6.dp)
                 )
@@ -340,7 +343,7 @@ private fun HistoryEmptyPlaceholder(text: String) {
             tint = NeoPalette.textSecondary,
             modifier = Modifier
                 .size(32.dp)
-                .clip(NeoShapes.dockButton)
+                .clip(AppShapes.badge())
                 .background(NeoPalette.iconBackground)
                 .padding(6.dp)
         )
@@ -483,15 +486,15 @@ private object NeoPalette {
     val item: Color
         @Composable get() = MaterialTheme.colorScheme.surfaceVariant
     val iconBackground: Color
-        @Composable get() = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f)
+        @Composable get() = AppColors.iconAccentBackground()
     val controlBackground: Color
-        @Composable get() = MaterialTheme.colorScheme.surfaceVariant
+        @Composable get() = AppColors.iconAccentBackground()
     val dockBackground: Color
         @Composable get() = MaterialTheme.colorScheme.surface
     val dockButtonBackground: Color
-        @Composable get() = MaterialTheme.colorScheme.secondaryContainer
+        @Composable get() = AppColors.iconAccentBackground()
     val neon: Color
-        @Composable get() = MaterialTheme.colorScheme.primary
+        @Composable get() = AppColors.iconAccent()
     val textPrimary: Color
         @Composable get() = MaterialTheme.colorScheme.onSurface
     val textSecondary: Color
@@ -499,17 +502,14 @@ private object NeoPalette {
 }
 
 private object NeoShapes {
-    private val tokens: SurfaceStyleTokens
-        @Composable get() = SurfaceTokens.current(ThemeConfig.surfaceStyle)
-
     val section
-        @Composable get() = tokens.shapes.largeCard
+        @Composable get() = AppShapes.panelLarge()
     val row
-        @Composable get() = tokens.shapes.mediumCard
+        @Composable get() = AppShapes.listItem()
     val dock
-        @Composable get() = tokens.shapes.largeCard
+        @Composable get() = AppShapes.panelLarge()
     val dockButton
-        @Composable get() = tokens.shapes.icon
+        @Composable get() = AppShapes.iconButton()
 }
 
 @Composable
@@ -750,9 +750,6 @@ private fun FolderSectionCard(
                         }
                     }
                 }
-            }
-            if (documents.isEmpty()) {
-                HistoryEmptyPlaceholder("В этой папке пока пусто")
             }
         }
     }

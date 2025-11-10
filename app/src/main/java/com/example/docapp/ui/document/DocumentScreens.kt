@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -74,9 +73,9 @@ import com.example.docapp.domain.Template
 import com.example.docapp.domain.TemplateField
 import com.example.docapp.domain.usecases.UseCases
 import com.example.docapp.ui.theme.AppDimens
+import com.example.docapp.ui.theme.AppShapes
+import com.example.docapp.ui.theme.AppColors
 import com.example.docapp.ui.theme.GlassCard
-import com.example.docapp.ui.theme.ThemeConfig
-import com.example.docapp.ui.theme.SurfaceTokens
 import kotlinx.coroutines.launch
 
 /**
@@ -117,6 +116,18 @@ fun DocumentViewScreen(
             Text("Загрузка...", style = MaterialTheme.typography.bodyLarge)
         }
         return
+    }
+
+    // Функция для открытия PDF
+    val openPdf = { pdfUri: String ->
+        try {
+            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
+            intent.setDataAndType(android.net.Uri.parse(pdfUri), "application/pdf")
+            intent.flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+            context.startActivity(android.content.Intent.createChooser(intent, "Открыть PDF"))
+        } catch (e: Exception) {
+            ErrorHandler.showError("Не удалось открыть PDF: ${e.message}")
+        }
     }
 
     // Функция для открытия фотографий
@@ -211,13 +222,10 @@ fun DocumentViewScreen(
                 SectionTitle("Photos")
                 Spacer(modifier = Modifier.height(12.dp))
                 doc.photos.forEach { photo ->
-                    Surface(
-                        color = MaterialTheme.colorScheme.surface,
-                        shape = RoundedCornerShape(28.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(28.dp))
-                            .clickable { openPhoto(photo.uri.toString()) }
+                    GlassCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { openPhoto(photo.uri.toString()) },
+                        shape = EditorShapes.section
                     ) {
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
@@ -225,7 +233,9 @@ fun DocumentViewScreen(
                                 .crossfade(true)
                                 .build(),
                             contentDescription = photo.displayName ?: "Photo",
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(EditorShapes.section),
                             contentScale = ContentScale.Crop
                         )
                     }
@@ -236,39 +246,22 @@ fun DocumentViewScreen(
             if (doc.pdfs.isNotEmpty()) {
                 SectionTitle("Attached files")
                 Spacer(modifier = Modifier.height(12.dp))
-                Surface(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(28.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                GlassCard(modifier = Modifier.fillMaxWidth(), shape = EditorShapes.section) {
                     Column(
                         modifier = Modifier.padding(20.dp)
                     ) {
                         Text(
                             text = "Attached files",
                             style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = EditorPalette.textPrimary
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            doc.pdfs.forEach { pdf ->
-                                AttachmentChip(
-                                    name = pdf.displayName ?: "PDF",
-                                    onOpen = {
-                                        try {
-                                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
-                                            intent.setDataAndType(android.net.Uri.parse(pdf.uri.toString()), "application/pdf")
-                                            intent.flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                            context.startActivity(android.content.Intent.createChooser(intent, "Открыть PDF"))
-                                        } catch (e: Exception) {
-                                            ErrorHandler.showError("Не удалось открыть PDF: ${e.message}")
-                                        }
-                                    }
-                                )
-                            }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        doc.pdfs.forEach { pdf ->
+                            AttachmentChip(
+                                name = pdf.displayName ?: "PDF",
+                                onOpen = { openPdf(pdf.uri.toString()) }
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
                         }
                     }
                 }
@@ -345,11 +338,11 @@ private object EditorPalette {
     val iconBackground: Color
         @Composable get() = MaterialTheme.colorScheme.surfaceVariant
     val controlBackground: Color
-        @Composable get() = MaterialTheme.colorScheme.surfaceVariant
+        @Composable get() = AppColors.iconAccentBackground()
     val badgeBackground: Color
-        @Composable get() = MaterialTheme.colorScheme.secondaryContainer
+        @Composable get() = AppColors.iconAccentBackground()
     val neon: Color
-        @Composable get() = MaterialTheme.colorScheme.primary
+        @Composable get() = AppColors.iconAccent()
     val textPrimary: Color
         @Composable get() = MaterialTheme.colorScheme.onSurface
     val textSecondary: Color
@@ -361,17 +354,14 @@ private object EditorPalette {
 }
 
 private object EditorShapes {
-    private val tokens: com.example.docapp.ui.theme.SurfaceStyleTokens
-        @Composable get() = SurfaceTokens.current(ThemeConfig.surfaceStyle)
-
     val section
-        @Composable get() = tokens.shapes.largeCard
+        @Composable get() = AppShapes.panelLarge()
     val row
-        @Composable get() = tokens.shapes.mediumCard
+        @Composable get() = AppShapes.listItem()
     val badge
-        @Composable get() = tokens.shapes.smallCard
+        @Composable get() = AppShapes.badge()
     val icon
-        @Composable get() = tokens.shapes.icon
+        @Composable get() = AppShapes.iconButton()
 }
 
 @Composable
@@ -1218,7 +1208,7 @@ private fun ViewFieldCard(
         Box(
             modifier = Modifier
                 .size(44.dp)
-                .clip(EditorShapes.icon)
+                .clip(CircleShape)
                 .background(EditorPalette.controlBackground),
             contentAlignment = Alignment.Center
         ) {
@@ -1260,12 +1250,13 @@ private fun AttachmentChip(
     name: String,
     onOpen: () -> Unit
 ) {
+    val shape = AppShapes.chip()
     Surface(
-        shape = RoundedCornerShape(22.dp),
+        shape = shape,
         color = EditorPalette.item,
         border = BorderStroke(1.dp, EditorPalette.neon.copy(alpha = 0.3f)),
         modifier = Modifier
-            .clip(RoundedCornerShape(22.dp))
+            .clip(shape)
             .clickable(onClick = onOpen)
     ) {
         Row(
@@ -1276,15 +1267,15 @@ private fun AttachmentChip(
             Box(
                 modifier = Modifier
                     .size(44.dp, 52.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(CircleShape)
                     .background(EditorPalette.badgeBackground),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "PDF",
-                    color = EditorPalette.neon,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
+                Icon(
+                    imageVector = Icons.Default.PictureAsPdf,
+                    contentDescription = null,
+                    tint = EditorPalette.neon,
+                    modifier = Modifier.size(22.dp)
                 )
             }
             Text(
@@ -1308,7 +1299,7 @@ private fun NeonOutlineButton(
         enabled = enabled,
         modifier = modifier
             .height(54.dp),
-        shape = EditorShapes.row,
+        shape = AppShapes.secondaryButton(),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
             contentColor = EditorPalette.neon,
@@ -1333,7 +1324,7 @@ private fun NeonPrimaryButton(
         enabled = enabled,
         modifier = modifier
             .height(58.dp),
-        shape = EditorShapes.row,
+        shape = AppShapes.primaryButton(),
         colors = ButtonDefaults.buttonColors(
             containerColor = EditorPalette.neon,
             contentColor = EditorPalette.background,

@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentCopy
@@ -43,6 +43,8 @@ import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.ServiceLocator
 import com.example.docapp.domain.Template
 import com.example.docapp.ui.theme.GlassCard
+import com.example.docapp.ui.theme.AppShapes
+import com.example.docapp.ui.theme.AppColors
 import kotlinx.coroutines.launch
 
 @Composable
@@ -209,7 +211,7 @@ private fun TemplateOptionCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    GlassCard(modifier = modifier, onClick = onClick) {
+    GlassCard(modifier = modifier, onClick = onClick, shape = AppShapes.panelMedium()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -219,8 +221,12 @@ private fun TemplateOptionCard(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(32.dp)
+                tint = AppColors.iconAccent(),
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(AppShapes.badge())
+                    .background(AppColors.iconAccentBackground())
+                    .padding(6.dp)
             )
             Spacer(Modifier.height(12.dp))
             Text(
@@ -248,7 +254,8 @@ private fun TemplateListItem(
 ) {
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
-        onClick = onOpen
+        onClick = onOpen,
+        shape = AppShapes.listItem()
     ) {
         Row(
             modifier = Modifier
@@ -282,7 +289,7 @@ private fun TemplateListItem(
 
 @Composable
 private fun TemplateEmptyState() {
-    GlassCard(modifier = Modifier.fillMaxWidth()) {
+    GlassCard(modifier = Modifier.fillMaxWidth(), shape = AppShapes.panelLarge()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -383,7 +390,7 @@ private fun TemplateDialog(
                         onClick = onAddField,
                         modifier = Modifier
                             .size(44.dp)
-                            .clip(RoundedCornerShape(18.dp))
+                            .clip(AppShapes.iconButton())
                             .background(MaterialTheme.colorScheme.primaryContainer)
                     ) {
                         Icon(
@@ -398,7 +405,7 @@ private fun TemplateDialog(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(AppShapes.panelMedium())
                             .background(MaterialTheme.colorScheme.surfaceVariant)
                             .padding(horizontal = 16.dp, vertical = 14.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -442,7 +449,7 @@ private fun TemplateDialog(
                     disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
                     disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = AppShapes.panelMedium()
             ) {
                 Text("Создать шаблон")
             }

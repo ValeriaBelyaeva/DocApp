@@ -14,70 +14,65 @@ import com.example.docapp.core.ThemeManager
 import com.example.docapp.core.DarkGlassColors
 import com.example.docapp.core.DarkThemeColors
 
-// Light theme with warm brown accent colors
-private val PrimaryGreen = Color(0xFFD4A574)      // Warm brown for primary actions
-private val PrimaryContainer = Color(0xFFF5E6D3)  // Light warm brown container
-private val OnPrimaryContainer = Color(0xFF2D1B00) // Dark text on light warm brown
-private val SecondaryGreen = Color(0xFFE6A85C)     // Warm orange for secondary
-private val SecondaryContainer = Color(0xFFFFF8E1) // Very light warm container
-private val SecondaryOnContainer = Color(0xFF2D1B00) // Dark text on warm container
-private val TertiaryTeal = Color(0xFFB8860B)      // Golden for tertiary
-private val TertiaryContainer = Color(0xFFFFF8DC) // Light golden container
-private val TertiaryOnContainer = Color(0xFF00201B) // Dark text on light teal
+// Light theme with updated warm pink-brown palette
+private val LightBackground = Color(0xFFF5F0EB)
+private val LightSurface = Color(0xFFFFFFFF)
+private val LightSurfaceVariant = Color(0xFFF0E3D8)
+private val LightOutline = Color(0xFF7A4A33)
+private val LightOutlineSoft = Color(0xFFE0D2C6)
 
-// Background colors for readability
-private val SoftBackground = Color(0xFFFFFBF0)    // Very soft yellow-orange background
-private val SurfaceBase = Color(0xFFFFFEF8)       // Almost white with warm tint
-private val SurfaceVariant = Color(0xFFFFF8E1)   // Light warm variant
-private val OnSurfaceVariant = Color(0xFF2D1B00) // Dark warm text on light surfaces
-private val Outline = Color(0xFFD4A574)          // Warm outline
-private val OutlineVariant = Color(0xFFE6D4B8)   // Light warm outline
+private val TextPrimaryLight = Color(0xFF2B2220)
+private val TextSecondaryLight = Color(0xFF6F6058)
+private val TextDisabledLight = Color(0xFFB5A7A0)
+
+private val AccentPink = Color(0xFFD2667A)
+private val AccentPinkDark = Color(0xFFB04E63)
+private val AccentPinkSoft = Color(0xFFF7DFE5)
+
+private val AccentBrown = Color(0xFF9C5A3C)
+private val AccentBrownDark = Color(0xFF6D3C28)
+private val AccentBrownSoft = Color(0xFFF2E1D7)
+
+private val SuccessLight = Color(0xFF3B8F6A)
+private val WarningLight = Color(0xFFD98A32)
+private val ErrorLight = Color(0xFFD64545)
 
 // Glassmorphism colors - enhanced for better visibility
-private val GlassTintTop = Color(0xF2FFFFFF)      // 95% white for glass top (more opaque)
-private val GlassTintBottom = Color(0xE6FFFFFF)   // 90% white for glass bottom (more opaque)
-private val GlassHighlight = Color(0x99FFFFFF)    // 60% white highlight (more visible)
-private val GlassShadow = Color(0x60000000)        // 37% black shadow (more prominent)
+private val GlassTintTop = Color(0xFFFFFFFF)
+private val GlassTintBottom = LightSurfaceVariant
+private val GlassHighlight = Color(0x66FFFFFF)
+private val GlassShadow = Color(0x33000000)
 
 val LightGlassColorScheme = lightColorScheme(
-    primary = PrimaryGreen,
+    primary = AccentPink,
     onPrimary = Color.White,
-    primaryContainer = PrimaryContainer,
-    onPrimaryContainer = OnPrimaryContainer,
-    secondary = SecondaryGreen,
+    primaryContainer = AccentPinkSoft,
+    onPrimaryContainer = AccentPinkDark,
+    secondary = AccentBrown,
     onSecondary = Color.White,
-    secondaryContainer = SecondaryContainer,
-    onSecondaryContainer = SecondaryOnContainer,
-    tertiary = TertiaryTeal,
+    secondaryContainer = AccentBrownSoft,
+    onSecondaryContainer = AccentBrownDark,
+    tertiary = AccentPinkDark,
     onTertiary = Color.White,
-    tertiaryContainer = TertiaryContainer,
-    onTertiaryContainer = TertiaryOnContainer,
-    background = SoftBackground,
-    onBackground = Color(0xFF121613), // Almost black for high contrast
-    surface = SurfaceBase,
-    onSurface = Color(0xFF121613), // Almost black for high contrast
-    surfaceVariant = SurfaceVariant,
-    onSurfaceVariant = OnSurfaceVariant,
-    outline = Outline,
-    outlineVariant = OutlineVariant,
-    error = Color(0xFFB3261E),
+    tertiaryContainer = AccentPinkSoft,
+    onTertiaryContainer = AccentPinkDark,
+    background = LightBackground,
+    onBackground = TextPrimaryLight,
+    surface = LightSurface,
+    onSurface = TextPrimaryLight,
+    surfaceVariant = LightSurfaceVariant,
+    onSurfaceVariant = TextSecondaryLight,
+    outline = LightOutline,
+    outlineVariant = LightOutlineSoft,
+    error = ErrorLight,
     onError = Color.White,
-    errorContainer = Color(0xFFF9DEDC),
-    onErrorContainer = Color(0xFF410E0B),
-    inverseSurface = Color(0xFF243027),
-    inverseOnSurface = Color(0xFFEFF4EE),
-    inversePrimary = Color(0xFF83C789),
-    surfaceTint = PrimaryGreen,
+    errorContainer = ErrorLight.copy(alpha = 0.12f),
+    onErrorContainer = ErrorLight,
+    inverseSurface = AccentBrownDark,
+    inverseOnSurface = LightSurface,
+    inversePrimary = AccentPinkDark,
+    surfaceTint = AccentPink,
     scrim = Color(0x88000000)
-)
-
-private val LightGlassTokens = GlassColors(
-    containerTop = GlassTintTop,
-    containerBottom = GlassTintBottom,
-    highlight = GlassHighlight,
-    borderBright = Color.White.copy(alpha = 0.7f),
-    borderShadow = Color(0x33D4A574),
-    shadowColor = GlassShadow
 )
 
 val DarkGlassColorScheme = darkColorScheme(
@@ -101,15 +96,24 @@ val DarkGlassColorScheme = darkColorScheme(
     onSurfaceVariant = DarkThemeColors.darkOnSurfaceVariant,
     outline = DarkThemeColors.darkOutline,
     outlineVariant = DarkThemeColors.darkOutlineVariant,
-    error = Color(0xFFCF6679),
-    onError = Color(0xFF000000),
-    errorContainer = Color(0xFF93000A),
-    onErrorContainer = Color(0xFFFFDAD6),
-    inverseSurface = Color(0xFFE1E1E1),
-    inverseOnSurface = Color(0xFF121212),
-    inversePrimary = Color(0xFFD7FC5A),
+    error = ErrorLight,
+    onError = Color.White,
+    errorContainer = ErrorLight.copy(alpha = 0.2f),
+    onErrorContainer = ErrorLight,
+    inverseSurface = DarkThemeColors.darkSurfaceVariant,
+    inverseOnSurface = DarkThemeColors.darkOnSurface,
+    inversePrimary = DarkThemeColors.darkPrimary,
     surfaceTint = DarkThemeColors.darkPrimary,
     scrim = Color(0x88000000)
+)
+
+private val LightGlassTokens = GlassColors(
+    containerTop = GlassTintTop,
+    containerBottom = GlassTintBottom,
+    highlight = GlassHighlight,
+    borderBright = AccentPink.copy(alpha = 0.35f),
+    borderShadow = LightOutlineSoft.copy(alpha = 0.5f),
+    shadowColor = GlassShadow
 )
 
 private val DarkGlassTokens = GlassColors(

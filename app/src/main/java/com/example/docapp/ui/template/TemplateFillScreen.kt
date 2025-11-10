@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -48,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -57,6 +57,9 @@ import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.NamingRules
 import com.example.docapp.core.ServiceLocator
 import com.example.docapp.ui.theme.GlassCard
+import com.example.docapp.ui.theme.AppShapes
+import com.example.docapp.ui.theme.AppRadii
+import com.example.docapp.ui.theme.AppColors
 import kotlinx.coroutines.launch
 
 @Composable
@@ -276,7 +279,7 @@ private fun TemplateSectionCard(
     title: String,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    GlassCard(modifier = Modifier.fillMaxWidth()) {
+    GlassCard(modifier = Modifier.fillMaxWidth(), shape = AppShapes.panelLarge()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -334,7 +337,7 @@ private fun AttachmentList(
             AttachmentGroup(
                 title = "Фото",
                 items = photos,
-                badgeColor = MaterialTheme.colorScheme.primaryContainer,
+                badgeColor = AppColors.iconAccentBackground(),
                 icon = Icons.Default.Photo,
                 onRemove = onRemovePhoto
             )
@@ -343,7 +346,7 @@ private fun AttachmentList(
             AttachmentGroup(
                 title = "PDF файлы",
                 items = pdfs,
-                badgeColor = MaterialTheme.colorScheme.secondaryContainer,
+                badgeColor = AppColors.iconAccentBackground(),
                 icon = Icons.Default.PictureAsPdf,
                 onRemove = onRemovePdf
             )
@@ -368,7 +371,7 @@ private fun AttachmentGroup(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = AppShapes.panelMedium(),
         color = MaterialTheme.colorScheme.surfaceVariant,
         tonalElevation = 0.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
@@ -387,7 +390,7 @@ private fun AttachmentGroup(
             items.forEach { (uri, name) ->
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
+                    shape = AppShapes.listItem(),
                     color = MaterialTheme.colorScheme.surface,
                     tonalElevation = 0.dp,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.16f))
@@ -402,7 +405,7 @@ private fun AttachmentGroup(
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
-                                .clip(RoundedCornerShape(16.dp))
+                                .clip(AppShapes.badge())
                                 .background(badgeColor),
                             contentAlignment = Alignment.Center
                         ) {
@@ -439,7 +442,7 @@ private fun SecondaryButton(
         onClick = onClick,
         modifier = modifier.height(52.dp),
         enabled = enabled,
-        shape = RoundedCornerShape(14.dp),
+        shape = AppShapes.secondaryButton(),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
     ) {
@@ -458,7 +461,7 @@ private fun PrimaryButton(
         onClick = onClick,
         modifier = modifier.height(52.dp),
         enabled = enabled,
-        shape = RoundedCornerShape(16.dp),
+        shape = AppShapes.primaryButton(),
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary,

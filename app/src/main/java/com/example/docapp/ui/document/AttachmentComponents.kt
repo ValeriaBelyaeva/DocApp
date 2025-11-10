@@ -23,6 +23,7 @@ import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.ServiceLocator
 import com.example.docapp.data.db.entities.AttachmentEntity
 import com.example.docapp.ui.theme.GlassCard
+import com.example.docapp.ui.theme.AppColors
 import kotlinx.coroutines.launch
 
 @Composable
@@ -246,7 +247,7 @@ private fun AttachmentItem(
                     else -> Icons.Default.AttachFile
                 },
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
+                tint = AppColors.iconAccent()
             )
             
             Spacer(modifier = Modifier.width(12.dp))
@@ -268,13 +269,13 @@ private fun AttachmentItem(
             // Кнопки действий
             Row {
                 IconButton(onClick = onOpen) {
-                    Icon(Icons.Default.OpenInNew, contentDescription = "Открыть")
+                    Icon(Icons.Default.OpenInNew, contentDescription = "Открыть", tint = AppColors.iconAccent())
                 }
                 IconButton(onClick = onShare) {
-                    Icon(Icons.Default.Share, contentDescription = "Поделиться")
+                    Icon(Icons.Default.Share, contentDescription = "Поделиться", tint = AppColors.iconAccent())
                 }
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Удалить")
+                    Icon(Icons.Default.Delete, contentDescription = "Удалить", tint = AppColors.iconAccent())
                 }
             }
         }

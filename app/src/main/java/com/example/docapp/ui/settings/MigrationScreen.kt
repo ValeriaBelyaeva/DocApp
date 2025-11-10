@@ -16,6 +16,7 @@ import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.ServiceLocator
 import com.example.docapp.data.storage.FileGc
 import com.example.docapp.ui.theme.GlassCard
+import com.example.docapp.ui.theme.AppColors
 import kotlinx.coroutines.launch
 
 @Composable
@@ -57,7 +58,7 @@ fun MigrationScreen() {
                     Icon(
                         Icons.Default.SwapHoriz,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = AppColors.iconAccent()
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -150,7 +151,7 @@ fun MigrationScreen() {
                     Icon(
                         Icons.Default.CleaningServices,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = AppColors.iconAccent()
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(

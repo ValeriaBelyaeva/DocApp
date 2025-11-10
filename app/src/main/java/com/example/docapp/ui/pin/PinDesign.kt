@@ -48,8 +48,8 @@ import com.example.docapp.R
 import com.example.docapp.core.AppLogger
 import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.ServiceLocator
-import com.example.docapp.ui.theme.SurfaceTokens
-import com.example.docapp.ui.theme.ThemeConfig
+import com.example.docapp.ui.theme.AppShapes
+import com.example.docapp.ui.theme.AppColors
 import kotlinx.coroutines.launch
 import kotlin.UninitializedPropertyAccessException
 
@@ -63,19 +63,16 @@ object PinColors {
     val Layer: Color
         @Composable get() = MaterialTheme.colorScheme.surface
     val Neon: Color
-        @Composable get() = MaterialTheme.colorScheme.primary
+        @Composable get() = AppColors.iconAccent()
     val Outline: Color
-        @Composable get() = MaterialTheme.colorScheme.outline
+        @Composable get() = AppColors.iconAccent()
     val TextPri: Color
         @Composable get() = MaterialTheme.colorScheme.onSurface
 }
 
 private object PinShapes {
-    private val tokens
-        @Composable get() = SurfaceTokens.current(ThemeConfig.surfaceStyle)
-
     val Capsule
-        @Composable get() = tokens.shapes.largeCard
+        @Composable get() = AppShapes.panelLarge()
 }
 
 /* ────────────────────────────────────────────────────────────
