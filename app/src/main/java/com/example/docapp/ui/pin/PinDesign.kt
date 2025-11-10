@@ -48,6 +48,8 @@ import com.example.docapp.R
 import com.example.docapp.core.AppLogger
 import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.ServiceLocator
+import com.example.docapp.ui.theme.SurfaceTokens
+import com.example.docapp.ui.theme.ThemeConfig
 import kotlinx.coroutines.launch
 import kotlin.UninitializedPropertyAccessException
 
@@ -56,15 +58,24 @@ import kotlin.UninitializedPropertyAccessException
    ──────────────────────────────────────────────────────────── */
 
 object PinColors {
-    val Bg = Color(0xFF0B1014)        // общий фон
-    val Layer = Color(0xFF161D24)     // капсула ввода
-    val Neon = Color(0xFFC6FF00)      // лаймовый акцент
-    val Outline = Color(0xFF26303C)   // вспомогательная обводка (если нужна)
-    val TextPri = Color(0xFFE9EFF6)
+    val Bg: Color
+        @Composable get() = MaterialTheme.colorScheme.background
+    val Layer: Color
+        @Composable get() = MaterialTheme.colorScheme.surface
+    val Neon: Color
+        @Composable get() = MaterialTheme.colorScheme.primary
+    val Outline: Color
+        @Composable get() = MaterialTheme.colorScheme.outline
+    val TextPri: Color
+        @Composable get() = MaterialTheme.colorScheme.onSurface
 }
 
 private object PinShapes {
-    val Capsule = RoundedCornerShape(28.dp)   // у поля ввода
+    private val tokens
+        @Composable get() = SurfaceTokens.current(ThemeConfig.surfaceStyle)
+
+    val Capsule
+        @Composable get() = tokens.shapes.largeCard
 }
 
 /* ────────────────────────────────────────────────────────────
@@ -316,7 +327,7 @@ fun PinScreenNew(onSuccess: () -> Unit) {
                 Spacer(Modifier.height(16.dp))
                 Text(
                     text = errorText,
-                    color = Color.Red,
+                    color = MaterialTheme.colorScheme.error,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium
                 )

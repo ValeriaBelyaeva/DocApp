@@ -5,6 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
@@ -124,7 +125,11 @@ private val DarkGlassTokens = GlassColors(
 fun DocTheme(content: @Composable () -> Unit) {
     val isDarkTheme = ThemeManager.isDarkTheme
     val colorScheme = if (isDarkTheme) DarkGlassColorScheme else LightGlassColorScheme
-    val glassTokens = if (isDarkTheme) DarkGlassTokens else LightGlassTokens
+    val surfaceStyle = ThemeConfig.surfaceStyle
+    val glassTokens = when (surfaceStyle) {
+        SurfaceStyle.Glass -> if (isDarkTheme) DarkGlassTokens else LightGlassTokens
+        SurfaceStyle.Matte -> matteTokensFor(colorScheme)
+    }
     
     CompositionLocalProvider(LocalGlassColors provides glassTokens) {
         MaterialTheme(colorScheme = colorScheme, typography = AppTypography) {
@@ -138,3 +143,12 @@ fun DocTheme(content: @Composable () -> Unit) {
         }
     }
 }
+
+private fun matteTokensFor(colorScheme: ColorScheme): GlassColors = GlassColors(
+    containerTop = colorScheme.surface,
+    containerBottom = colorScheme.surface,
+    highlight = Color.Transparent,
+    borderBright = Color.Transparent,
+    borderShadow = Color.Transparent,
+    shadowColor = Color.Transparent
+)

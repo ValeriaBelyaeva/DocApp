@@ -1,8 +1,6 @@
 package com.example.docapp.ui.template
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,8 +13,6 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,17 +32,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.docapp.ui.theme.NeonColorScheme
-import com.example.docapp.ui.theme.NeonShapes
-import com.example.docapp.ui.theme.NeonTokens
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import com.example.docapp.core.DataValidator
 import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.ServiceLocator
 import com.example.docapp.domain.Template
+import com.example.docapp.ui.theme.GlassCard
 import kotlinx.coroutines.launch
 
 @Composable
@@ -56,10 +52,8 @@ fun TemplateSelectorScreen(
     onCreateEmpty: (folderId: String?) -> Unit
 ) {
     val uc = ServiceLocator.useCases
-    var list by remember { mutableStateOf<List<Template>>(emptyList()) }
+    var templates by remember { mutableStateOf<List<Template>>(emptyList()) }
     val scope = rememberCoroutineScope()
-    val colors = NeonTokens.darkColors
-    val shapes = NeonTokens.shapes
 
     var showDialog by remember { mutableStateOf(false) }
     var tplName by remember { mutableStateOf("") }
@@ -67,10 +61,10 @@ fun TemplateSelectorScreen(
     var newField by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        list = uc.listTemplates()
+        templates = uc.listTemplates()
     }
 
-    Surface(color = colors.background, modifier = Modifier.fillMaxSize()) {
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -88,13 +82,13 @@ fun TemplateSelectorScreen(
                             text = "Создание документа",
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
-                            color = colors.textPrimary
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(
                             text = "Выбери способ: новый документ или заготовка",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = colors.textSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -105,46 +99,42 @@ fun TemplateSelectorScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        NeonTemplateOptionCard(
+                        TemplateOptionCard(
                             icon = Icons.Default.Description,
                             title = "Пустой документ",
                             subtitle = "Начать с нуля",
-                            onClick = { onCreateEmpty(folderId) },
                             modifier = Modifier.weight(1f),
-                            colors = colors,
-                            shapes = shapes
+                            onClick = { onCreateEmpty(folderId) }
                         )
-                        NeonTemplateOptionCard(
+                        TemplateOptionCard(
                             icon = Icons.Default.ContentCopy,
                             title = "Новый шаблон",
                             subtitle = "Сохранить структуру",
-                            onClick = { showDialog = true },
                             modifier = Modifier.weight(1f),
-                            colors = colors,
-                            shapes = shapes
+                            onClick = { showDialog = true }
                         )
                     }
                 }
 
-                if (list.isNotEmpty()) {
+                if (templates.isNotEmpty()) {
                     item {
                         Text(
                             text = "Доступные шаблоны",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = colors.textPrimary
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                     }
 
-                    items(list) { tpl ->
-                        NeonTemplateListItem(
-                            template = tpl,
-                            onClick = { onCreateDocFromTemplate(tpl.id, folderId) },
+                    items(templates) { template ->
+                        TemplateListItem(
+                            template = template,
+                            onOpen = { onCreateDocFromTemplate(template.id, folderId) },
                             onDelete = {
                                 scope.launch {
                                     try {
-                                        uc.deleteTemplate(tpl.id)
-                                        list = uc.listTemplates()
+                                        uc.deleteTemplate(template.id)
+                                        templates = uc.listTemplates()
                                         ErrorHandler.showSuccess("Шаблон удален")
                                     } catch (e: Exception) {
                                         ErrorHandler.showError("Не удалось удалить шаблон: ${e.message}")
@@ -154,12 +144,12 @@ fun TemplateSelectorScreen(
                         )
                     }
                 } else {
-                    item { NeonTemplateEmptyState() }
+                    item { TemplateEmptyState() }
                 }
             }
 
             if (showDialog) {
-                NeonTemplateDialog(
+                TemplateDialog(
                     tplName = tplName,
                     onNameChange = { tplName = it },
                     newField = newField,
@@ -188,7 +178,7 @@ fun TemplateSelectorScreen(
                                 val normalizedName = nameValidation.getValue()!!
                                 val normalizedFields = fieldValidations.map { it.getValue()!! }
                                 uc.addTemplate(normalizedName, normalizedFields)
-                                list = uc.listTemplates()
+                                templates = uc.listTemplates()
                                 tplName = ""
                                 newField = ""
                                 fieldNames.clear()
@@ -204,9 +194,7 @@ fun TemplateSelectorScreen(
                             ErrorHandler.showError(errors.joinToString("\n"))
                         }
                     },
-                    confirmEnabled = tplName.trim().isNotEmpty() && fieldNames.isNotEmpty(),
-                    colors = colors,
-                    shapes = shapes
+                    confirmEnabled = tplName.trim().isNotEmpty() && fieldNames.isNotEmpty()
                 )
             }
         }
@@ -214,54 +202,38 @@ fun TemplateSelectorScreen(
 }
 
 @Composable
-private fun NeonTemplateOptionCard(
+private fun TemplateOptionCard(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
     subtitle: String,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    colors: NeonColorScheme = NeonTokens.darkColors,
-    shapes: NeonShapes = NeonTokens.shapes
+    onClick: () -> Unit
 ) {
-    Card(
-        onClick = onClick,
-        modifier = modifier,
-        shape = shapes.largeCard,
-        colors = CardDefaults.cardColors(containerColor = colors.surface),
-        border = BorderStroke(1.2.dp, colors.outline)
-    ) {
+    GlassCard(modifier = modifier, onClick = onClick) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 24.dp, horizontal = 18.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(22.dp))
-                    .background(colors.badgePrimary),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = colors.accent,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-            Spacer(Modifier.height(14.dp))
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(32.dp)
+            )
+            Spacer(Modifier.height(12.dp))
             Text(
                 text = title.uppercase(),
                 style = MaterialTheme.typography.titleSmall,
-                color = colors.textPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(6.dp))
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = colors.textSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
         }
@@ -269,20 +241,14 @@ private fun NeonTemplateOptionCard(
 }
 
 @Composable
-private fun NeonTemplateListItem(
+private fun TemplateListItem(
     template: Template,
-    onClick: () -> Unit,
-    onDelete: () -> Unit,
-    colors: NeonColorScheme = NeonTokens.darkColors,
-    shapes: NeonShapes = NeonTokens.shapes
+    onOpen: () -> Unit,
+    onDelete: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = shapes.mediumCard,
-        colors = CardDefaults.cardColors(containerColor = colors.surfaceMuted),
-        border = BorderStroke(1.dp, colors.outline)
+    GlassCard(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onOpen
     ) {
         Row(
             modifier = Modifier
@@ -294,20 +260,20 @@ private fun NeonTemplateListItem(
                 Text(
                     text = template.name,
                     style = MaterialTheme.typography.titleMedium,
-                    color = colors.textPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
                     text = "Шаблон",
                     style = MaterialTheme.typography.bodySmall,
-                    color = colors.textSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             IconButton(onClick = onDelete) {
                 Icon(
                     imageVector = Icons.Default.Delete,
                     contentDescription = "Удалить шаблон",
-                    tint = colors.accentWarning
+                    tint = MaterialTheme.colorScheme.error
                 )
             }
         }
@@ -315,36 +281,33 @@ private fun NeonTemplateListItem(
 }
 
 @Composable
-private fun NeonTemplateEmptyState(
-    colors: NeonColorScheme = NeonTokens.darkColors,
-    shapes: NeonShapes = NeonTokens.shapes
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shapes.largeCard)
-            .background(colors.surface)
-            .padding(horizontal = 24.dp, vertical = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "Нет доступных шаблонов",
-            style = MaterialTheme.typography.titleMedium,
-            color = colors.textPrimary,
-            textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = "Создай шаблон, чтобы ускорить повторяющиеся документы",
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.textSecondary,
-            textAlign = TextAlign.Center
-        )
+private fun TemplateEmptyState() {
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Нет доступных шаблонов",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "Создай шаблон, чтобы ускорить повторяющиеся документы",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 
 @Composable
-private fun NeonTemplateDialog(
+private fun TemplateDialog(
     tplName: String,
     onNameChange: (String) -> Unit,
     newField: String,
@@ -354,19 +317,16 @@ private fun NeonTemplateDialog(
     onRemoveField: (String) -> Unit,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
-    confirmEnabled: Boolean,
-    colors: NeonColorScheme = NeonTokens.darkColors,
-    shapes: NeonShapes = NeonTokens.shapes
+    confirmEnabled: Boolean
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = colors.surface,
         title = {
             Text(
                 text = "Новый шаблон",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = colors.textPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
         },
         text = {
@@ -378,15 +338,15 @@ private fun NeonTemplateDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = colors.textPrimary,
-                        unfocusedTextColor = colors.textPrimary,
-                        cursorColor = colors.accent,
-                        focusedBorderColor = colors.accent,
-                        unfocusedBorderColor = colors.outline,
-                        focusedLabelColor = colors.accent,
-                        unfocusedLabelColor = colors.textSecondary,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                        unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent
                     )
                 )
 
@@ -394,7 +354,7 @@ private fun NeonTemplateDialog(
                     text = "Добавь поля для шаблона",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium,
-                    color = colors.textPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Row(
@@ -408,15 +368,15 @@ private fun NeonTemplateDialog(
                         modifier = Modifier.weight(1f),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = colors.textPrimary,
-                            unfocusedTextColor = colors.textPrimary,
-                            cursorColor = colors.accent,
-                            focusedBorderColor = colors.accent,
-                            unfocusedBorderColor = colors.outline,
-                            focusedLabelColor = colors.accent,
-                            unfocusedLabelColor = colors.textSecondary,
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                            unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent
                         )
                     )
                     IconButton(
@@ -424,12 +384,12 @@ private fun NeonTemplateDialog(
                         modifier = Modifier
                             .size(44.dp)
                             .clip(RoundedCornerShape(18.dp))
-                            .background(colors.badgePrimary)
+                            .background(MaterialTheme.colorScheme.primaryContainer)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Добавить поле",
-                            tint = colors.accent
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -438,15 +398,15 @@ private fun NeonTemplateDialog(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(shapes.mediumCard)
-                            .background(colors.surfaceMuted)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
                             .padding(horizontal = 16.dp, vertical = 14.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Text(
                             text = "Поля шаблона",
                             style = MaterialTheme.typography.titleSmall,
-                            color = colors.textPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         fields.forEach { field ->
                             Row(
@@ -456,14 +416,14 @@ private fun NeonTemplateDialog(
                                 Text(
                                     text = field,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = colors.textPrimary,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.weight(1f)
                                 )
                                 IconButton(onClick = { onRemoveField(field) }) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
                                         contentDescription = "Удалить",
-                                        tint = colors.accentWarning
+                                        tint = MaterialTheme.colorScheme.error
                                     )
                                 }
                             }
@@ -477,12 +437,12 @@ private fun NeonTemplateDialog(
                 onClick = onConfirm,
                 enabled = confirmEnabled,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = colors.accent,
-                    contentColor = colors.background,
-                    disabledContainerColor = colors.accent.copy(alpha = 0.3f),
-                    disabledContentColor = colors.background.copy(alpha = 0.5f)
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                    disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
                 ),
-                shape = shapes.button
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Text("Создать шаблон")
             }
@@ -490,7 +450,7 @@ private fun NeonTemplateDialog(
         dismissButton = {
             TextButton(
                 onClick = onDismiss,
-                colors = ButtonDefaults.textButtonColors(contentColor = colors.textSecondary)
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
             ) {
                 Text("Отмена")
             }

@@ -34,13 +34,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import com.example.docapp.core.DataValidator
 import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.ServiceLocator
@@ -53,6 +53,11 @@ import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.ui.theme.AppLayout
 import com.example.docapp.ui.theme.VSpace
 import kotlinx.coroutines.launch
+import com.example.docapp.ui.theme.GlassCard
+import com.example.docapp.ui.theme.ThemeConfig
+import com.example.docapp.ui.theme.SurfaceStyle
+import com.example.docapp.ui.theme.SurfaceStyleTokens
+import com.example.docapp.ui.theme.SurfaceTokens
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -271,50 +276,50 @@ private fun HistorySectionCard(
     onToggleCollapse: () -> Unit,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(NeoShapes.section)
-            .background(NeoPalette.section)
-            .padding(horizontal = 20.dp, vertical = 18.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(
-                onClick = onToggleCollapse,
-                modifier = Modifier
-                    .size(40.dp)
+    GlassCard(modifier = Modifier.fillMaxWidth(), shape = NeoShapes.section) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 18.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = onToggleCollapse,
+                    modifier = Modifier
+                        .size(40.dp)
                         .clip(NeoShapes.dockButton)
                         .background(NeoPalette.controlBackground)
-            ) {
-                Icon(
-                    imageVector = if (isCollapsed) Icons.Outlined.KeyboardArrowDown else Icons.Outlined.KeyboardArrowUp,
-                    contentDescription = if (isCollapsed) "Развернуть" else "Свернуть",
+                ) {
+                    Icon(
+                        imageVector = if (isCollapsed) Icons.Outlined.KeyboardArrowDown else Icons.Outlined.KeyboardArrowUp,
+                        contentDescription = if (isCollapsed) "Развернуть" else "Свернуть",
                         tint = NeoPalette.neon
-                )
-            }
-            Spacer(Modifier.width(16.dp))
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
+                    )
+                }
+                Spacer(Modifier.width(16.dp))
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
                     tint = NeoPalette.neon,
-                modifier = Modifier
-                    .size(32.dp)
+                    modifier = Modifier
+                        .size(32.dp)
                         .clip(NeoShapes.dockButton)
                         .background(NeoPalette.iconBackground)
-                    .padding(6.dp)
-            )
-            Spacer(Modifier.width(12.dp))
-            Text(
-                text = title,
+                        .padding(6.dp)
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    text = title,
                     color = NeoPalette.textPrimary,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.weight(1f)
-            )
-        }
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
-        if (!isCollapsed) {
-            Spacer(Modifier.height(18.dp))
-            content()
+            if (!isCollapsed) {
+                Spacer(Modifier.height(18.dp))
+                content()
+            }
         }
     }
 }
@@ -471,23 +476,40 @@ private fun HistoryBottomBar(
 /* ===== Дерево (папки + “без папки”) — новый визуал ===== */
 
 private object NeoPalette {
-    val background = Color(0xFF060B12)
-    val section = Color(0xFF202C3A)
-    val item = Color(0xFF151F2C)
-    val iconBackground = Color(0xFF0C141D)
-    val controlBackground = Color(0xFF121C27)
-    val dockBackground = Color(0xFF070D16)
-    val dockButtonBackground = Color(0xFF152130)
-    val neon = Color(0xFFC6FF00)
-    val textPrimary = Color(0xFFE8EEF6)
-    val textSecondary = Color(0xFF93A4B8)
+    val background: Color
+        @Composable get() = MaterialTheme.colorScheme.background
+    val section: Color
+        @Composable get() = MaterialTheme.colorScheme.surface
+    val item: Color
+        @Composable get() = MaterialTheme.colorScheme.surfaceVariant
+    val iconBackground: Color
+        @Composable get() = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f)
+    val controlBackground: Color
+        @Composable get() = MaterialTheme.colorScheme.surfaceVariant
+    val dockBackground: Color
+        @Composable get() = MaterialTheme.colorScheme.surface
+    val dockButtonBackground: Color
+        @Composable get() = MaterialTheme.colorScheme.secondaryContainer
+    val neon: Color
+        @Composable get() = MaterialTheme.colorScheme.primary
+    val textPrimary: Color
+        @Composable get() = MaterialTheme.colorScheme.onSurface
+    val textSecondary: Color
+        @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
 }
 
 private object NeoShapes {
-    val section = RoundedCornerShape(28.dp)
-    val row = RoundedCornerShape(24.dp)
-    val dock = RoundedCornerShape(26.dp)
-    val dockButton = CircleShape
+    private val tokens: SurfaceStyleTokens
+        @Composable get() = SurfaceTokens.current(ThemeConfig.surfaceStyle)
+
+    val section
+        @Composable get() = tokens.shapes.largeCard
+    val row
+        @Composable get() = tokens.shapes.mediumCard
+    val dock
+        @Composable get() = tokens.shapes.largeCard
+    val dockButton
+        @Composable get() = tokens.shapes.icon
 }
 
 @Composable
@@ -633,97 +655,104 @@ private fun FolderSectionCard(
     var menuOpen by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(NeoShapes.section)
-            .background(NeoPalette.section)
-            .padding(horizontal = 20.dp, vertical = 18.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (collapsible) {
-                IconButton(
-                    onClick = onToggleCollapse,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(NeoShapes.dockButton)
-                        .background(NeoPalette.controlBackground)
-                ) {
-                    Icon(
-                        imageVector = if (isCollapsed) Icons.Outlined.KeyboardArrowDown else Icons.Outlined.KeyboardArrowUp,
-                        contentDescription = if (isCollapsed) "Развернуть" else "Свернуть",
-                        tint = NeoPalette.neon
-                    )
-                }
-                Spacer(Modifier.width(12.dp))
-            } else {
-                Spacer(Modifier.width(4.dp))
-                Icon(
-                    imageVector = Icons.Outlined.NoteAdd,
-                    contentDescription = null,
-                    tint = NeoPalette.neon,
-                    modifier = Modifier
-                        .size(32.dp)
-                        .background(NeoPalette.controlBackground, NeoShapes.dockButton)
-                        .padding(6.dp)
-                )
-                Spacer(Modifier.width(12.dp))
-            }
-
-            Text(
-                text = title,
-                color = NeoPalette.textPrimary,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.weight(1f)
-            )
-
-            if (onCreateInFolder != null || onDeleteFolder != null) {
-                IconButton(
-                    onClick = { menuOpen = true },
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(NeoShapes.dockButton)
-                        .background(NeoPalette.controlBackground)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Tune,
-                        contentDescription = "Настройки папки",
-                    tint = NeoPalette.neon
-                    )
-                }
-                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                    if (onCreateInFolder != null) {
-                        DropdownMenuItem(
-                            text = { Text("Создать документ") },
-                            onClick = {
-                                menuOpen = false
-                                onCreateInFolder()
-                            }
+        GlassCard(modifier = Modifier.fillMaxWidth(), shape = NeoShapes.section) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 18.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (collapsible) {
+                        IconButton(
+                            onClick = onToggleCollapse,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(NeoShapes.dockButton)
+                                .background(NeoPalette.controlBackground)
+                        ) {
+                            Icon(
+                                imageVector = if (isCollapsed) Icons.Outlined.KeyboardArrowDown else Icons.Outlined.KeyboardArrowUp,
+                                contentDescription = if (isCollapsed) "Развернуть" else "Свернуть",
+                                tint = NeoPalette.neon
+                            )
+                        }
+                        Spacer(Modifier.width(12.dp))
+                    } else {
+                        Spacer(Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Outlined.NoteAdd,
+                            contentDescription = null,
+                            tint = NeoPalette.neon,
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(NeoPalette.controlBackground, NeoShapes.dockButton)
+                                .padding(6.dp)
                         )
+                        Spacer(Modifier.width(12.dp))
                     }
-                    if (onDeleteFolder != null) {
-                        DropdownMenuItem(
-                            text = { Text("Удалить папку") },
-                            onClick = {
-                                menuOpen = false
-                                onDeleteFolder()
+
+                    Text(
+                        text = title,
+                        color = NeoPalette.textPrimary,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    if (onCreateInFolder != null || onDeleteFolder != null) {
+                        IconButton(
+                            onClick = { menuOpen = true },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(NeoShapes.dockButton)
+                                .background(NeoPalette.controlBackground)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Tune,
+                                contentDescription = "Настройки папки",
+                            tint = NeoPalette.neon
+                            )
+                        }
+                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                            if (onCreateInFolder != null) {
+                                DropdownMenuItem(
+                                    text = { Text("Создать документ") },
+                                    onClick = {
+                                        menuOpen = false
+                                        onCreateInFolder()
+                                    }
+                                )
                             }
+                            if (onDeleteFolder != null) {
+                                DropdownMenuItem(
+                                    text = { Text("Удалить папку") },
+                                    onClick = {
+                                        menuOpen = false
+                                        onDeleteFolder()
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                if (!isCollapsed || !collapsible) {
+                    Spacer(Modifier.height(16.dp))
+                    documents.forEachIndexed { index, doc ->
+                        DocumentRow(
+                            document = doc,
+                            openDoc = openDoc,
+                            onMoveDoc = onMoveDoc
                         )
+                        if (index != documents.lastIndex) {
+                            Spacer(Modifier.height(12.dp))
+                        }
                     }
                 }
             }
-        }
-
-        if (!isCollapsed || !collapsible) {
-            Spacer(Modifier.height(16.dp))
-            documents.forEachIndexed { index, doc ->
-                DocumentRow(
-                    document = doc,
-                    openDoc = openDoc,
-                    onMoveDoc = onMoveDoc
-                )
-                if (index != documents.lastIndex) {
-                    Spacer(Modifier.height(12.dp))
-                }
+            if (documents.isEmpty()) {
+                HistoryEmptyPlaceholder("В этой папке пока пусто")
             }
         }
     }
@@ -945,29 +974,27 @@ private fun InfoScreen() {
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Spacer(Modifier.height(16.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = if (ThemeManager.isDarkTheme) "Темная тема" else "Светлая тема",
-                            color = NeoPalette.textPrimary,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Switch(
-                            checked = ThemeManager.isDarkTheme,
-                            onCheckedChange = { ThemeManager.toggleTheme(context) },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = NeoPalette.neon,
-                                checkedTrackColor = NeoPalette.neon.copy(alpha = 0.4f),
-                                uncheckedThumbColor = NeoPalette.controlBackground,
-                                uncheckedTrackColor = NeoPalette.controlBackground,
-                                uncheckedBorderColor = Color.Transparent,
-                                checkedBorderColor = Color.Transparent
-                            )
-                        )
-                    }
+                    Text(
+                        text = "Палитра",
+                        color = NeoPalette.textPrimary,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    ThemePaletteToggle(
+                        isDark = ThemeManager.isDarkTheme,
+                        onSelect = { dark -> ThemeManager.setTheme(context, dark) }
+                    )
+                    Spacer(Modifier.height(20.dp))
+                    Text(
+                        text = "Поверхность",
+                        color = NeoPalette.textPrimary,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    SurfaceStyleToggle(
+                        current = ThemeConfig.surfaceStyle,
+                        onSelect = { style -> ThemeConfig.surfaceStyle = style }
+                    )
                 }
             }
 
@@ -1145,20 +1172,43 @@ private fun InformationSectionCard(
     title: String,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(NeoShapes.section)
-            .background(NeoPalette.section)
-            .padding(horizontal = 20.dp, vertical = 18.dp)
+    val surfaceTokens = SurfaceTokens.current(ThemeConfig.surfaceStyle)
+    val shape = NeoShapes.section
+    val border = if (surfaceTokens.borderWidth > 0.dp) BorderStroke(surfaceTokens.borderWidth, MaterialTheme.colorScheme.outline) else null
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = shape,
+        colors = CardDefaults.cardColors(
+            containerColor = if (surfaceTokens.useGradient) Color.Transparent else NeoPalette.section
+        ),
+        border = border
     ) {
-        Text(
-            text = title,
-            color = NeoPalette.textPrimary,
-            style = MaterialTheme.typography.titleMedium
-        )
-        Spacer(Modifier.height(16.dp))
-        content()
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(
+                    if (surfaceTokens.useGradient)
+                        Modifier.background(
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.surface,
+                                    MaterialTheme.colorScheme.surfaceVariant
+                                )
+                            ),
+                            shape
+                        )
+                    else Modifier.background(NeoPalette.section, shape)
+                )
+                .padding(horizontal = 20.dp, vertical = 18.dp)
+        ) {
+            Text(
+                text = title,
+                color = NeoPalette.textPrimary,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(Modifier.height(16.dp))
+            content()
+        }
     }
 }
 
@@ -1257,6 +1307,94 @@ private fun InformationHintBlock(title: String, hints: List<String>) {
         if (index != hints.lastIndex) {
             Spacer(Modifier.height(8.dp))
         }
+    }
+}
+
+@Composable
+private fun ThemePaletteToggle(isDark: Boolean, onSelect: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceSm)
+    ) {
+        ThemePaletteOptionButton(
+            title = "Темная",
+            isActive = isDark,
+            onClick = { onSelect(true) },
+            modifier = Modifier.weight(1f)
+        )
+        ThemePaletteOptionButton(
+            title = "Светлая",
+            isActive = !isDark,
+            onClick = { onSelect(false) },
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun ThemePaletteOptionButton(
+    title: String,
+    isActive: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = ButtonDefaults.buttonColors(
+        containerColor = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+        contentColor = if (isActive) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+    )
+    Button(
+        onClick = onClick,
+        modifier = modifier,
+        colors = colors,
+        shape = AppLayout.smallButtonShape()
+    ) {
+        Text(title.uppercase())
+    }
+}
+
+@Composable
+private fun SurfaceStyleToggle(current: SurfaceStyle, onSelect: (SurfaceStyle) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceSm)
+    ) {
+        SurfaceStyleOptionButton(
+            title = "Стекло",
+            target = SurfaceStyle.Glass,
+            current = current,
+            onSelect = onSelect,
+            modifier = Modifier.weight(1f)
+        )
+        SurfaceStyleOptionButton(
+            title = "Матовый",
+            target = SurfaceStyle.Matte,
+            current = current,
+            onSelect = onSelect,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun SurfaceStyleOptionButton(
+    title: String,
+    target: SurfaceStyle,
+    current: SurfaceStyle,
+    onSelect: (SurfaceStyle) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isActive = target == current
+    val colors = ButtonDefaults.buttonColors(
+        containerColor = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+        contentColor = if (isActive) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+    )
+    Button(
+        onClick = { onSelect(target) },
+        modifier = modifier,
+        colors = colors,
+        shape = AppLayout.smallButtonShape()
+    ) {
+        Text(title.uppercase())
     }
 }
 

@@ -53,39 +53,39 @@ val LocalThemeManager = staticCompositionLocalOf { ThemeManager }
  * Dark theme colors for glassmorphism
  */
 object DarkGlassColors {
-    val darkGlassTintTop = Color(0x33212C3A)
-    val darkGlassTintBottom = Color(0x33151F2C)
-    val darkGlassHighlight = Color(0x26C6FF00)
-    val darkGlassShadow = Color(0x4010151E)
-    val darkGlassBorderBright = Color(0x4DC6FF00)
-    val darkGlassBorderShadow = Color(0x1A0C141D)
+    val darkGlassTintTop = Color(0x3327292F)
+    val darkGlassTintBottom = Color(0x33181B22)
+    val darkGlassHighlight = Color(0x268B8C8E)
+    val darkGlassShadow = Color(0x40000000)
+    val darkGlassBorderBright = Color(0x33BCED57)
+    val darkGlassBorderShadow = Color(0x33202127)
 }
 
 /**
  * Dark theme color scheme
  */
 object DarkThemeColors {
-    val darkPrimary = Color(0xFFC6FF00)
-    val darkOnPrimary = Color(0xFF050A02)
-    val darkPrimaryContainer = Color(0xFF121C27)
-    val darkOnPrimaryContainer = Color(0xFFC6FF00)
+    val darkPrimary = Color(0xFFBCED57)
+    val darkOnPrimary = Color(0xFF10140A)
+    val darkPrimaryContainer = Color(0xFF1A2A11)
+    val darkOnPrimaryContainer = Color(0xFFBCED57)
 
-    val darkSecondary = Color(0xFFC6FF00)
-    val darkOnSecondary = Color(0xFF050A02)
-    val darkSecondaryContainer = Color(0xFF202C3A)
-    val darkOnSecondaryContainer = Color(0xFFE8EEF6)
+    val darkSecondary = Color(0xFFA4CF49)
+    val darkOnSecondary = Color(0xFF0E1406)
+    val darkSecondaryContainer = Color(0xFF233016)
+    val darkOnSecondaryContainer = Color(0xFFA4CF49)
 
-    val darkTertiary = Color(0xFFC6FF00)
-    val darkOnTertiary = Color(0xFF050A02)
-    val darkTertiaryContainer = Color(0xFF152130)
-    val darkOnTertiaryContainer = Color(0xFFE8EEF6)
+    val darkTertiary = Color(0xFFBCCBDE)
+    val darkOnTertiary = Color(0xFF0E1117)
+    val darkTertiaryContainer = Color(0xFF1C2430)
+    val darkOnTertiaryContainer = Color(0xFFBCCBDE)
 
-    val darkBackground = Color(0xFF060B12)
-    val darkOnBackground = Color(0xFFE8EEF6)
-    val darkSurface = Color(0xFF202C3A)
-    val darkOnSurface = Color(0xFFE8EEF6)
-    val darkSurfaceVariant = Color(0xFF151F2C)
-    val darkOnSurfaceVariant = Color(0xFF93A4B8)
-    val darkOutline = Color(0xFF152130)
-    val darkOutlineVariant = Color(0xFF1E2A38)
+    val darkBackground = Color(0xFF0F121A)
+    val darkOnBackground = Color(0xFFFBFBFB)
+    val darkSurface = Color(0xFF27292F)
+    val darkOnSurface = Color(0xFFFBFBFB)
+    val darkSurfaceVariant = Color(0xFF1C1F26)
+    val darkOnSurfaceVariant = Color(0xFF8B8C8E)
+    val darkOutline = Color(0xFF3A3D44)
+    val darkOutlineVariant = Color(0xFF2B2E34)
 }

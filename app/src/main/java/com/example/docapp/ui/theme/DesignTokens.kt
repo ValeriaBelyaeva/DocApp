@@ -21,6 +21,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
  
 
 /**
@@ -157,6 +160,12 @@ object DesignSystem {
     val layout: AppLayoutRef = AppLayoutRef
     val colors: AppColorsRef = AppColorsRef
     val typography = AppTypography
+}
+
+enum class SurfaceStyle { Glass, Matte }
+
+object ThemeConfig {
+    var surfaceStyle: SurfaceStyle by mutableStateOf(SurfaceStyle.Matte)
 }
 
 // Thin wrappers to keep API stable while using OOP accessor

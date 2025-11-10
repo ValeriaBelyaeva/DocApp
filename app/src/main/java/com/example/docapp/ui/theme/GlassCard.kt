@@ -30,10 +30,12 @@ fun GlassCard(
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     enabled: Boolean = true,
-    shape: Shape = GlassShape,
+    shape: Shape? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val glassColors = LocalGlassColors.current
+    val surfaceTokens = SurfaceTokens.current(ThemeConfig.surfaceStyle)
+    val targetShape = shape ?: surfaceTokens.shapes.largeCard
     val isInteractive = onClick != null || onLongClick != null
     val interactionSource = remember { MutableInteractionSource() }
     val ripple = rememberRipple(
@@ -52,40 +54,50 @@ fun GlassCard(
         Modifier
     }
 
-    Surface(
-        modifier = modifier.shadow(
-            elevation = 20.dp,
-            shape = shape,
-            clip = false,
-            ambientColor = glassColors.shadowColor,
-            spotColor = glassColors.shadowColor
-        ),
-        shape = shape,
-        color = Color.Transparent,
-        contentColor = MaterialTheme.colorScheme.onSurface,
-        tonalElevation = 0.dp,
-        border = BorderStroke(
-            width = 2.dp,
+    val borderStroke = if (surfaceTokens.borderWidth > 0.dp &&
+        (glassColors.borderBright.alpha > 0f || glassColors.borderShadow.alpha > 0f)
+    ) {
+        BorderStroke(
+            width = surfaceTokens.borderWidth,
             brush = Brush.linearGradient(
                 colors = listOf(glassColors.borderBright, glassColors.borderShadow)
             )
         )
+    } else null
+
+    val shadowElevation = if (glassColors.shadowColor.alpha > 0f) 20.dp else 6.dp
+
+    Surface(
+        modifier = modifier.shadow(
+            elevation = shadowElevation,
+            shape = targetShape,
+            clip = false,
+            ambientColor = glassColors.shadowColor,
+            spotColor = glassColors.shadowColor
+        ),
+        shape = targetShape,
+        color = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        tonalElevation = 0.dp,
+        border = borderStroke
     ) {
         Column(
             modifier = Modifier
-                .clip(shape)
-                .background(glassGradient(), shape)
+                .clip(targetShape)
+                .background(glassGradient(), targetShape)
                 .then(clickableModifier)
                 .drawBehind {
-                    val highlightBrush = Brush.linearGradient(
-                        colors = listOf(glassColors.highlight, Color.Transparent),
-                        start = Offset.Zero,
-                        end = Offset(size.width, size.height / 1.4f)
-                    )
-                    drawRoundRect(
-                        brush = highlightBrush,
-                        cornerRadius = CornerRadius(AppRadii.cardCorner.toPx(), AppRadii.cardCorner.toPx())
-                    )
+                    if (glassColors.highlight.alpha > 0f) {
+                        val highlightBrush = Brush.linearGradient(
+                            colors = listOf(glassColors.highlight, Color.Transparent),
+                            start = Offset.Zero,
+                            end = Offset(size.width, size.height / 1.4f)
+                        )
+                        drawRoundRect(
+                            brush = highlightBrush,
+                            cornerRadius = CornerRadius(AppRadii.cardCorner.toPx(), AppRadii.cardCorner.toPx())
+                        )
+                    }
                 },
             content = content
         )

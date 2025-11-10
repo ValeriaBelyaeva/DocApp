@@ -18,6 +18,11 @@ import com.example.docapp.ui.theme.DocTheme
 import com.example.docapp.core.AppLogger
 
 @Composable
+fun AppRoot(content: @Composable () -> Unit) {
+    content()
+}
+
+@Composable
 fun App() {
     AppLogger.log("App", "App composable started")
     DocTheme {

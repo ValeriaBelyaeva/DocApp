@@ -68,6 +68,15 @@ import com.example.docapp.core.PdfPreviewExtractor
 import com.example.docapp.core.ServiceLocator
 import com.example.docapp.core.newId
 import com.example.docapp.domain.Attachment
+import com.example.docapp.domain.Document
+import com.example.docapp.domain.DocumentRepository
+import com.example.docapp.domain.Template
+import com.example.docapp.domain.TemplateField
+import com.example.docapp.domain.usecases.UseCases
+import com.example.docapp.ui.theme.AppDimens
+import com.example.docapp.ui.theme.GlassCard
+import com.example.docapp.ui.theme.ThemeConfig
+import com.example.docapp.ui.theme.SurfaceTokens
 import kotlinx.coroutines.launch
 
 /**
@@ -327,24 +336,42 @@ fun DocumentViewScreen(
 }
 
 private object EditorPalette {
-    val background = Color(0xFF060B12)
-    val section = Color(0xFF202C3A)
-    val item = Color(0xFF151F2C)
-    val iconBackground = Color(0xFF0C141D)
-    val controlBackground = Color(0xFF121C27)
-    val badgeBackground = Color(0xFF0E1621)
-    val neon = Color(0xFFC6FF00)
-    val textPrimary = Color(0xFFE8EEF6)
-    val textSecondary = Color(0xFF93A4B8)
-    val muted = Color(0xFF2F3A49)
-    val danger = Color(0xFFFF4D67)
+    val background: Color
+        @Composable get() = MaterialTheme.colorScheme.background
+    val section: Color
+        @Composable get() = MaterialTheme.colorScheme.surface
+    val item: Color
+        @Composable get() = MaterialTheme.colorScheme.surfaceVariant
+    val iconBackground: Color
+        @Composable get() = MaterialTheme.colorScheme.surfaceVariant
+    val controlBackground: Color
+        @Composable get() = MaterialTheme.colorScheme.surfaceVariant
+    val badgeBackground: Color
+        @Composable get() = MaterialTheme.colorScheme.secondaryContainer
+    val neon: Color
+        @Composable get() = MaterialTheme.colorScheme.primary
+    val textPrimary: Color
+        @Composable get() = MaterialTheme.colorScheme.onSurface
+    val textSecondary: Color
+        @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
+    val muted: Color
+        @Composable get() = MaterialTheme.colorScheme.surfaceVariant
+    val danger: Color
+        @Composable get() = MaterialTheme.colorScheme.error
 }
 
 private object EditorShapes {
-    val section = RoundedCornerShape(28.dp)
-    val row = RoundedCornerShape(24.dp)
-    val badge = RoundedCornerShape(18.dp)
-    val icon = CircleShape
+    private val tokens: com.example.docapp.ui.theme.SurfaceStyleTokens
+        @Composable get() = SurfaceTokens.current(ThemeConfig.surfaceStyle)
+
+    val section
+        @Composable get() = tokens.shapes.largeCard
+    val row
+        @Composable get() = tokens.shapes.mediumCard
+    val badge
+        @Composable get() = tokens.shapes.smallCard
+    val icon
+        @Composable get() = tokens.shapes.icon
 }
 
 @Composable
@@ -923,22 +950,22 @@ private fun EditorSectionCard(
     title: String? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(EditorShapes.section)
-            .background(EditorPalette.section)
-            .padding(horizontal = 20.dp, vertical = 18.dp)
-    ) {
-        if (!title.isNullOrBlank()) {
-            Text(
-                text = title,
-                color = EditorPalette.textPrimary,
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(Modifier.height(16.dp))
+    GlassCard(modifier = Modifier.fillMaxWidth(), shape = EditorShapes.section) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 18.dp)
+        ) {
+            if (!title.isNullOrBlank()) {
+                Text(
+                    text = title,
+                    color = EditorPalette.textPrimary,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(Modifier.height(16.dp))
+            }
+            content()
         }
-        content()
     }
 }
 
@@ -956,7 +983,7 @@ private fun EditorFieldInput(
         modifier = Modifier
             .fillMaxWidth()
             .clip(EditorShapes.row)
-            .background(EditorPalette.item)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(horizontal = 20.dp, vertical = 18.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1010,7 +1037,7 @@ private fun EditorEmptyPlaceholder(text: String) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(EditorShapes.row)
-            .background(EditorPalette.item.copy(alpha = 0.6f))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(horizontal = 20.dp, vertical = 18.dp)
     ) {
         Text(
@@ -1041,7 +1068,7 @@ private fun EditorPhotoCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(EditorShapes.row)
-            .background(EditorPalette.item)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(horizontal = 18.dp, vertical = 18.dp)
     ) {
         Text(
@@ -1086,7 +1113,7 @@ private fun EditorPdfCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(EditorShapes.row)
-            .background(EditorPalette.item)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(horizontal = 18.dp, vertical = 18.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1184,7 +1211,7 @@ private fun ViewFieldCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(EditorShapes.row)
-            .background(EditorPalette.item)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(horizontal = 20.dp, vertical = 18.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
