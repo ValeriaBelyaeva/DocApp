@@ -1,6 +1,7 @@
 package com.example.docapp.ui.design
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -64,6 +65,7 @@ private fun DemoButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
         Modifier
             .clip(DMShapes.pill)
             .background(if (isSelected) DMColors.Accent else DMColors.SurfaceSoft)
+            .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Text(

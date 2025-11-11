@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.docapp.ui.theme.AppShapes
+import com.example.docapp.ui.theme.AppDimens
 
 @Composable
 fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -52,7 +53,10 @@ fun FieldTile(
         modifier = modifier.fillMaxWidth()
     ) {
         Row(
-            Modifier.padding(12.dp),
+            Modifier.padding(
+                horizontal = AppDimens.panelPaddingHorizontal,
+                vertical = AppDimens.panelPaddingVertical
+            ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(Modifier.weight(1f)) {
@@ -75,7 +79,7 @@ fun FieldTile(
                     }
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.iconRowSpacing)) {
                 if (onCopy != null) {
                     IconButton(onClick = onCopy) {
                         Icon(Icons.Default.ContentCopy, contentDescription = "Копировать")

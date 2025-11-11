@@ -26,10 +26,6 @@ class MainActivity : ComponentActivity() {
         AppLogger.log("MainActivity", "MainActivity onCreate started")
         
         AppLogger.log("MainActivity", "MainActivity initialized")
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_SECURE,
-            WindowManager.LayoutParams.FLAG_SECURE
-        )
         requestNecessaryPermissions()
         
         AppLogger.log("MainActivity", "Setting Compose content...")

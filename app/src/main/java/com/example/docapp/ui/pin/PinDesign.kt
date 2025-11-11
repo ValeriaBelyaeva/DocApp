@@ -50,6 +50,7 @@ import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.ServiceLocator
 import com.example.docapp.ui.theme.AppShapes
 import com.example.docapp.ui.theme.AppColors
+import com.example.docapp.ui.theme.AppDimens
 import kotlinx.coroutines.launch
 import kotlin.UninitializedPropertyAccessException
 
@@ -120,7 +121,7 @@ private fun LogoBlock() {
             tint = PinColors.Neon, // логотип в акценте
             modifier = Modifier.size(56.dp)
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(AppDimens.spaceSm))
         Text(
             text = "DocManager",
             color = PinColors.Neon,
@@ -138,7 +139,10 @@ private fun PinCapsule(isVisible: Boolean = false, actualPin: String = "", onVis
             .height(56.dp) // Фиксированная высота капсулы
             .clip(PinShapes.Capsule)
             .background(PinColors.Layer)
-            .padding(horizontal = 18.dp, vertical = 14.dp),
+            .padding(
+                horizontal = AppDimens.panelPaddingHorizontal,
+                vertical = AppDimens.panelPaddingVertical
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -147,7 +151,7 @@ private fun PinCapsule(isVisible: Boolean = false, actualPin: String = "", onVis
             tint = PinColors.Neon,
             modifier = Modifier.size(20.dp) // Фиксированный размер иконки
         )
-        Spacer(Modifier.width(14.dp))
+        Spacer(Modifier.width(AppDimens.spaceLg))
         Text(
             text = if (isVisible) {
                 // Показываем числа с пробелами
@@ -196,32 +200,32 @@ fun PinScreenDesign() {
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = AppDimens.spaceXl),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(AppDimens.spaceXl))
             LogoBlock()
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(AppDimens.spaceXl))
             PinCapsule(isVisible = false, actualPin = "1234")
 
-            Spacer(Modifier.height(38.dp))
+            Spacer(Modifier.height(AppDimens.spaceXl))
 
             // сетка 3×4
             Column(
-                verticalArrangement = Arrangement.spacedBy(18.dp),
+                verticalArrangement = Arrangement.spacedBy(AppDimens.spaceLg),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceXl)) {
                     RoundKey("1"); RoundKey("2"); RoundKey("3")
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceXl)) {
                     RoundKey("4"); RoundKey("5"); RoundKey("6")
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceXl)) {
                     RoundKey("7"); RoundKey("8"); RoundKey("9")
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceXl)) {
                     RoundKey()            // пустой слева
                     RoundKey("0")
                     RoundKey(isBackspace = true)
@@ -282,11 +286,11 @@ fun PinScreenNew(onSuccess: () -> Unit) {
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp)
+                .padding(AppDimens.screenPadding)
                 .padding(bottom = bottomInset),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(AppDimens.spaceXl))
             
             // Логотип с заголовком
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -296,7 +300,7 @@ fun PinScreenNew(onSuccess: () -> Unit) {
                     tint = PinColors.Neon,
                     modifier = Modifier.size(56.dp)
                 )
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(AppDimens.spaceSm))
                 Text(
                     text = when (stage) {
                         PinStageNew.EnterExisting -> "ВВЕДИТЕ ПИН-КОД"
@@ -310,7 +314,7 @@ fun PinScreenNew(onSuccess: () -> Unit) {
                 )
             }
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(AppDimens.spaceXl))
             
             // Капсула с PIN - показываем звездочки или реальный PIN
             PinCapsule(
@@ -321,7 +325,7 @@ fun PinScreenNew(onSuccess: () -> Unit) {
 
             // Ошибка
             error?.let { errorText ->
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(AppDimens.spaceLg))
                 Text(
                     text = errorText,
                     color = MaterialTheme.colorScheme.error,
@@ -330,17 +334,17 @@ fun PinScreenNew(onSuccess: () -> Unit) {
                 )
             }
 
-            Spacer(Modifier.height(80.dp)) // Увеличил расстояние до клавиатуры
+            Spacer(Modifier.height(AppDimens.spaceHuge)) // Увеличил расстояние до клавиатуры
 
             // Область между капсулой и клавиатурой, чтобы опустить блок вниз
             Spacer(Modifier.weight(1f))
 
             // Функциональная клавиатура 3×4 в нижней части экрана
             Column(
-                verticalArrangement = Arrangement.spacedBy(20.dp),
+                verticalArrangement = Arrangement.spacedBy(AppDimens.spaceLg),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceXl)) {
                     RoundKey("1") {
                         pin += "1"
                         error = null
@@ -354,7 +358,7 @@ fun PinScreenNew(onSuccess: () -> Unit) {
                         error = null
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceXl)) {
                     RoundKey("4") {
                         pin += "4"
                         error = null
@@ -368,7 +372,7 @@ fun PinScreenNew(onSuccess: () -> Unit) {
                         error = null
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceXl)) {
                     RoundKey("7") {
                         pin += "7"
                         error = null
@@ -382,7 +386,7 @@ fun PinScreenNew(onSuccess: () -> Unit) {
                         error = null
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceXl)) {
                     RoundKey() // пустая кнопка слева
                     RoundKey("0") {
                         pin += "0"
@@ -397,7 +401,7 @@ fun PinScreenNew(onSuccess: () -> Unit) {
                 }
             }
 
-            Spacer(Modifier.height(24.dp + bottomInset))
+        Spacer(Modifier.height(AppDimens.spaceXl + bottomInset))
         }
     }
 

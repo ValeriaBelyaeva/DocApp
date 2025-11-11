@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +26,7 @@ import com.example.docapp.data.db.entities.AttachmentEntity
 import com.example.docapp.ui.theme.GlassCard
 import com.example.docapp.ui.theme.AppColors
 import kotlinx.coroutines.launch
+import com.example.docapp.ui.theme.AppDimens
 
 @Composable
 fun AttachmentManager(
@@ -127,7 +129,7 @@ fun AttachmentManager(
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
         
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(AppDimens.spaceSm))
         
         // Список вложений
         if (attachments.isEmpty()) {
@@ -135,11 +137,14 @@ fun AttachmentManager(
                 text = "Нет вложений",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(
+                    horizontal = AppDimens.panelPaddingHorizontal,
+                    vertical = AppDimens.panelPaddingVertical
+                )
             )
         } else {
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(AppDimens.spaceXs),
                 modifier = Modifier.heightIn(max = 300.dp)
             ) {
                 items(attachments) { attachment ->
@@ -160,7 +165,7 @@ fun AttachmentManager(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(Icons.Default.Share, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(AppDimens.spaceSm))
                 Text("Поделиться всеми (${attachments.size})")
             }
         }
@@ -236,7 +241,7 @@ private fun AttachmentItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(AppDimens.cardPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Иконка типа файла
@@ -250,7 +255,7 @@ private fun AttachmentItem(
                 tint = AppColors.iconAccent()
             )
             
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(AppDimens.spaceMd))
             
             // Информация о файле
             Column(modifier = Modifier.weight(1f)) {
@@ -269,7 +274,7 @@ private fun AttachmentItem(
             // Кнопки действий
             Row {
                 IconButton(onClick = onOpen) {
-                    Icon(Icons.Default.OpenInNew, contentDescription = "Открыть", tint = AppColors.iconAccent())
+                    Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = "Открыть", tint = AppColors.iconAccent())
                 }
                 IconButton(onClick = onShare) {
                     Icon(Icons.Default.Share, contentDescription = "Поделиться", tint = AppColors.iconAccent())

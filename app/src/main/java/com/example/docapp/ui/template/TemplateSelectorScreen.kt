@@ -45,6 +45,8 @@ import com.example.docapp.domain.Template
 import com.example.docapp.ui.theme.GlassCard
 import com.example.docapp.ui.theme.AppShapes
 import com.example.docapp.ui.theme.AppColors
+import com.example.docapp.ui.theme.AppLayout
+import com.example.docapp.ui.theme.AppDimens
 import kotlinx.coroutines.launch
 
 @Composable
@@ -68,25 +70,26 @@ fun TemplateSelectorScreen(
 
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.systemBars)
-                .padding(horizontal = 20.dp)
+            modifier = AppLayout.appScreenInsets(Modifier.fillMaxSize())
+                .padding(AppDimens.screenPadding)
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(22.dp),
-                contentPadding = PaddingValues(top = 32.dp, bottom = 140.dp)
+                verticalArrangement = Arrangement.spacedBy(AppDimens.sectionSpacing),
+                contentPadding = PaddingValues(
+                    top = AppDimens.sectionSpacing,
+                    bottom = AppDimens.bottomButtonsSpacer
+                )
             ) {
                 item {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = "Создание документа",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
+            Text(
+                text = "Создание документа",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground
                         )
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(AppDimens.listSpacing))
                         Text(
                             text = "Выбери способ: новый документ или заготовка",
                             style = MaterialTheme.typography.bodyMedium,
@@ -95,11 +98,11 @@ fun TemplateSelectorScreen(
                         )
                     }
                 }
-
+                
                 item {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                         modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(AppDimens.sectionSpacing)
                     ) {
                         TemplateOptionCard(
                             icon = Icons.Default.Description,
@@ -215,7 +218,10 @@ private fun TemplateOptionCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 24.dp, horizontal = 18.dp),
+                .padding(
+                    horizontal = AppDimens.panelPaddingHorizontal,
+                    vertical = AppDimens.panelPaddingVertical
+                ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
@@ -226,26 +232,26 @@ private fun TemplateOptionCard(
                     .size(32.dp)
                     .clip(AppShapes.badge())
                     .background(AppColors.iconAccentBackground())
-                    .padding(6.dp)
+                    .padding(AppDimens.spaceXs)
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(AppDimens.listSpacing))
             Text(
                 text = title.uppercase(),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
+                            textAlign = TextAlign.Center
+                        )
+            Spacer(Modifier.height(AppDimens.labelSpacing))
+                        Text(
                 text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+            
 @Composable
 private fun TemplateListItem(
     template: Template,
@@ -260,7 +266,10 @@ private fun TemplateListItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 18.dp),
+                .padding(
+                    horizontal = AppDimens.panelPaddingHorizontal,
+                    vertical = AppDimens.panelPaddingVertical
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -269,49 +278,52 @@ private fun TemplateListItem(
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(Modifier.height(6.dp))
-                Text(
+                Spacer(Modifier.height(AppDimens.labelSpacing))
+                                Text(
                     text = "Шаблон",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             IconButton(onClick = onDelete) {
-                Icon(
+                                    Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Удалить шаблон",
-                    tint = MaterialTheme.colorScheme.error
-                )
-            }
-        }
-    }
-}
+                                        contentDescription = "Удалить шаблон",
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                        }
+                    }
 
 @Composable
 private fun TemplateEmptyState() {
     GlassCard(modifier = Modifier.fillMaxWidth(), shape = AppShapes.panelLarge()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 32.dp),
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                .padding(
+                    horizontal = AppDimens.panelPaddingHorizontal,
+                    vertical = AppDimens.spaceXl
+                ),
             horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Нет доступных шаблонов",
-                style = MaterialTheme.typography.titleMedium,
+                ) {
+                    Text(
+                        text = "Нет доступных шаблонов",
+                        style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
+                        textAlign = TextAlign.Center
+                    )
+            Spacer(Modifier.height(AppDimens.listSpacing))
+                    Text(
                 text = "Создай шаблон, чтобы ускорить повторяющиеся документы",
-                style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
         }
-    }
-}
 
 @Composable
 private fun TemplateDialog(
@@ -326,25 +338,25 @@ private fun TemplateDialog(
     onConfirm: () -> Unit,
     confirmEnabled: Boolean
 ) {
-    AlertDialog(
+            AlertDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = "Новый шаблон",
-                style = MaterialTheme.typography.headlineSmall,
+                title = { 
+                    Text(
+                        text = "Новый шаблон",
+                        style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
-            )
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                OutlinedTextField(
-                    value = tplName,
+                    )
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(AppDimens.spaceLg)) {
+                        OutlinedTextField(
+                            value = tplName,
                     onValueChange = onNameChange,
-                    label = { Text("Название шаблона") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
+                            label = { Text("Название шаблона") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = MaterialTheme.colorScheme.onSurface,
                         unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                         cursorColor = MaterialTheme.colorScheme.primary,
@@ -354,27 +366,27 @@ private fun TemplateDialog(
                         unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
                         unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent
-                    )
-                )
-
-                Text(
+                            )
+                        )
+                        
+                        Text(
                     text = "Добавь поля для шаблона",
-                    style = MaterialTheme.typography.titleSmall,
+                            style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface
-                )
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedTextField(
-                        value = newField,
+                        )
+                        
+                        Row(
+                    horizontalArrangement = Arrangement.spacedBy(AppDimens.listSpacing),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedTextField(
+                                value = newField,
                         onValueChange = onFieldChange,
-                        label = { Text("Название поля") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
+                                label = { Text("Название поля") },
+                                modifier = Modifier.weight(1f),
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = MaterialTheme.colorScheme.onSurface,
                             unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                             cursorColor = MaterialTheme.colorScheme.primary,
@@ -392,37 +404,40 @@ private fun TemplateDialog(
                             .size(44.dp)
                             .clip(AppShapes.iconButton())
                             .background(MaterialTheme.colorScheme.primaryContainer)
-                    ) {
+                            ) {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Добавить поле",
                             tint = MaterialTheme.colorScheme.primary
                         )
-                    }
-                }
-
+                            }
+                        }
+                        
                 if (fields.isNotEmpty()) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(AppShapes.panelMedium())
                             .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                            .padding(
+                                horizontal = AppDimens.dialogPaddingHorizontal,
+                                vertical = AppDimens.dialogPaddingVertical
+                            ),
+                        verticalArrangement = Arrangement.spacedBy(AppDimens.listSpacing)
                     ) {
-                        Text(
+                                    Text(
                             text = "Поля шаблона",
-                            style = MaterialTheme.typography.titleSmall,
+                                        style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onSurface
-                        )
+                                    )
                         fields.forEach { field ->
-                            Row(
+                                        Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
+                                        ) {
+                                            Text(
                                     text = field,
-                                    style = MaterialTheme.typography.bodyMedium,
+                                                style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.weight(1f)
                                 )
@@ -431,16 +446,16 @@ private fun TemplateDialog(
                                         imageVector = Icons.Default.Delete,
                                         contentDescription = "Удалить",
                                         tint = MaterialTheme.colorScheme.error
-                                    )
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            }
-        },
-        confirmButton = {
-            Button(
+                },
+                confirmButton = {
+                        Button(
                 onClick = onConfirm,
                 enabled = confirmEnabled,
                 colors = ButtonDefaults.buttonColors(
@@ -450,17 +465,17 @@ private fun TemplateDialog(
                     disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
                 ),
                 shape = AppShapes.panelMedium()
-            ) {
-                Text("Создать шаблон")
-            }
-        },
-        dismissButton = {
+                        ) {
+                            Text("Создать шаблон")
+                        }
+                },
+                dismissButton = {
             TextButton(
                 onClick = onDismiss,
                 colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
             ) {
-                Text("Отмена")
-            }
-        }
-    )
+                        Text("Отмена") 
+                    }
+                }
+            )
 }

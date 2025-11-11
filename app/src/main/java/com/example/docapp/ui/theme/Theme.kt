@@ -130,13 +130,18 @@ fun DocTheme(content: @Composable () -> Unit) {
     val isDarkTheme = ThemeManager.isDarkTheme
     val colorScheme = if (isDarkTheme) DarkGlassColorScheme else LightGlassColorScheme
     val surfaceStyle = ThemeConfig.surfaceStyle
+    val surfaceTokens = SurfaceTokens.current(surfaceStyle)
     val glassTokens = when (surfaceStyle) {
         SurfaceStyle.Glass -> if (isDarkTheme) DarkGlassTokens else LightGlassTokens
         SurfaceStyle.Matte -> matteTokensFor(colorScheme)
     }
     
     CompositionLocalProvider(LocalGlassColors provides glassTokens) {
-        MaterialTheme(colorScheme = colorScheme, typography = AppTypography) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = AppTypography,
+            shapes = surfaceTokens.materialShapes
+        ) {
             Surface(
                 modifier = Modifier.fillMaxSize(),
                 color = MaterialTheme.colorScheme.background,

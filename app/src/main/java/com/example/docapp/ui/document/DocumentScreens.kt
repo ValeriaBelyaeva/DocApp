@@ -73,6 +73,7 @@ import com.example.docapp.domain.Template
 import com.example.docapp.domain.TemplateField
 import com.example.docapp.domain.usecases.UseCases
 import com.example.docapp.ui.theme.AppDimens
+import com.example.docapp.ui.theme.AppLayout
 import com.example.docapp.ui.theme.AppShapes
 import com.example.docapp.ui.theme.AppColors
 import com.example.docapp.ui.theme.GlassCard
@@ -170,11 +171,9 @@ fun DocumentViewScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.systemBars)
+            modifier = AppLayout.appScreenInsets(Modifier.fillMaxSize())
                 .verticalScroll(scrollState)
-                .padding(horizontal = 24.dp, vertical = 24.dp)
+                .padding(AppDimens.screenPadding)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -187,7 +186,7 @@ fun DocumentViewScreen(
                     iconColor = MaterialTheme.colorScheme.onPrimary,
                     onClick = onEdit
                 )
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(AppDimens.spaceLg))
                 Text(
                     text = doc.doc.name,
                     style = MaterialTheme.typography.headlineSmall,
@@ -204,7 +203,7 @@ fun DocumentViewScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(AppDimens.spaceXl))
 
             viewFields.forEach { (label, value) ->
                 ViewFieldCard(
@@ -215,12 +214,12 @@ fun DocumentViewScreen(
                         ErrorHandler.showSuccess("Скопировано: $label")
                     }
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(AppDimens.spaceLg))
             }
 
             if (doc.photos.isNotEmpty()) {
                 SectionTitle("Photos")
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(AppDimens.spaceMd))
                 doc.photos.forEach { photo ->
                     GlassCard(
                         modifier = Modifier.fillMaxWidth(),
@@ -239,39 +238,42 @@ fun DocumentViewScreen(
                             contentScale = ContentScale.Crop
                         )
                     }
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(AppDimens.spaceLg))
                 }
             }
 
             if (doc.pdfs.isNotEmpty()) {
                 SectionTitle("Attached files")
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(AppDimens.spaceMd))
                 GlassCard(modifier = Modifier.fillMaxWidth(), shape = EditorShapes.section) {
                     Column(
-                        modifier = Modifier.padding(20.dp)
+                        modifier = Modifier.padding(
+                            horizontal = AppDimens.panelPaddingHorizontal,
+                            vertical = AppDimens.panelPaddingVertical
+                        )
                     ) {
                         Text(
                             text = "Attached files",
                             style = MaterialTheme.typography.titleSmall,
                             color = EditorPalette.textPrimary
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(AppDimens.spaceMd))
                         doc.pdfs.forEach { pdf ->
                             AttachmentChip(
                                 name = pdf.displayName ?: "PDF",
                                 onOpen = { openPdf(pdf.uri.toString()) }
                             )
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(AppDimens.listSpacing))
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(AppDimens.spaceLg))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(AppDimens.listSpacing)
             ) {
                 NeonOutlineButton(
                     text = "Delete",
@@ -585,12 +587,12 @@ fun DocumentEditScreen(
     Surface(color = EditorPalette.background, modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(22.dp),
+            verticalArrangement = Arrangement.spacedBy(AppDimens.sectionSpacing),
             contentPadding = PaddingValues(
-                start = 20.dp,
-                end = 20.dp,
-                top = 32.dp + topInset.dp,
-                bottom = 200.dp + bottomInset.dp
+                start = AppDimens.screenPadding,
+                end = AppDimens.screenPadding,
+                top = AppDimens.sectionSpacing + topInset.dp,
+                bottom = AppDimens.bottomButtonsSpacer + bottomInset.dp
             )
         ) {
             item {
@@ -614,7 +616,7 @@ fun DocumentEditScreen(
                         placeholder = "Придумай короткое имя",
                         onValueChange = { name = it }
                     )
-                    Spacer(Modifier.height(18.dp))
+                    Spacer(Modifier.height(AppDimens.sectionSpacing))
                     EditorFieldInput(
                         label = "Описание",
                         value = description,
@@ -640,11 +642,11 @@ fun DocumentEditScreen(
                                 onRemove = { fields.removeAt(index) }
                             )
                             if (index != fields.lastIndex) {
-                                Spacer(Modifier.height(16.dp))
+                                Spacer(Modifier.height(AppDimens.listSpacing))
                             }
                         }
                     }
-                    Spacer(Modifier.height(18.dp))
+                    Spacer(Modifier.height(AppDimens.sectionSpacing))
                     NeonOutlineButton(
                         text = "Добавить поле",
                         onClick = {
@@ -690,13 +692,13 @@ fun DocumentEditScreen(
                     }
 
                     if (currentPhotos.isEmpty() && currentPdfs.isEmpty()) {
-                        Spacer(Modifier.height(20.dp))
+                        Spacer(Modifier.height(AppDimens.spaceLg))
                         EditorEmptyPlaceholder("После импорта здесь появятся фото и документы.")
                     } else {
                         if (currentPhotos.isNotEmpty()) {
-                            Spacer(Modifier.height(24.dp))
+                            Spacer(Modifier.height(AppDimens.spaceLg))
                             EditorSubsectionTitle("Фото")
-                            Spacer(Modifier.height(12.dp))
+                            Spacer(Modifier.height(AppDimens.listSpacing))
                             currentPhotos.forEach { photo ->
                                 EditorPhotoCard(
                                     photo = photo,
@@ -704,13 +706,13 @@ fun DocumentEditScreen(
                                     onDelete = { deletePhoto(photo.id) },
                                     isDeleting = isSaving
                                 )
-                                Spacer(Modifier.height(14.dp))
+                                Spacer(Modifier.height(AppDimens.spaceLg))
                             }
                         }
                         if (currentPdfs.isNotEmpty()) {
-                            Spacer(Modifier.height(24.dp))
+                            Spacer(Modifier.height(AppDimens.spaceLg))
                             EditorSubsectionTitle("PDF файлы")
-                            Spacer(Modifier.height(12.dp))
+                            Spacer(Modifier.height(AppDimens.listSpacing))
                             currentPdfs.forEach { pdf ->
                                 EditorPdfCard(
                                     pdf = pdf,
@@ -720,7 +722,7 @@ fun DocumentEditScreen(
                                     onDelete = { deletePdf(pdf.id) },
                                     isDeleting = isSaving
                                 )
-                                Spacer(Modifier.height(14.dp))
+                                Spacer(Modifier.height(AppDimens.spaceLg))
                             }
                         }
                     }
@@ -806,9 +808,9 @@ fun DocumentEditScreen(
             text = {
                 Column {
                     Text("Импорт файлов в процессе...", color = EditorPalette.textSecondary)
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(AppDimens.spaceLg))
                     LinearProgressIndicator(
-                        progress = importProgress,
+                        progress = { importProgress },
                         modifier = Modifier.fillMaxWidth(),
                         color = EditorPalette.neon,
                         trackColor = EditorPalette.muted
@@ -944,7 +946,10 @@ private fun EditorSectionCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 18.dp)
+                .padding(
+                    horizontal = AppDimens.panelPaddingHorizontal,
+                    vertical = AppDimens.panelPaddingVertical
+                )
         ) {
             if (!title.isNullOrBlank()) {
                 Text(
@@ -952,7 +957,7 @@ private fun EditorSectionCard(
                     color = EditorPalette.textPrimary,
                     style = MaterialTheme.typography.titleMedium
                 )
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(AppDimens.listSpacing))
             }
             content()
         }
@@ -974,7 +979,10 @@ private fun EditorFieldInput(
             .fillMaxWidth()
             .clip(EditorShapes.row)
             .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 20.dp, vertical = 18.dp)
+            .padding(
+                horizontal = AppDimens.panelPaddingHorizontal,
+                vertical = AppDimens.panelPaddingVertical
+            )
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -994,7 +1002,7 @@ private fun EditorFieldInput(
                 )
             }
         }
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(AppDimens.listSpacing))
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
@@ -1028,7 +1036,10 @@ private fun EditorEmptyPlaceholder(text: String) {
             .fillMaxWidth()
             .clip(EditorShapes.row)
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(horizontal = 20.dp, vertical = 18.dp)
+            .padding(
+                horizontal = AppDimens.panelPaddingHorizontal,
+                vertical = AppDimens.panelPaddingVertical
+            )
     ) {
         Text(
             text = text,
@@ -1059,14 +1070,17 @@ private fun EditorPhotoCard(
             .fillMaxWidth()
             .clip(EditorShapes.row)
             .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 18.dp, vertical = 18.dp)
+            .padding(
+                horizontal = AppDimens.panelPaddingHorizontal,
+                vertical = AppDimens.panelPaddingVertical
+            )
     ) {
         Text(
             text = photo.displayName ?: "Фото",
             color = EditorPalette.textPrimary,
             style = MaterialTheme.typography.titleMedium
         )
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(AppDimens.listSpacing))
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(photo.uri)
@@ -1081,7 +1095,7 @@ private fun EditorPhotoCard(
                 .clickable(onClick = onOpen),
             contentScale = ContentScale.Crop
         )
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(AppDimens.spaceLg))
         NeonOutlineButton(
             text = "Удалить фото",
             onClick = onDelete,
@@ -1104,7 +1118,10 @@ private fun EditorPdfCard(
             .fillMaxWidth()
             .clip(EditorShapes.row)
             .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 18.dp, vertical = 18.dp)
+            .padding(
+                horizontal = AppDimens.panelPaddingHorizontal,
+                vertical = AppDimens.panelPaddingVertical
+            )
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -1121,7 +1138,7 @@ private fun EditorPdfCard(
                     modifier = Modifier.size(22.dp)
                 )
             }
-            Spacer(Modifier.width(14.dp))
+            Spacer(Modifier.width(AppDimens.spaceLg))
             Text(
                 text = pdf.displayName ?: "PDF",
                 color = EditorPalette.textPrimary,
@@ -1129,7 +1146,7 @@ private fun EditorPdfCard(
                 modifier = Modifier.weight(1f)
             )
         }
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(AppDimens.listSpacing))
         if (preview != null) {
             Text(
                 text = preview,
@@ -1149,8 +1166,8 @@ private fun EditorPdfCard(
                 fontStyle = FontStyle.Italic
             )
         }
-        Spacer(Modifier.height(14.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Spacer(Modifier.height(AppDimens.listSpacing))
+        Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.listSpacing)) {
             NeonOutlineButton(
                 text = "Открыть",
                 onClick = onOpen,
@@ -1202,7 +1219,10 @@ private fun ViewFieldCard(
             .fillMaxWidth()
             .clip(EditorShapes.row)
             .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 20.dp, vertical = 18.dp),
+            .padding(
+                horizontal = AppDimens.panelPaddingHorizontal,
+                vertical = AppDimens.panelPaddingVertical
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
@@ -1220,7 +1240,7 @@ private fun ViewFieldCard(
             )
         }
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(AppDimens.iconRowSpacing))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -1228,7 +1248,7 @@ private fun ViewFieldCard(
                 style = MaterialTheme.typography.labelLarge,
                 color = EditorPalette.textSecondary
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(AppDimens.labelSpacing))
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleMedium,
@@ -1236,7 +1256,7 @@ private fun ViewFieldCard(
             )
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(AppDimens.iconRowSpacing))
         NeonCircleButton(
             icon = Icons.Default.ContentCopy,
             description = "Copy value",
@@ -1260,9 +1280,12 @@ private fun AttachmentChip(
             .clickable(onClick = onOpen)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.padding(
+                horizontal = AppDimens.panelPaddingHorizontal,
+                vertical = AppDimens.panelPaddingVertical
+            ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(AppDimens.iconRowSpacing)
         ) {
             Box(
                 modifier = Modifier
@@ -1369,7 +1392,7 @@ private fun MoveToFolderDialog(
                     )
                     Text("Без папки", color = EditorPalette.textSecondary)
                 }
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(AppDimens.spaceSm))
                 folders.forEach { folder ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         RadioButton(

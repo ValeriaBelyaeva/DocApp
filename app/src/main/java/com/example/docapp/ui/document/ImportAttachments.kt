@@ -151,7 +151,7 @@ fun ImportAttachmentsButton(
                     Text("Импорт файлов в процессе...")
                     Spacer(modifier = Modifier.height(16.dp))
                     LinearProgressIndicator(
-                        progress = importProgress,
+                        progress = { importProgress },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }

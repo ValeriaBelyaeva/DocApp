@@ -100,11 +100,11 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
     private fun runMigrations(db: SQLCipherDatabase) {
         try {
             // Миграция: добавляем поле display_name в таблицу attachments
-            val cursor = db.rawQuery("PRAGMA table_info(attachments)", null)
-            val columns = cursor?.use { 
-                generateSequence { if (it.moveToNext()) it.getString(it.getColumnIndexOrThrow("name")) else null }
-                    .toList()
-            } ?: emptyList()
+            val columns = db.rawQuery("PRAGMA table_info(attachments)", null).use { cursor ->
+                generateSequence {
+                    if (cursor.moveToNext()) cursor.getString(cursor.getColumnIndexOrThrow("name")) else null
+                }.toList()
+            }
             
             if (!columns.contains("display_name")) {
                 AppLogger.log("AppDb", "Adding display_name column to attachments table")
@@ -113,8 +113,10 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
             }
             
             // Миграция Mx_AddAttachments: создаем новую таблицу для современных вложений
-            val newAttachmentsExists = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='attachments_new'", null)
-                ?.use { it.count > 0 } ?: false
+            val newAttachmentsExists = db.rawQuery(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='attachments_new'",
+                null
+            ).use { it.count > 0 }
             
             if (!newAttachmentsExists) {
                 AppLogger.log("AppDb", "Creating new attachments table for modern attachment system")
@@ -147,8 +149,10 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
     private fun createTablesIfNeeded(db: SQLCipherDatabase) {
         try {
             // Проверяем, существует ли таблица templates
-            val cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='templates'", null)
-            val tableExists = cursor?.use { it.count > 0 } ?: false
+            val tableExists = db.rawQuery(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='templates'",
+                null
+            ).use { it.count > 0 }
             
             if (!tableExists) {
                 ErrorHandler.showInfo("AppDb: Создаем таблицы БД...")
@@ -192,10 +196,10 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
                 db.execSQL("INSERT INTO settings(id,pin_hash,pin_salt,db_key_salt,version) VALUES(1, x'', x'', x'', '1.0.0')")
                 
                 // Проверяем, есть ли уже базовые данные
-                val templatesCount = db.rawQuery("SELECT COUNT(*) FROM templates", null)?.use { 
+                val templatesCount = db.rawQuery("SELECT COUNT(*) FROM templates", null).use {
                     it.moveToFirst()
                     it.getInt(0)
-                } ?: 0
+                }
                 
                 if (templatesCount == 0) {
                     ErrorHandler.showInfo("AppDb: Заполняем БД базовыми данными...")
@@ -209,10 +213,10 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
             } else {
                 // Миграция: добавляем колонку description к существующим таблицам documents
                 try {
-                    val descriptionColumnExists = db.rawQuery("PRAGMA table_info(documents)", null).use { cursor ->
+                    val descriptionColumnExists = db.rawQuery("PRAGMA table_info(documents)", null).use { tableInfoCursor ->
                         var exists = false
-                        while (cursor.moveToNext()) {
-                            val columnName = cursor.getString(cursor.getColumnIndexOrThrow("name"))
+                        while (tableInfoCursor.moveToNext()) {
+                            val columnName = tableInfoCursor.getString(tableInfoCursor.getColumnIndexOrThrow("name"))
                             if (columnName == "description") {
                                 exists = true
                                 break

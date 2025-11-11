@@ -286,6 +286,7 @@ class CryptoManager(val context: Context) {
         return joinToString(separator = "") { byte -> "%02x".format(byte) }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun deriveRuntimeKeysFromPin(pin: String) {
         // Эта функция может использоваться для получения временных ключей
         // на основе PIN для дополнительных операций шифрования

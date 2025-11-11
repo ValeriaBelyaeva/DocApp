@@ -18,6 +18,7 @@ import com.example.docapp.data.storage.FileGc
 import com.example.docapp.ui.theme.GlassCard
 import com.example.docapp.ui.theme.AppColors
 import kotlinx.coroutines.launch
+import com.example.docapp.ui.theme.AppDimens
 
 @Composable
 fun MigrationScreen() {
@@ -36,8 +37,8 @@ fun MigrationScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(AppDimens.screenPadding),
+        verticalArrangement = Arrangement.spacedBy(AppDimens.sectionSpacing)
     ) {
         Text(
             text = "Управление вложениями",
@@ -50,7 +51,10 @@ fun MigrationScreen() {
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(
+                    horizontal = AppDimens.panelPaddingHorizontal,
+                    vertical = AppDimens.panelPaddingVertical
+                )
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
@@ -60,7 +64,7 @@ fun MigrationScreen() {
                         contentDescription = null,
                         tint = AppColors.iconAccent()
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(AppDimens.spaceSm))
                     Text(
                         text = "Миграция старых URI",
                         style = MaterialTheme.typography.titleMedium,
@@ -68,7 +72,7 @@ fun MigrationScreen() {
                     )
                 }
                 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(AppDimens.spaceSm))
                 
                 Text(
                     text = "Переносит все внешние URI в локальное хранилище приложения для обеспечения стабильного доступа к файлам.",
@@ -76,7 +80,7 @@ fun MigrationScreen() {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(AppDimens.spaceLg))
                 
                 Button(
                     onClick = {
@@ -122,13 +126,13 @@ fun MigrationScreen() {
                             modifier = Modifier.size(16.dp),
                             strokeWidth = 2.dp
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(AppDimens.spaceSm))
                     }
                     Text(if (isMigrating) "Миграция..." else "Запустить миграцию")
                 }
                 
                 migrationResult?.let { result ->
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(AppDimens.spaceSm))
                     Text(
                         text = result,
                         style = MaterialTheme.typography.bodySmall,
@@ -143,7 +147,10 @@ fun MigrationScreen() {
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(
+                    horizontal = AppDimens.panelPaddingHorizontal,
+                    vertical = AppDimens.panelPaddingVertical
+                )
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
@@ -153,7 +160,7 @@ fun MigrationScreen() {
                         contentDescription = null,
                         tint = AppColors.iconAccent()
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(AppDimens.spaceSm))
                     Text(
                         text = "Очистка неиспользуемых файлов",
                         style = MaterialTheme.typography.titleMedium,
@@ -161,7 +168,7 @@ fun MigrationScreen() {
                     )
                 }
                 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(AppDimens.spaceSm))
                 
                 Text(
                     text = "Удаляет файлы, которые не привязаны ни к одному документу (сироты).",
@@ -169,7 +176,7 @@ fun MigrationScreen() {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(AppDimens.spaceLg))
                 
                 Button(
                     onClick = {
@@ -209,13 +216,13 @@ fun MigrationScreen() {
                             modifier = Modifier.size(16.dp),
                             strokeWidth = 2.dp
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(AppDimens.spaceSm))
                     }
                     Text(if (isCleaningUp) "Очистка..." else "Запустить очистку")
                 }
                 
                 cleanupResult?.let { result ->
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(AppDimens.spaceSm))
                     Text(
                         text = "Результат: ${result.deletedFiles} файлов удалено, ${result.deletedRecords} записей, ${result.errors} ошибок",
                         style = MaterialTheme.typography.bodySmall,
@@ -230,7 +237,10 @@ fun MigrationScreen() {
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(
+                    horizontal = AppDimens.panelPaddingHorizontal,
+                    vertical = AppDimens.panelPaddingVertical
+                )
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
@@ -240,7 +250,7 @@ fun MigrationScreen() {
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(AppDimens.spaceSm))
                     Text(
                         text = "Информация",
                         style = MaterialTheme.typography.titleMedium,
@@ -248,7 +258,7 @@ fun MigrationScreen() {
                     )
                 }
                 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(AppDimens.spaceSm))
                 
                 Text(
                     text = "• Миграция выполняется один раз при обновлении приложения\n" +
@@ -269,12 +279,12 @@ fun MigrationScreen() {
             text = {
                 Column {
                     Text("Миграция внешних URI в локальное хранилище...")
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(AppDimens.spaceLg))
                     LinearProgressIndicator(
-                        progress = migrationProgress,
+                        progress = { migrationProgress },
                         modifier = Modifier.fillMaxWidth()
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(AppDimens.spaceSm))
                     Text(
                         text = "${(migrationProgress * 100).toInt()}%",
                         style = MaterialTheme.typography.bodySmall

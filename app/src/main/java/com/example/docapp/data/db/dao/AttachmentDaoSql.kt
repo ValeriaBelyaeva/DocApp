@@ -100,10 +100,9 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
     override suspend fun deleteById(id: String): Unit = withContext(Dispatchers.IO) {
         try {
             // Сначала получаем docId для обновления Flow
-            val docId = db.rawQuery("SELECT docId FROM attachments_new WHERE id = ?", arrayOf(id))
-                ?.use { cursor ->
-                    if (cursor.moveToFirst()) cursor.getString(0) else null
-                }
+            val docId = db.rawQuery("SELECT docId FROM attachments_new WHERE id = ?", arrayOf(id)).use { cursor ->
+                if (cursor.moveToFirst()) cursor.getString(0) else null
+            }
             
             val deleted = db.delete("attachments_new", "id = ?", arrayOf(id))
             if (deleted > 0) {
@@ -192,10 +191,9 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
     }
     
     override suspend fun countByDoc(docId: String): Int = withContext(Dispatchers.IO) {
-        db.rawQuery("SELECT COUNT(*) FROM attachments_new WHERE docId = ?", arrayOf(docId))
-            ?.use { cursor ->
-                if (cursor.moveToFirst()) cursor.getInt(0) else 0
-            } ?: 0
+        db.rawQuery("SELECT COUNT(*) FROM attachments_new WHERE docId = ?", arrayOf(docId)).use { cursor ->
+            if (cursor.moveToFirst()) cursor.getInt(0) else 0
+        }
     }
     
     private suspend fun emitDocAttachments(docId: String) {

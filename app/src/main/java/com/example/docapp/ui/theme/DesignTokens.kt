@@ -31,7 +31,7 @@ import androidx.compose.runtime.setValue
  */
 object AppDimens {
     // Screen padding and common paddings
-    val screenPadding: Dp = 16.dp
+    val screenPadding: Dp = 12.dp
     val contentPaddingVertical: Dp = 16.dp
     val contentPaddingHorizontal: Dp = 16.dp
     val cardPadding: Dp = 12.dp
@@ -44,13 +44,26 @@ object AppDimens {
     val spaceLg: Dp = 16.dp
     val spaceXl: Dp = 24.dp
     val space2Xl: Dp = 32.dp
+    val spaceHuge: Dp = 80.dp
+
+    // Semantic spacing
+    val sectionSpacing: Dp = spaceMd
+    val listSpacing: Dp = spaceSm
+    val panelPaddingHorizontal: Dp = 16.dp
+    val panelPaddingVertical: Dp = 12.dp
+    val dialogPaddingHorizontal: Dp = 16.dp
+    val dialogPaddingVertical: Dp = 12.dp
+    val iconRowSpacing: Dp = spaceSm
+    val dockSpacing: Dp = spaceXl
+    val labelSpacing: Dp = spaceXs
 
     // Specific layout constants
     val listItemContentPadding: Dp = 12.dp
-    val bottomButtonsSpacer: Dp = 180.dp
-    val bottomButtonsHorizontalPadding: Dp = 32.dp
-    val bottomButtonsVerticalPadding: Dp = 24.dp
+    val bottomButtonsSpacer: Dp = 128.dp
+    val bottomButtonsHorizontalPadding: Dp = 24.dp
+    val bottomButtonsVerticalPadding: Dp = 20.dp
     val bottomButtonsBetween: Dp = 12.dp
+    val dockBottomPadding: Dp = 36.dp
 }
 
 object AppRadii {

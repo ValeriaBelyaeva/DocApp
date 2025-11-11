@@ -111,7 +111,7 @@ object ServiceLocator {
                 // Устанавливаем новый PIN, но сохраняем существующий ключ БД
                 AppLogger.log("ServiceLocator", "Current PIN verified, setting new PIN but keeping DB key...")
                 ErrorHandler.showInfo("ServiceLocator: Текущий PIN проверен, устанавливаем новый...")
-                val currentKey = crypto.getExistingDbKey() ?: throw IllegalStateException("Current DB key is missing")
+                crypto.getExistingDbKey() ?: throw IllegalStateException("Current DB key is missing")
                 // Просто перезаписываем PIN, сохраняя существующий ключ БД
                 val newKey = crypto.setInitialPin(pin) // Используем setInitialPin, но он сохранит существующий ключ
                 ErrorHandler.showInfo("ServiceLocator: Новый PIN установлен")

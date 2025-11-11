@@ -24,7 +24,7 @@ import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.icons.outlined.CreateNewFolder
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
-import androidx.compose.material.icons.outlined.NoteAdd
+import androidx.compose.material.icons.automirrored.outlined.NoteAdd
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.Visibility
@@ -111,12 +111,12 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
         Box(Modifier.fillMaxSize()) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(22.dp),
+                verticalArrangement = Arrangement.spacedBy(AppDimens.sectionSpacing),
                 contentPadding = PaddingValues(
-                    start = 20.dp,
-                    end = 20.dp,
-                    top = 24.dp + topInset.dp,
-                    bottom = 160.dp + bottomInset.dp
+                    start = AppDimens.screenPadding,
+                    end = AppDimens.screenPadding,
+                    top = AppDimens.sectionSpacing + topInset.dp,
+                    bottom = AppDimens.bottomButtonsSpacer + bottomInset.dp
                 )
             ) {
                 item {
@@ -135,7 +135,10 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
                                         .fillMaxWidth()
                                         .clip(NeoShapes.row)
                                         .background(NeoPalette.controlBackground)
-                                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                                        .padding(
+                                            horizontal = AppDimens.panelPaddingHorizontal,
+                                            vertical = AppDimens.panelPaddingVertical
+                                        )
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
@@ -143,7 +146,7 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
                                             contentDescription = null,
                                             tint = NeoPalette.neon
                                         )
-                                        Spacer(Modifier.width(12.dp))
+                                        Spacer(Modifier.width(AppDimens.spaceMd))
                                         Text(
                                             text = "Выбрали документ. Коснитесь другого закрепленного, чтобы поменять местами",
                                             color = NeoPalette.textSecondary,
@@ -155,7 +158,7 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
                                         }
                                     }
                                 }
-                                Spacer(Modifier.height(16.dp))
+                                Spacer(Modifier.height(AppDimens.sectionSpacing))
                             }
 
                             home.pinned.forEachIndexed { index, document ->
@@ -200,7 +203,7 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
                                     menuEnabled = !reorderMode
                                 )
                                 if (index != home.pinned.lastIndex) {
-                                    Spacer(Modifier.height(12.dp))
+                                    Spacer(Modifier.height(AppDimens.listSpacing))
                                 }
                             }
                         }
@@ -237,7 +240,7 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
                                     menuEnabled = true
                                 )
                                 if (index != home.recent.lastIndex) {
-                                    Spacer(Modifier.height(12.dp))
+                                    Spacer(Modifier.height(AppDimens.listSpacing))
                                 }
                             }
                         }
@@ -248,7 +251,7 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
             HistoryBottomBar(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 36.dp + bottomInset.dp),
+                    .padding(bottom = AppDimens.spaceXl + bottomInset.dp),
                 reorderMode = reorderMode,
                 onToggleReorder = {
                     if (reorderMode) {
@@ -283,15 +286,17 @@ private fun HistorySectionCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 18.dp)
+                .padding(
+                    horizontal = AppDimens.panelPaddingHorizontal,
+                    vertical = AppDimens.panelPaddingVertical
+                )
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
                     onClick = onToggleCollapse,
                     modifier = Modifier
                         .size(40.dp)
-                        .clip(NeoShapes.dockButton)
-                        .background(NeoPalette.controlBackground)
+                        .clip(AppShapes.iconButton())
                 ) {
                     Icon(
                         imageVector = if (isCollapsed) Icons.Outlined.KeyboardArrowDown else Icons.Outlined.KeyboardArrowUp,
@@ -299,7 +304,7 @@ private fun HistorySectionCard(
                         tint = NeoPalette.neon
                     )
                 }
-                Spacer(Modifier.width(16.dp))
+                Spacer(Modifier.width(AppDimens.iconRowSpacing))
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
@@ -308,9 +313,9 @@ private fun HistorySectionCard(
                         .size(32.dp)
                         .clip(AppShapes.badge())
                         .background(NeoPalette.iconBackground)
-                        .padding(6.dp)
+                        .padding(AppDimens.spaceXs)
                 )
-                Spacer(Modifier.width(12.dp))
+                Spacer(Modifier.width(AppDimens.iconRowSpacing))
                 Text(
                     text = title,
                     color = NeoPalette.textPrimary,
@@ -320,7 +325,7 @@ private fun HistorySectionCard(
             }
 
             if (!isCollapsed) {
-                Spacer(Modifier.height(18.dp))
+                Spacer(Modifier.height(AppDimens.listSpacing))
                 content()
             }
         }
@@ -334,7 +339,10 @@ private fun HistoryEmptyPlaceholder(text: String) {
             .fillMaxWidth()
             .clip(NeoShapes.row)
             .background(NeoPalette.item.copy(alpha = 0.6f))
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .padding(
+                horizontal = AppDimens.panelPaddingHorizontal,
+                vertical = AppDimens.panelPaddingVertical
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -345,9 +353,9 @@ private fun HistoryEmptyPlaceholder(text: String) {
                 .size(32.dp)
                 .clip(AppShapes.badge())
                 .background(NeoPalette.iconBackground)
-                .padding(6.dp)
+                .padding(AppDimens.spaceXs)
         )
-        Spacer(Modifier.width(16.dp))
+        Spacer(Modifier.width(AppDimens.spaceLg))
         Text(
             text = text,
             color = NeoPalette.textSecondary,
@@ -392,15 +400,18 @@ private fun HistoryDocumentRow(
                     color = borderColor,
                     shape = NeoShapes.row
                 )
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .padding(
+                    horizontal = AppDimens.panelPaddingHorizontal,
+                    vertical = AppDimens.panelPaddingVertical
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
                 onClick = onTogglePin,
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(NeoShapes.dockButton)
-                    .background(NeoPalette.controlBackground)
+                    .clip(AppShapes.iconButton())
+                    .background(AppColors.level3Background())
             ) {
                 Icon(
                     imageVector = if (isPinned) Icons.Default.Star else Icons.Outlined.StarOutline,
@@ -408,7 +419,7 @@ private fun HistoryDocumentRow(
                     tint = NeoPalette.neon
                 )
             }
-            Spacer(Modifier.width(16.dp))
+            Spacer(Modifier.width(AppDimens.iconRowSpacing))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = document.name,
@@ -416,7 +427,7 @@ private fun HistoryDocumentRow(
                     style = MaterialTheme.typography.titleMedium
                 )
                 if (document.description.isNotBlank()) {
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(AppDimens.labelSpacing))
                     Text(
                         text = if (descriptionMasked) "＊＊＊＊＊＊" else document.description,
                         color = NeoPalette.textSecondary,
@@ -424,13 +435,13 @@ private fun HistoryDocumentRow(
                     )
                 }
             }
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(AppDimens.iconRowSpacing))
             IconButton(
                 onClick = { descriptionMasked = !descriptionMasked },
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(NeoShapes.dockButton)
-                    .background(NeoPalette.controlBackground)
+                    .clip(AppShapes.iconButton())
+                    .background(AppColors.level3Background())
             ) {
                 Icon(
                     imageVector = if (descriptionMasked) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
@@ -459,12 +470,15 @@ private fun HistoryBottomBar(
         modifier = modifier
             .clip(NeoShapes.dock)
             .background(NeoPalette.dockBackground)
-            .padding(horizontal = 32.dp, vertical = 18.dp),
-        horizontalArrangement = Arrangement.spacedBy(48.dp),
+            .padding(
+                horizontal = AppDimens.panelPaddingHorizontal,
+                vertical = AppDimens.panelPaddingVertical
+            ),
+        horizontalArrangement = Arrangement.spacedBy(AppDimens.dockSpacing),
         verticalAlignment = Alignment.CenterVertically
     ) {
         DockButton(
-            icon = Icons.Outlined.NoteAdd,
+            icon = Icons.AutoMirrored.Outlined.NoteAdd,
             description = "Новый документ",
             onClick = onCreateDocument
         )
@@ -545,12 +559,12 @@ private fun TreeScreen(
         Box(Modifier.fillMaxSize()) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(22.dp),
+                verticalArrangement = Arrangement.spacedBy(AppDimens.sectionSpacing),
                 contentPadding = PaddingValues(
-                    start = 20.dp,
-                    end = 20.dp,
-                    top = 24.dp + topInset.dp,
-                    bottom = 160.dp + bottomInset.dp
+                    start = AppDimens.screenPadding,
+                    end = AppDimens.screenPadding,
+                    top = AppDimens.sectionSpacing + topInset.dp,
+                    bottom = AppDimens.bottomButtonsSpacer + bottomInset.dp
                 )
             ) {
                 items(folders) { folder ->
@@ -594,7 +608,7 @@ private fun TreeScreen(
             FloatingDock(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 36.dp + bottomInset.dp),
+                    .padding(bottom = AppDimens.dockBottomPadding + bottomInset.dp),
                 onCreateDoc = { createInFolder(null) },
                 onCreateFolder = { showNewFolderDialog = true }
             )
@@ -661,7 +675,10 @@ private fun FolderSectionCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 18.dp)
+                    .padding(
+                        horizontal = AppDimens.panelPaddingHorizontal,
+                        vertical = AppDimens.panelPaddingVertical
+                    )
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (collapsible) {
@@ -669,8 +686,8 @@ private fun FolderSectionCard(
                             onClick = onToggleCollapse,
                             modifier = Modifier
                                 .size(40.dp)
-                                .clip(NeoShapes.dockButton)
-                                .background(NeoPalette.controlBackground)
+                                .clip(AppShapes.iconButton())
+                                .background(AppColors.level3Background())
                         ) {
                             Icon(
                                 imageVector = if (isCollapsed) Icons.Outlined.KeyboardArrowDown else Icons.Outlined.KeyboardArrowUp,
@@ -678,19 +695,19 @@ private fun FolderSectionCard(
                                 tint = NeoPalette.neon
                             )
                         }
-                        Spacer(Modifier.width(12.dp))
+                        Spacer(Modifier.width(AppDimens.spaceMd))
                     } else {
-                        Spacer(Modifier.width(4.dp))
+                        Spacer(Modifier.width(AppDimens.spaceXxs))
                         Icon(
-                            imageVector = Icons.Outlined.NoteAdd,
+                            imageVector = Icons.AutoMirrored.Outlined.NoteAdd,
                             contentDescription = null,
                             tint = NeoPalette.neon,
                             modifier = Modifier
                                 .size(32.dp)
                                 .background(NeoPalette.controlBackground, NeoShapes.dockButton)
-                                .padding(6.dp)
+                                .padding(AppDimens.spaceXs)
                         )
-                        Spacer(Modifier.width(12.dp))
+                        Spacer(Modifier.width(AppDimens.spaceMd))
                     }
 
                     Text(
@@ -705,8 +722,8 @@ private fun FolderSectionCard(
                             onClick = { menuOpen = true },
                             modifier = Modifier
                                 .size(40.dp)
-                                .clip(NeoShapes.dockButton)
-                                .background(NeoPalette.controlBackground)
+                                .clip(AppShapes.iconButton())
+                                .background(AppColors.level3Background())
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Tune,
@@ -738,7 +755,7 @@ private fun FolderSectionCard(
                 }
 
                 if (!isCollapsed || !collapsible) {
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(AppDimens.listSpacing))
                     documents.forEachIndexed { index, doc ->
                         DocumentRow(
                             document = doc,
@@ -746,7 +763,7 @@ private fun FolderSectionCard(
                             onMoveDoc = onMoveDoc
                         )
                         if (index != documents.lastIndex) {
-                            Spacer(Modifier.height(12.dp))
+                            Spacer(Modifier.height(AppDimens.listSpacing))
                         }
                     }
                 }
@@ -774,7 +791,10 @@ private fun DocumentRow(
                 onClick = { openDoc(document.id) },
                 onLongClick = { menuOpen = true }
             )
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .padding(
+                horizontal = AppDimens.panelPaddingHorizontal,
+                vertical = AppDimens.panelPaddingVertical
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -783,11 +803,11 @@ private fun DocumentRow(
             tint = NeoPalette.neon,
             modifier = Modifier
                 .size(36.dp)
-                .clip(NeoShapes.dockButton)
+                .clip(AppShapes.badge())
                 .background(NeoPalette.iconBackground)
-                .padding(6.dp)
+                .padding(AppDimens.spaceXs)
         )
-        Spacer(Modifier.width(18.dp))
+        Spacer(Modifier.width(AppDimens.spaceLg))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = document.name,
@@ -795,7 +815,7 @@ private fun DocumentRow(
                 style = MaterialTheme.typography.titleMedium
             )
             if (document.description.isNotBlank()) {
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(AppDimens.labelSpacing))
                 Text(
                     text = if (isMasked) "＊＊＊＊＊＊" else document.description,
                     color = NeoPalette.textSecondary,
@@ -803,13 +823,13 @@ private fun DocumentRow(
                 )
             }
         }
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(AppDimens.iconRowSpacing))
         IconButton(
             onClick = { isMasked = !isMasked },
             modifier = Modifier
                 .size(40.dp)
-                .clip(NeoShapes.dockButton)
-                .background(NeoPalette.controlBackground)
+                .clip(AppShapes.iconButton())
+                .background(AppColors.level3Background())
         ) {
             Icon(
                 imageVector = if (isMasked) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
@@ -839,12 +859,15 @@ private fun FloatingDock(
         modifier = modifier
             .clip(NeoShapes.dock)
             .background(NeoPalette.dockBackground)
-            .padding(horizontal = 32.dp, vertical = 18.dp),
-        horizontalArrangement = Arrangement.spacedBy(48.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(
+                horizontal = AppDimens.panelPaddingHorizontal,
+                vertical = AppDimens.panelPaddingVertical
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(AppDimens.dockSpacing)
     ) {
         DockButton(
-            icon = Icons.Outlined.NoteAdd,
+            icon = Icons.AutoMirrored.Outlined.NoteAdd,
             description = "Новый документ",
             onClick = onCreateDoc
         )
@@ -946,20 +969,19 @@ private fun InfoScreen() {
     Surface(color = NeoPalette.background, modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(22.dp),
+            verticalArrangement = Arrangement.spacedBy(AppDimens.sectionSpacing),
             contentPadding = PaddingValues(
-                start = 20.dp,
-                end = 20.dp,
-                top = 32.dp + topInset.dp,
-                bottom = 160.dp + bottomInset.dp
+                start = AppDimens.screenPadding,
+                end = AppDimens.screenPadding,
+                top = AppDimens.sectionSpacing + topInset.dp,
+                bottom = AppDimens.bottomButtonsSpacer + bottomInset.dp
             )
         ) {
             item {
                 Text(
                     text = "INFO & SETTINGS",
                     color = NeoPalette.textPrimary,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(horizontal = 8.dp)
+                    style = MaterialTheme.typography.titleLarge
                 )
             }
 
@@ -970,24 +992,24 @@ private fun InfoScreen() {
                         color = NeoPalette.textSecondary,
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(AppDimens.spaceLg))
                     Text(
                         text = "Палитра",
                         color = NeoPalette.textPrimary,
                         style = MaterialTheme.typography.titleSmall
                     )
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(AppDimens.spaceSm))
                     ThemePaletteToggle(
                         isDark = ThemeManager.isDarkTheme,
                         onSelect = { dark -> ThemeManager.setTheme(context, dark) }
                     )
-                    Spacer(Modifier.height(20.dp))
+                    Spacer(Modifier.height(AppDimens.spaceLg))
                     Text(
                         text = "Поверхность",
                         color = NeoPalette.textPrimary,
                         style = MaterialTheme.typography.titleSmall
                     )
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(AppDimens.spaceSm))
                     SurfaceStyleToggle(
                         current = ThemeConfig.surfaceStyle,
                         onSelect = { style -> ThemeConfig.surfaceStyle = style }
@@ -1007,7 +1029,7 @@ private fun InfoScreen() {
                             context.startActivity(intent)
                         }
                     )
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(AppDimens.spaceMd))
                     Text(
                         text = "Telegram: @irisus_r",
                         color = NeoPalette.textSecondary,
@@ -1034,19 +1056,19 @@ private fun InfoScreen() {
                             onValueChange = { oldPin = it },
                             label = "Старый пинкод"
                         )
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(AppDimens.spaceMd))
                         InformationTextField(
                             value = newPin,
                             onValueChange = { newPin = it },
                             label = "Новый пинкод (4 цифры)"
                         )
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(AppDimens.spaceMd))
                         InformationTextField(
                             value = confirmPin,
                             onValueChange = { confirmPin = it },
                             label = "Повтори пинкод"
                         )
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(AppDimens.spaceLg))
                         InformationPrimaryButton(
                             text = "Применить",
                             onClick = {
@@ -1077,7 +1099,7 @@ private fun InfoScreen() {
                                 }
                             }
                         )
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(AppDimens.spaceMd))
                         InformationGhostButton(
                             text = "Отмена",
                             onClick = {
@@ -1102,7 +1124,7 @@ private fun InfoScreen() {
                             "Вправо — экран «Info», где лежат подсказки и ссылки."
                         )
                     )
-                    Spacer(Modifier.height(18.dp))
+                    Spacer(Modifier.height(AppDimens.spaceLg))
                     InformationHintBlock(
                         title = "Главная",
                         hints = listOf(
@@ -1113,7 +1135,7 @@ private fun InfoScreen() {
                             "Раздел «Последние» сортируется по времени последнего открытия."
                         )
                     )
-                    Spacer(Modifier.height(18.dp))
+                    Spacer(Modifier.height(AppDimens.spaceLg))
                     InformationHintBlock(
                         title = "Папки",
                         hints = listOf(
@@ -1121,7 +1143,7 @@ private fun InfoScreen() {
                             "Раздел «Без папки» собирает все документы без привязки; их тоже можно перенести в нужную папку."
                         )
                     )
-                    Spacer(Modifier.height(18.dp))
+                    Spacer(Modifier.height(AppDimens.spaceLg))
                     InformationHintBlock(
                         title = "Документ",
                         hints = listOf(
@@ -1134,7 +1156,7 @@ private fun InfoScreen() {
                             "Корзины позволяют удалять документы и отдельные поля."
                         )
                     )
-                    Spacer(Modifier.height(18.dp))
+                    Spacer(Modifier.height(AppDimens.spaceLg))
                     InformationHintBlock(
                         title = "Шаблоны",
                         hints = listOf(
@@ -1142,7 +1164,7 @@ private fun InfoScreen() {
                             "Свои шаблоны создаются на экране настройки шаблонов."
                         )
                     )
-                    Spacer(Modifier.height(18.dp))
+                    Spacer(Modifier.height(AppDimens.spaceLg))
                     InformationHintBlock(
                         title = "Закрепления",
                         hints = listOf(
@@ -1150,7 +1172,7 @@ private fun InfoScreen() {
                             "Порядок закрепленных меняется в режиме перестановки через долгий тап."
                         )
                     )
-                    Spacer(Modifier.height(18.dp))
+                    Spacer(Modifier.height(AppDimens.spaceLg))
                     InformationHintBlock(
                         title = "Безопасность",
                         hints = listOf(
@@ -1196,14 +1218,17 @@ private fun InformationSectionCard(
                         )
                     else Modifier.background(NeoPalette.section, shape)
                 )
-                .padding(horizontal = 20.dp, vertical = 18.dp)
+                .padding(
+                    horizontal = AppDimens.panelPaddingHorizontal,
+                    vertical = AppDimens.panelPaddingVertical
+                )
         ) {
             Text(
                 text = title,
                 color = NeoPalette.textPrimary,
                 style = MaterialTheme.typography.titleMedium
             )
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(AppDimens.listSpacing))
             content()
         }
     }
@@ -1218,7 +1243,7 @@ private fun InformationPrimaryButton(text: String, onClick: () -> Unit) {
             containerColor = NeoPalette.neon,
             contentColor = NeoPalette.background
         ),
-        shape = NeoShapes.row
+        shape = AppShapes.primaryButton()
     ) {
         Text(text = text.uppercase())
     }
@@ -1231,7 +1256,7 @@ private fun InformationGhostButton(text: String, onClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth(),
         border = BorderStroke(1.dp, NeoPalette.neon),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = NeoPalette.neon),
-        shape = NeoShapes.row
+        shape = AppShapes.secondaryButton()
     ) {
         Text(text = text.uppercase())
     }
@@ -1244,7 +1269,7 @@ private fun InformationLinkButton(text: String, onClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth(),
         border = BorderStroke(1.dp, NeoPalette.neon.copy(alpha = 0.6f)),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = NeoPalette.neon),
-        shape = NeoShapes.row
+        shape = AppShapes.secondaryButton()
     ) {
         Text(text = text.uppercase())
     }
@@ -1282,7 +1307,7 @@ private fun InformationHintBlock(title: String, hints: List<String>) {
         color = NeoPalette.textPrimary,
         style = MaterialTheme.typography.titleSmall
     )
-    Spacer(Modifier.height(10.dp))
+    Spacer(Modifier.height(AppDimens.spaceSm))
     hints.forEachIndexed { index, hint ->
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -1292,7 +1317,7 @@ private fun InformationHintBlock(title: String, hints: List<String>) {
                 text = "•",
                 color = NeoPalette.neon,
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(end = 8.dp)
+                modifier = Modifier.padding(end = AppDimens.listSpacing)
             )
             Text(
                 text = hint,
@@ -1302,7 +1327,7 @@ private fun InformationHintBlock(title: String, hints: List<String>) {
             )
         }
         if (index != hints.lastIndex) {
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(AppDimens.spaceSm))
         }
     }
 }

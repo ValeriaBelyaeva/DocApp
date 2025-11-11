@@ -77,7 +77,7 @@ fun App() {
                 TemplateFillScreen(
                     templateId = templateId,
                     folderId = folderIdArg,
-                    onDocumentCreated = { docId ->
+                    onDocumentCreated = { _ ->
                         nav.navigate("home") { popUpTo("home") }
                     },
                     onCancel = {

@@ -1,6 +1,7 @@
 package com.example.docapp.ui.design
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -73,6 +74,7 @@ private fun ShowcaseButton(text: String, isSelected: Boolean, onClick: () -> Uni
         Modifier
             .clip(RoundedCornerShape(100))
             .background(if (isSelected) Color(0xFFC6FF00) else Color(0xFF1E2630))
+            .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Text(

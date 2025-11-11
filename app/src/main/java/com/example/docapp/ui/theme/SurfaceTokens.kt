@@ -6,6 +6,7 @@ import androidx.compose.material3.Shapes
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.times
 import com.example.docapp.ui.theme.AppRadii
 
 data class SurfaceShapes(
@@ -43,29 +44,29 @@ object SurfaceTokens {
         mediumCard = RoundedCornerShape(24.dp),
         smallCard = RoundedCornerShape(20.dp),
         icon = CircleShape,
-        button = RoundedCornerShape(24.dp),
-        buttonSmall = RoundedCornerShape(18.dp)
+        button = RoundedCornerShape(28.dp),
+        buttonSmall = RoundedCornerShape(24.dp)
     )
 
     private val glassMaterialShapes = Shapes(
-        small = RoundedCornerShape(16.dp),
-        medium = RoundedCornerShape(24.dp),
-        large = RoundedCornerShape(28.dp)
+        small = RoundedCornerShape(24.dp),
+        medium = RoundedCornerShape(28.dp),
+        large = RoundedCornerShape(32.dp)
     )
 
     private val matteShapes = SurfaceShapes(
-        largeCard = RoundedCornerShape(AppRadii.radiusLg),
-        mediumCard = RoundedCornerShape(AppRadii.radiusMd),
-        smallCard = RoundedCornerShape(AppRadii.radiusSm),
+        largeCard = RoundedCornerShape(48.dp),
+        mediumCard = RoundedCornerShape(48.dp),
+        smallCard = RoundedCornerShape(AppRadii.radiusMd),
         icon = RoundedCornerShape(AppRadii.radiusSm),
-        button = RoundedCornerShape(AppRadii.radiusMd),
-        buttonSmall = RoundedCornerShape(AppRadii.radiusSm)
+        button = RoundedCornerShape(AppRadii.radiusLg * 2),
+        buttonSmall = RoundedCornerShape(AppRadii.radiusLg)
     )
 
     private val matteMaterialShapes = Shapes(
-        small = RoundedCornerShape(AppRadii.radiusSm),
-        medium = RoundedCornerShape(AppRadii.radiusMd),
-        large = RoundedCornerShape(AppRadii.radiusLg)
+        small = RoundedCornerShape(AppRadii.radiusLg),
+        medium = RoundedCornerShape(AppRadii.radiusLg * 2),
+        large = RoundedCornerShape(AppRadii.radiusLg * 2)
     )
 
     private fun SurfaceShapes.toRefs(): SurfaceShapeRefs = SurfaceShapeRefs(

@@ -122,11 +122,6 @@ class FileGc(
         try {
             AppLogger.log("FileGc", "Starting integrity validation...")
             
-            // Получаем все вложения
-            val allAttachments = mutableListOf<AttachmentEntity>()
-            // Здесь нужно получить все вложения, но у нас нет метода getAll()
-            // Пока что проверяем только по документам
-            
             val orphanAttachments = attachmentDao.listOrphans()
             val missingFiles = mutableListOf<AttachmentEntity>()
             val corruptedFiles = mutableListOf<AttachmentEntity>()

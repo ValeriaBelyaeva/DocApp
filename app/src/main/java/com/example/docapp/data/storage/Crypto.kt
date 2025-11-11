@@ -110,7 +110,7 @@ class AttachmentCrypto(private val context: Context) {
         }
     }
     
-    fun isEncrypted(file: File): Boolean {
+    fun isEncrypted(@Suppress("UNUSED_PARAMETER") file: File): Boolean {
         return try {
             if (!encryptionEnabled) return false
             

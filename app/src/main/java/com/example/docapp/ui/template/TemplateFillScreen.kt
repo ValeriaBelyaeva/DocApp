@@ -49,7 +49,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.docapp.core.DataValidator
@@ -61,6 +60,8 @@ import com.example.docapp.ui.theme.AppShapes
 import com.example.docapp.ui.theme.AppRadii
 import com.example.docapp.ui.theme.AppColors
 import kotlinx.coroutines.launch
+import com.example.docapp.ui.theme.AppLayout
+import com.example.docapp.ui.theme.AppDimens
 
 @Composable
 fun TemplateFillScreen(
@@ -71,7 +72,6 @@ fun TemplateFillScreen(
 ) {
     val useCases = ServiceLocator.useCases
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
     
     // Состояние экрана
     var template by remember { mutableStateOf<com.example.docapp.domain.Template?>(null) }
@@ -124,15 +124,13 @@ fun TemplateFillScreen(
     }
     
     Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.systemBars)
-                .padding(horizontal = 20.dp)
+        Column(
+            modifier = AppLayout.appScreenInsets(Modifier.fillMaxSize())
+                .padding(AppDimens.screenPadding)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(22.dp)
-    ) {
-            Spacer(Modifier.height(32.dp))
+            verticalArrangement = Arrangement.spacedBy(AppDimens.sectionSpacing)
+        ) {
+            Spacer(Modifier.height(AppDimens.spaceXl))
 
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -141,7 +139,7 @@ fun TemplateFillScreen(
             fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
                 )
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(AppDimens.labelSpacing))
                 Text(
                     text = template?.name ?: "",
                     style = MaterialTheme.typography.titleMedium,
@@ -155,7 +153,7 @@ fun TemplateFillScreen(
                     value = documentName,
                     onValueChange = { documentName = it }
                 )
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(AppDimens.labelSpacing))
                 TemplateTextField(
                     label = "Описание документа",
                     value = documentDescription,
@@ -167,7 +165,7 @@ fun TemplateFillScreen(
 
             if (templateFields.isNotEmpty()) {
                 TemplateSectionCard(title = "Заполните поля") {
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(AppDimens.listSpacing)) {
                         templateFields.forEach { field ->
                             TemplateTextField(
                                 label = field.name,
@@ -192,10 +190,10 @@ fun TemplateFillScreen(
                         attachedPdfs = attachedPdfs.filterNot { it.first == uri }
                     }
                 )
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(AppDimens.listSpacing))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(AppDimens.listSpacing)
                 ) {
                     SecondaryButton(
                         text = "Добавить фото",
@@ -210,14 +208,14 @@ fun TemplateFillScreen(
             }
         }
         
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(AppDimens.listSpacing))
         
         Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 32.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+                    .padding(bottom = AppDimens.spaceXl),
+                horizontalArrangement = Arrangement.spacedBy(AppDimens.listSpacing)
+            ) {
                 SecondaryButton(
                     text = "Отмена",
                 onClick = onCancel,
@@ -283,8 +281,11 @@ private fun TemplateSectionCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 22.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(
+                    horizontal = AppDimens.panelPaddingHorizontal,
+                    vertical = AppDimens.panelPaddingVertical
+                ),
+            verticalArrangement = Arrangement.spacedBy(AppDimens.listSpacing)
         ) {
             Text(
                 text = title,
@@ -332,7 +333,7 @@ private fun AttachmentList(
     onRemovePhoto: (String) -> Unit,
     onRemovePdf: (String) -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(AppDimens.spaceMd)) {
         if (photos.isNotEmpty()) {
             AttachmentGroup(
                 title = "Фото",
@@ -379,8 +380,11 @@ private fun AttachmentGroup(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(
+                    horizontal = AppDimens.panelPaddingHorizontal,
+                    vertical = AppDimens.panelPaddingVertical
+                ),
+            verticalArrangement = Arrangement.spacedBy(AppDimens.listSpacing)
         ) {
             Text(
                 text = title,
@@ -398,9 +402,12 @@ private fun AttachmentGroup(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                            .padding(
+                                horizontal = AppDimens.panelPaddingHorizontal,
+                                vertical = AppDimens.panelPaddingVertical
+                            ),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(AppDimens.listSpacing)
                     ) {
                         Box(
                             modifier = Modifier
@@ -443,8 +450,8 @@ private fun SecondaryButton(
         modifier = modifier.height(52.dp),
         enabled = enabled,
         shape = AppShapes.secondaryButton(),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+        border = BorderStroke(1.dp, AppColors.iconAccent()),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = AppColors.iconAccent())
     ) {
         Text(text)
     }
