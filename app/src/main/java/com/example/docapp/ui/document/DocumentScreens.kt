@@ -182,8 +182,8 @@ fun DocumentViewScreen(
                 NeonCircleButton(
                     icon = Icons.Outlined.Edit,
                     description = "Edit document",
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    iconColor = MaterialTheme.colorScheme.onPrimary,
+            containerColor = AppColors.iconAccent(),
+            iconColor = AppColors.background(),
                     onClick = onEdit
                 )
                 Spacer(modifier = Modifier.width(AppDimens.spaceLg))
@@ -196,7 +196,7 @@ fun DocumentViewScreen(
                 if (viewFields.isNotEmpty()) {
                     Text(
                         text = "Copy all",
-                        color = MaterialTheme.colorScheme.primary,
+                        color = AppColors.iconAccent(),
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.clickable(onClick = handleCopyAll)
                     )
@@ -1325,11 +1325,11 @@ private fun NeonOutlineButton(
         shape = AppShapes.secondaryButton(),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
-            contentColor = EditorPalette.neon,
+            contentColor = AppColors.iconAccent(),
             disabledContainerColor = Color.Transparent,
-            disabledContentColor = EditorPalette.neon.copy(alpha = 0.4f)
+            disabledContentColor = AppColors.iconAccent().copy(alpha = 0.4f)
         ),
-        border = BorderStroke(1.6.dp, EditorPalette.neon)
+        border = BorderStroke(1.6.dp, AppColors.iconAccent())
     ) {
         Text(text)
     }
@@ -1349,10 +1349,10 @@ private fun NeonPrimaryButton(
             .height(58.dp),
         shape = AppShapes.primaryButton(),
         colors = ButtonDefaults.buttonColors(
-            containerColor = EditorPalette.neon,
-            contentColor = EditorPalette.background,
-            disabledContainerColor = EditorPalette.neon.copy(alpha = 0.3f),
-            disabledContentColor = EditorPalette.background.copy(alpha = 0.5f)
+            containerColor = AppColors.iconAccent(),
+            contentColor = AppColors.background(),
+            disabledContainerColor = AppColors.iconAccent().copy(alpha = 0.3f),
+            disabledContentColor = AppColors.background().copy(alpha = 0.5f)
         )
     ) {
         Text(text)

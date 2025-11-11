@@ -16,8 +16,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -44,6 +45,8 @@ import com.example.docapp.core.ServiceLocator
 import com.example.docapp.domain.Template
 import com.example.docapp.ui.theme.GlassCard
 import com.example.docapp.ui.theme.AppShapes
+import com.example.docapp.ui.theme.SurfaceTokens
+import com.example.docapp.ui.theme.ThemeConfig
 import com.example.docapp.ui.theme.AppColors
 import com.example.docapp.ui.theme.AppLayout
 import com.example.docapp.ui.theme.AppDimens
@@ -214,6 +217,12 @@ private fun TemplateOptionCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    val iconBackground = if (SurfaceTokens.current(ThemeConfig.surfaceStyle).useGradient) {
+        AppColors.iconAccentBackground()
+    } else {
+        Color.Transparent
+    }
+
     GlassCard(modifier = modifier, onClick = onClick, shape = AppShapes.panelMedium()) {
         Column(
             modifier = Modifier
@@ -229,9 +238,9 @@ private fun TemplateOptionCard(
                 contentDescription = null,
                 tint = AppColors.iconAccent(),
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(44.dp)
                     .clip(AppShapes.badge())
-                    .background(AppColors.iconAccentBackground())
+                    .background(iconBackground)
                     .padding(AppDimens.spaceXs)
             )
             Spacer(Modifier.height(AppDimens.listSpacing))
@@ -356,13 +365,14 @@ private fun TemplateDialog(
                             label = { Text("Название шаблона") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
+                            shape = AppShapes.panelSmall(),
                             colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = MaterialTheme.colorScheme.onSurface,
                         unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                        cursorColor = MaterialTheme.colorScheme.primary,
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        cursorColor = AppColors.iconAccent(),
+                        focusedBorderColor = AppColors.iconAccent(),
+                        unfocusedBorderColor = AppColors.level2Background(),
+                        focusedLabelColor = AppColors.iconAccent(),
                         unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
                         unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent
@@ -386,13 +396,14 @@ private fun TemplateDialog(
                                 label = { Text("Название поля") },
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
+                                shape = AppShapes.panelSmall(),
                                 colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = MaterialTheme.colorScheme.onSurface,
                             unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                            cursorColor = MaterialTheme.colorScheme.primary,
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            cursorColor = AppColors.iconAccent(),
+                            focusedBorderColor = AppColors.iconAccent(),
+                            unfocusedBorderColor = AppColors.level2Background(),
+                            focusedLabelColor = AppColors.iconAccent(),
                             unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
                             unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent
@@ -403,12 +414,12 @@ private fun TemplateDialog(
                         modifier = Modifier
                             .size(44.dp)
                             .clip(AppShapes.iconButton())
-                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .background(AppColors.iconAccentBackground())
                             ) {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Добавить поле",
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = AppColors.iconAccent()
                         )
                             }
                         }
@@ -459,10 +470,10 @@ private fun TemplateDialog(
                 onClick = onConfirm,
                 enabled = confirmEnabled,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                    disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
+                    containerColor = AppColors.iconAccent(),
+                    contentColor = AppColors.background(),
+                    disabledContainerColor = AppColors.iconAccent().copy(alpha = 0.3f),
+                    disabledContentColor = AppColors.background().copy(alpha = 0.5f)
                 ),
                 shape = AppShapes.panelMedium()
                         ) {

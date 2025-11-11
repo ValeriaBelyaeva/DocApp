@@ -18,9 +18,12 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import com.example.docapp.ui.theme.AppShapes
 
@@ -36,6 +39,9 @@ fun GlassCard(
 ) {
     val glassColors = LocalGlassColors.current
     val surfaceTokens = SurfaceTokens.current(ThemeConfig.surfaceStyle)
+    val scheme = MaterialTheme.colorScheme
+    val isDark = scheme.background.luminance() < 0.5f
+    val fallbackGlow = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)
     val targetShape = shape ?: AppShapes.panelLarge()
     val isInteractive = onClick != null || onLongClick != null
     val interactionSource = remember { MutableInteractionSource() }
@@ -85,10 +91,25 @@ fun GlassCard(
         Column(
             modifier = Modifier
                 .clip(targetShape)
-                .background(glassGradient(), targetShape)
+                .then(
+                    if (surfaceTokens.useGradient) {
+                        Modifier.background(glassGradient(), targetShape)
+                    } else {
+                        Modifier.background(MaterialTheme.colorScheme.surface, targetShape)
+                    }
+                )
                 .then(clickableModifier)
                 .drawBehind {
-                    if (glassColors.highlight.alpha > 0f) {
+                    val fallbackRadius = size.minDimension * 0.12f
+                    val cornerRadius = when (val outline = targetShape.createOutline(size, layoutDirection, this)) {
+                        is Outline.Rounded -> {
+                            val radius = outline.roundRect.topLeftCornerRadius
+                            CornerRadius(radius.x, radius.y)
+                        }
+                        else -> CornerRadius(fallbackRadius, fallbackRadius)
+                    }
+
+                    if (surfaceTokens.useGradient && glassColors.highlight.alpha > 0f) {
                         val highlightBrush = Brush.linearGradient(
                             colors = listOf(glassColors.highlight, Color.Transparent),
                             start = Offset.Zero,
@@ -96,8 +117,17 @@ fun GlassCard(
                         )
                         drawRoundRect(
                             brush = highlightBrush,
-                            cornerRadius = CornerRadius(AppRadii.cardCorner.toPx(), AppRadii.cardCorner.toPx())
+                            cornerRadius = cornerRadius
                         )
+                    } else if (surfaceTokens.useInnerGlow) {
+                        // Matte or fallback surfaces rely on a subtle neutral inner glow to avoid flat fills.
+                        val glowCore = if (glassColors.highlight.alpha > 0f) glassColors.highlight else fallbackGlow
+                        val glowBrush = Brush.radialGradient(
+                            colors = listOf(glowCore, Color.Transparent),
+                            center = Offset(size.width / 2f, size.height / 2f),
+                            radius = size.maxDimension
+                        )
+                        drawRoundRect(brush = glowBrush, cornerRadius = cornerRadius)
                     }
                 },
             content = content

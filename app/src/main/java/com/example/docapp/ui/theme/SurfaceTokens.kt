@@ -34,24 +34,25 @@ data class SurfaceStyleTokens(
     val shapes: SurfaceShapes,
     val materialShapes: Shapes,
     val useGradient: Boolean,
+    val useInnerGlow: Boolean,
     val borderWidth: Dp,
     val refs: SurfaceShapeRefs
 )
 
 object SurfaceTokens {
     private val glassShapes = SurfaceShapes(
-        largeCard = RoundedCornerShape(28.dp),
-        mediumCard = RoundedCornerShape(24.dp),
-        smallCard = RoundedCornerShape(20.dp),
+        largeCard = RoundedCornerShape(24.dp),
+        mediumCard = RoundedCornerShape(20.dp),
+        smallCard = RoundedCornerShape(16.dp),
         icon = CircleShape,
-        button = RoundedCornerShape(28.dp),
-        buttonSmall = RoundedCornerShape(24.dp)
+        button = RoundedCornerShape(16.dp),
+        buttonSmall = RoundedCornerShape(12.dp)
     )
-
+    
     private val glassMaterialShapes = Shapes(
-        small = RoundedCornerShape(24.dp),
-        medium = RoundedCornerShape(28.dp),
-        large = RoundedCornerShape(32.dp)
+        small = RoundedCornerShape(12.dp),
+        medium = RoundedCornerShape(16.dp),
+        large = RoundedCornerShape(20.dp)
     )
 
     private val matteShapes = SurfaceShapes(
@@ -85,6 +86,7 @@ object SurfaceTokens {
         shapes = glassShapes,
         materialShapes = glassMaterialShapes,
         useGradient = true,
+        useInnerGlow = false,
         borderWidth = 1.5.dp,
         refs = glassShapes.toRefs()
     )
@@ -93,6 +95,7 @@ object SurfaceTokens {
         shapes = matteShapes,
         materialShapes = matteMaterialShapes,
         useGradient = false,
+        useInnerGlow = true,
         borderWidth = 0.dp,
         refs = matteShapes.toRefs()
     )

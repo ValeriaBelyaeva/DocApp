@@ -1,5 +1,6 @@
 package com.example.docapp.ui.pin
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -248,6 +249,10 @@ fun PinScreenNew(onSuccess: () -> Unit) {
     var isProcessing by remember { mutableStateOf(false) }
     var isPinVisible by remember { mutableStateOf(false) } // Состояние видимости PIN
     val scope = rememberCoroutineScope()
+
+    BackHandler(enabled = true) {
+        // блокируем системную "назад", чтобы нельзя было вернуться за экран PIN
+    }
 
     LaunchedEffect(Unit) {
         AppLogger.log("PinScreen", "PinScreen initialized")

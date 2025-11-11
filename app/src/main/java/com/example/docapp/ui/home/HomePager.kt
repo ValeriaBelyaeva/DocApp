@@ -283,6 +283,7 @@ private fun HistorySectionCard(
     content: @Composable ColumnScope.() -> Unit
 ) {
     GlassCard(modifier = Modifier.fillMaxWidth(), shape = NeoShapes.section) {
+        val iconBackground = if (SurfaceTokens.current(ThemeConfig.surfaceStyle).useGradient) AppColors.level3Background() else Color.Transparent
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -297,6 +298,7 @@ private fun HistorySectionCard(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(AppShapes.iconButton())
+                        .background(iconBackground)
                 ) {
                     Icon(
                         imageVector = if (isCollapsed) Icons.Outlined.KeyboardArrowDown else Icons.Outlined.KeyboardArrowUp,
@@ -311,8 +313,6 @@ private fun HistorySectionCard(
                     tint = NeoPalette.neon,
                     modifier = Modifier
                         .size(32.dp)
-                        .clip(AppShapes.badge())
-                        .background(NeoPalette.iconBackground)
                         .padding(AppDimens.spaceXs)
                 )
                 Spacer(Modifier.width(AppDimens.iconRowSpacing))
@@ -351,8 +351,6 @@ private fun HistoryEmptyPlaceholder(text: String) {
             tint = NeoPalette.textSecondary,
             modifier = Modifier
                 .size(32.dp)
-                .clip(AppShapes.badge())
-                .background(NeoPalette.iconBackground)
                 .padding(AppDimens.spaceXs)
         )
         Spacer(Modifier.width(AppDimens.spaceLg))
@@ -384,6 +382,7 @@ private fun HistoryDocumentRow(
     val borderColor = if (isSelected) NeoPalette.neon.copy(alpha = 0.6f) else Color.Transparent
 
     Box(modifier = Modifier.fillMaxWidth()) {
+        val iconBackground = if (SurfaceTokens.current(ThemeConfig.surfaceStyle).useGradient) AppColors.level3Background() else Color.Transparent
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -411,7 +410,7 @@ private fun HistoryDocumentRow(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(AppShapes.iconButton())
-                    .background(AppColors.level3Background())
+                    .background(iconBackground)
             ) {
                 Icon(
                     imageVector = if (isPinned) Icons.Default.Star else Icons.Outlined.StarOutline,
@@ -441,7 +440,7 @@ private fun HistoryDocumentRow(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(AppShapes.iconButton())
-                    .background(AppColors.level3Background())
+                    .background(iconBackground)
             ) {
                 Icon(
                     imageVector = if (descriptionMasked) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
@@ -498,15 +497,15 @@ private object NeoPalette {
     val section: Color
         @Composable get() = MaterialTheme.colorScheme.surface
     val item: Color
-        @Composable get() = MaterialTheme.colorScheme.surfaceVariant
+        @Composable get() = MaterialTheme.colorScheme.surface
     val iconBackground: Color
         @Composable get() = AppColors.iconAccentBackground()
     val controlBackground: Color
-        @Composable get() = AppColors.iconAccentBackground()
+        @Composable get() = AppColors.level2Background()
     val dockBackground: Color
         @Composable get() = MaterialTheme.colorScheme.surface
     val dockButtonBackground: Color
-        @Composable get() = AppColors.iconAccentBackground()
+        @Composable get() = AppColors.level2Background()
     val neon: Color
         @Composable get() = AppColors.iconAccent()
     val textPrimary: Color
@@ -672,6 +671,7 @@ private fun FolderSectionCard(
         modifier = Modifier.fillMaxWidth()
     ) {
         GlassCard(modifier = Modifier.fillMaxWidth(), shape = NeoShapes.section) {
+            val iconBackground = if (SurfaceTokens.current(ThemeConfig.surfaceStyle).useGradient) AppColors.level3Background() else Color.Transparent
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -687,7 +687,7 @@ private fun FolderSectionCard(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(AppShapes.iconButton())
-                                .background(AppColors.level3Background())
+                                .background(iconBackground)
                         ) {
                             Icon(
                                 imageVector = if (isCollapsed) Icons.Outlined.KeyboardArrowDown else Icons.Outlined.KeyboardArrowUp,
@@ -723,7 +723,7 @@ private fun FolderSectionCard(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(AppShapes.iconButton())
-                                .background(AppColors.level3Background())
+                                .background(iconBackground)
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Tune,
@@ -756,14 +756,34 @@ private fun FolderSectionCard(
 
                 if (!isCollapsed || !collapsible) {
                     Spacer(Modifier.height(AppDimens.listSpacing))
-                    documents.forEachIndexed { index, doc ->
-                        DocumentRow(
-                            document = doc,
-                            openDoc = openDoc,
-                            onMoveDoc = onMoveDoc
-                        )
-                        if (index != documents.lastIndex) {
-                            Spacer(Modifier.height(AppDimens.listSpacing))
+                    if (documents.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(NeoShapes.row)
+                                .background(NeoPalette.controlBackground)
+                                .padding(
+                                    horizontal = AppDimens.panelPaddingHorizontal,
+                                    vertical = AppDimens.panelPaddingVertical
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Пусто",
+                                color = NeoPalette.textSecondary,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    } else {
+                        documents.forEachIndexed { index, doc ->
+                            DocumentRow(
+                                document = doc,
+                                openDoc = openDoc,
+                                onMoveDoc = onMoveDoc
+                            )
+                            if (index != documents.lastIndex) {
+                                Spacer(Modifier.height(AppDimens.listSpacing))
+                            }
                         }
                     }
                 }
@@ -781,6 +801,8 @@ private fun DocumentRow(
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     var isMasked by remember(document.id) { mutableStateOf(true) }
+
+    val iconBackground = if (SurfaceTokens.current(ThemeConfig.surfaceStyle).useGradient) AppColors.level3Background() else Color.Transparent
 
     Row(
         modifier = Modifier
@@ -829,7 +851,7 @@ private fun DocumentRow(
             modifier = Modifier
                 .size(40.dp)
                 .clip(AppShapes.iconButton())
-                .background(AppColors.level3Background())
+                .background(iconBackground)
         ) {
             Icon(
                 imageVector = if (isMasked) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
@@ -1361,8 +1383,8 @@ private fun ThemePaletteOptionButton(
     modifier: Modifier = Modifier
 ) {
     val colors = ButtonDefaults.buttonColors(
-        containerColor = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-        contentColor = if (isActive) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+        containerColor = if (isActive) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.surfaceVariant,
+        contentColor = if (isActive) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurfaceVariant
     )
     Button(
         onClick = onClick,
@@ -1407,8 +1429,8 @@ private fun SurfaceStyleOptionButton(
 ) {
     val isActive = target == current
     val colors = ButtonDefaults.buttonColors(
-        containerColor = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-        contentColor = if (isActive) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+        containerColor = if (isActive) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.surfaceVariant,
+        contentColor = if (isActive) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurfaceVariant
     )
     Button(
         onClick = { onSelect(target) },

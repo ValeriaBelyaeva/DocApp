@@ -2,6 +2,7 @@ package com.example.docapp.ui.theme
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.Color
@@ -157,16 +158,32 @@ object AppColors {
     fun glassShadow() = LocalGlassColors.current.shadowColor
 
     @Composable
-    fun iconAccent() = MaterialTheme.colorScheme.onSecondaryContainer
+    fun iconAccent() = MaterialTheme.colorScheme.primary
 
     @Composable
-    fun iconAccentBackground() = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.55f)
+    fun iconAccentBackground(): Color {
+        val scheme = MaterialTheme.colorScheme
+        val isDark = scheme.background.luminance() < 0.5f
+        return if (isDark) {
+            scheme.primaryContainer.copy(alpha = 0.85f)
+        } else {
+            scheme.secondaryContainer.copy(alpha = 0.55f)
+        }
+    }
 
     @Composable
     fun level2Background() = MaterialTheme.colorScheme.surfaceVariant
 
     @Composable
-    fun level3Background() = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.35f)
+    fun level3Background(): Color {
+        val scheme = MaterialTheme.colorScheme
+        val isDark = scheme.background.luminance() < 0.5f
+        return if (isDark) {
+            scheme.surfaceVariant.copy(alpha = 0.5f)
+        } else {
+            scheme.secondaryContainer.copy(alpha = 0.35f)
+        }
+    }
 }
 
 // Kept legacy color constants for possible references

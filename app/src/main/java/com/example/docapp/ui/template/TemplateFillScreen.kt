@@ -315,10 +315,10 @@ private fun TemplateTextField(
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = MaterialTheme.colorScheme.onSurface,
             unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-            cursorColor = MaterialTheme.colorScheme.primary,
-            focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            cursorColor = AppColors.iconAccent(),
+            focusedBorderColor = AppColors.iconAccent(),
+            unfocusedBorderColor = AppColors.level2Background(),
+            focusedLabelColor = AppColors.iconAccent(),
             unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
             focusedContainerColor = Color.Transparent,
             unfocusedContainerColor = Color.Transparent
@@ -470,10 +470,10 @@ private fun PrimaryButton(
         enabled = enabled,
         shape = AppShapes.primaryButton(),
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-            disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-            disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
+            containerColor = AppColors.iconAccent(),
+            contentColor = AppColors.background().copy(alpha = 0.95f),
+            disabledContainerColor = AppColors.iconAccent().copy(alpha = 0.3f),
+            disabledContentColor = AppColors.background().copy(alpha = 0.5f)
         )
     ) {
         Text(text)

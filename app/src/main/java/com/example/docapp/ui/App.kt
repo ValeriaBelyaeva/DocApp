@@ -1,7 +1,10 @@
 package com.example.docapp.ui
 
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -16,35 +19,63 @@ import com.example.docapp.ui.template.TemplateSelectorScreen
 import com.example.docapp.ui.template.TemplateFillScreen
 import com.example.docapp.ui.theme.DocTheme
 import com.example.docapp.core.AppLogger
+import com.example.docapp.ui.navigation.AppDestination
+import com.example.docapp.ui.navigation.rememberAppNavigator
+import kotlinx.coroutines.delay
 
 @Composable
 fun AppRoot(content: @Composable () -> Unit) {
     content()
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun App() {
     AppLogger.log("App", "App composable started")
     DocTheme {
         val nav = rememberNavController()
-        AppLogger.log("App", "Navigation controller created")
-        NavHost(navController = nav, startDestination = "pin") {
-            composable("pin") {
-                PinScreenNew(onSuccess = { nav.navigate("home") })
+        val navigator = rememberAppNavigator(nav)
+        var lastInteraction by remember { mutableStateOf(System.currentTimeMillis()) }
+        val inactivityTimeoutMs = 30_000L
+        LaunchedEffect(Unit) {
+            while (true) {
+                delay(1_000L)
+                val currentRoute = nav.currentBackStackEntry?.destination?.route
+                if (currentRoute != AppDestination.Pin.route &&
+                    System.currentTimeMillis() - lastInteraction >= inactivityTimeoutMs
+                ) {
+                    navigator.openPin(popUpTo = AppDestination.Pin, inclusive = true)
+                    lastInteraction = System.currentTimeMillis()
+                }
             }
-            composable("showcase") {
+        }
+
+        AppLogger.log("App", "Navigation controller created")
+        NavHost(
+            navController = nav,
+            startDestination = AppDestination.Pin.route,
+            modifier = Modifier.pointerInteropFilter {
+                lastInteraction = System.currentTimeMillis()
+                false
+            }
+        ) {
+            composable(AppDestination.Pin.route) {
+                PinScreenNew(onSuccess = {
+                    lastInteraction = System.currentTimeMillis()
+                    navigator.openHome(popUpTo = AppDestination.Pin, inclusive = true)
+                })
+            }
+            composable(AppDestination.Showcase.route) {
                 DesignShowcase()
             }
-            composable("home") {
+            composable(AppDestination.Home.route) {
                 HomePager(
-                    openDoc = { id -> nav.navigate("doc/view/$id") },
-                    createNew = { folderId ->
-                        nav.navigate("templates?folderId=${folderId ?: ""}")
-                    }
+                    openDoc = { id -> navigator.openDocView(id) },
+                    createNew = { folderId -> navigator.openTemplateSelector(folderId) }
                 )
             }
             composable(
-                route = "templates?folderId={folderId}",
+                route = AppDestination.TemplateSelector.route,
                 arguments = listOf(navArgument("folderId") {
                     type = NavType.StringType; defaultValue = ""
                 })
@@ -54,21 +85,21 @@ fun App() {
                 TemplateSelectorScreen(
                     folderId = folderIdArg,
                     onCreateDocFromTemplate = { templateId, fId ->
-                        nav.navigate("template/fill?templateId=$templateId&folderId=${fId ?: ""}")
+                        navigator.openTemplateFill(templateId, fId)
                     },
                     onCreateEmpty = { fId ->
-                        nav.navigate("doc/edit?docId=&templateId=&folderId=${fId ?: ""}")
+                        navigator.openDocEditor(templateId = null, folderId = fId)
                     }
                 )
             }
             composable(
-                route = "template/fill?templateId={templateId}&folderId={folderId}",
+                route = AppDestination.TemplateFill.route,
                 arguments = listOf(
                     navArgument("templateId") { type = NavType.StringType },
                     navArgument("folderId") { type = NavType.StringType; defaultValue = "" }
                 )
             ) { backStack ->
-                val args = backStack.arguments 
+                val args = backStack.arguments
                     ?: throw IllegalStateException("Missing navigation arguments")
                 val templateId = args.getString("templateId")
                     ?: throw IllegalStateException("Missing templateId argument")
@@ -77,40 +108,39 @@ fun App() {
                 TemplateFillScreen(
                     templateId = templateId,
                     folderId = folderIdArg,
-                    onDocumentCreated = { _ ->
-                        nav.navigate("home") { popUpTo("home") }
+                    onDocumentCreated = {
+                        navigator.openHome(popUpTo = AppDestination.Home)
                     },
                     onCancel = {
-                        nav.popBackStack()
+                        navigator.popBack()
                     }
                 )
             }
             composable(
-                route = "doc/view/{docId}",
+                route = AppDestination.DocView.route,
                 arguments = listOf(navArgument("docId") { type = NavType.StringType })
             ) { backStack ->
-                val docId = backStack.arguments?.getString("docId") 
+                val docId = backStack.arguments?.getString("docId")
                     ?: throw IllegalStateException("Missing docId argument")
                 DocumentViewScreen(
                     docId = docId,
                     onEdit = {
-                        nav.navigate("doc/edit?docId=$docId&templateId=&folderId=")
+                        navigator.openDocEditor(docId = docId)
                     },
                     onDeleted = {
-                        // Удалили документ — просто уходим назад на домашний
-                        nav.popBackStack()
+                        navigator.popBack()
                     }
                 )
             }
             composable(
-                route = "doc/edit?docId={docId}&templateId={templateId}&folderId={folderId}",
+                route = AppDestination.DocEdit.route,
                 arguments = listOf(
                     navArgument("docId") { type = NavType.StringType; defaultValue = "" },
                     navArgument("templateId") { type = NavType.StringType; defaultValue = "" },
                     navArgument("folderId") { type = NavType.StringType; defaultValue = "" },
                 )
             ) { backStack ->
-                val args = backStack.arguments 
+                val args = backStack.arguments
                     ?: throw IllegalStateException("Missing navigation arguments")
                 DocumentEditScreen(
                     existingDocId = args.getString("docId")
@@ -120,7 +150,7 @@ fun App() {
                     folderId = args.getString("folderId")
                         ?.ifBlank { null },
                     onSaved = { id ->
-                        nav.navigate("doc/view/$id") { popUpTo("home") }
+                        navigator.openDocView(id, popUpTo = AppDestination.Home)
                     }
                 )
             }

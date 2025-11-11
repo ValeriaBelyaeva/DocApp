@@ -75,10 +75,10 @@ object DarkThemeColors {
     val darkSecondaryContainer = Color(0xFF233016)
     val darkOnSecondaryContainer = Color(0xFFA4CF49)
 
-    val darkTertiary = Color(0xFFBCCBDE)
-    val darkOnTertiary = Color(0xFF0E1117)
-    val darkTertiaryContainer = Color(0xFF1C2430)
-    val darkOnTertiaryContainer = Color(0xFFBCCBDE)
+    val darkTertiary = Color(0xFFBCED57)
+    val darkOnTertiary = Color(0xFF10140A)
+    val darkTertiaryContainer = Color(0xFF233016)
+    val darkOnTertiaryContainer = Color(0xFFBCED57)
 
     val darkBackground = Color(0xFF0F121A)
     val darkOnBackground = Color(0xFFFBFBFB)

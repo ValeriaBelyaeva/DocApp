@@ -119,7 +119,13 @@ fun MigrationScreen() {
                         }
                     },
                     enabled = !isMigrating,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AppColors.iconAccent(),
+                        contentColor = AppColors.background(),
+                        disabledContainerColor = AppColors.iconAccent().copy(alpha = 0.3f),
+                        disabledContentColor = AppColors.background().copy(alpha = 0.5f)
+                    )
                 ) {
                     if (isMigrating) {
                         CircularProgressIndicator(
@@ -209,7 +215,13 @@ fun MigrationScreen() {
                         }
                     },
                     enabled = !isCleaningUp,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AppColors.iconAccent(),
+                        contentColor = AppColors.background(),
+                        disabledContainerColor = AppColors.iconAccent().copy(alpha = 0.3f),
+                        disabledContentColor = AppColors.background().copy(alpha = 0.5f)
+                    )
                 ) {
                     if (isCleaningUp) {
                         CircularProgressIndicator(
@@ -248,7 +260,7 @@ fun MigrationScreen() {
                     Icon(
                         Icons.Default.Info,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = AppColors.iconAccent()
                     )
                     Spacer(modifier = Modifier.width(AppDimens.spaceSm))
                     Text(
