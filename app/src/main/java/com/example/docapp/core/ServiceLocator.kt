@@ -6,6 +6,7 @@ import com.example.docapp.data.AppDb
 import com.example.docapp.data.RepositoriesImpl
 import com.example.docapp.data.SqlDaoFactory
 import com.example.docapp.domain.Repositories
+import com.example.docapp.domain.interactors.DomainInteractors
 import com.example.docapp.domain.usecases.UseCases
 
 object ServiceLocator {
@@ -16,6 +17,8 @@ object ServiceLocator {
     lateinit var files: AttachmentStore
         private set
     lateinit var repos: Repositories
+        private set
+    lateinit var domain: DomainInteractors
         private set
     lateinit var useCases: UseCases
         private set
@@ -146,6 +149,7 @@ object ServiceLocator {
                 // Initialize compatibility layer for legacy code paths
                 files = AttachmentStoreImpl(appContext)
                 repos = RepositoriesImpl(dao, crypto, files, appContext)
+                domain = DomainInteractors(repos, files, dao.documents)
                 useCases = UseCases(repos, files, dao.documents)
                 AppLogger.log("ServiceLocator", "Database and components initialized successfully")
                 ErrorHandler.showSuccess("ServiceLocator: Database and components initialized")

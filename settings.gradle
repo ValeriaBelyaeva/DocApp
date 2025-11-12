@@ -11,9 +11,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url 'https://maven.zetetic.net/' }
+        maven { url = uri("https://maven.zetetic.net/") }
         // Используем JitPack как альтернативу для SQLCipher
-        maven { url 'https://jitpack.io' }
+        maven { url = uri("https://jitpack.io") }
     }
 }
 rootProject.name = "DocApp"

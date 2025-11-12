@@ -3,137 +3,40 @@ package com.example.docapp.ui.theme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.lightColorScheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
 import com.example.docapp.core.ThemeManager
-import com.example.docapp.core.DarkGlassColors
-import com.example.docapp.core.DarkThemeColors
-
-// Light theme with updated warm pink-brown palette
-private val LightBackground = Color(0xFFF5F0EB)
-private val LightSurface = Color(0xFFFFFFFF)
-private val LightSurfaceVariant = Color(0xFFF0E3D8)
-private val LightOutline = Color(0xFF7A4A33)
-private val LightOutlineSoft = Color(0xFFE0D2C6)
-
-private val TextPrimaryLight = Color(0xFF2B2220)
-private val TextSecondaryLight = Color(0xFF6F6058)
-private val TextDisabledLight = Color(0xFFB5A7A0)
-
-private val AccentPink = Color(0xFFD2667A)
-private val AccentPinkDark = Color(0xFFB04E63)
-private val AccentPinkSoft = Color(0xFFF7DFE5)
-
-private val AccentBrown = Color(0xFF9C5A3C)
-private val AccentBrownDark = Color(0xFF6D3C28)
-private val AccentBrownSoft = Color(0xFFF2E1D7)
-
-private val SuccessLight = Color(0xFF3B8F6A)
-private val WarningLight = Color(0xFFD98A32)
-private val ErrorLight = Color(0xFFD64545)
-
-// Glassmorphism colors - enhanced for better visibility
-private val GlassTintTop = Color(0xFFFFFFFF)
-private val GlassTintBottom = LightSurfaceVariant
-private val GlassHighlight = Color(0x66FFFFFF)
-private val GlassShadow = Color(0x33000000)
-
-val LightGlassColorScheme = lightColorScheme(
-    primary = AccentPink,
-    onPrimary = Color.White,
-    primaryContainer = AccentPinkSoft,
-    onPrimaryContainer = AccentPinkDark,
-    secondary = AccentBrown,
-    onSecondary = Color.White,
-    secondaryContainer = AccentBrownSoft,
-    onSecondaryContainer = AccentBrownDark,
-    tertiary = AccentPinkDark,
-    onTertiary = Color.White,
-    tertiaryContainer = AccentPinkSoft,
-    onTertiaryContainer = AccentPinkDark,
-    background = LightBackground,
-    onBackground = TextPrimaryLight,
-    surface = LightSurface,
-    onSurface = TextPrimaryLight,
-    surfaceVariant = LightSurfaceVariant,
-    onSurfaceVariant = TextSecondaryLight,
-    outline = LightOutline,
-    outlineVariant = LightOutlineSoft,
-    error = ErrorLight,
-    onError = Color.White,
-    errorContainer = ErrorLight.copy(alpha = 0.12f),
-    onErrorContainer = ErrorLight,
-    inverseSurface = AccentBrownDark,
-    inverseOnSurface = LightSurface,
-    inversePrimary = AccentPinkDark,
-    surfaceTint = AccentPink,
-    scrim = Color(0x88000000)
-)
-
-val DarkGlassColorScheme = darkColorScheme(
-    primary = DarkThemeColors.darkPrimary,
-    onPrimary = DarkThemeColors.darkOnPrimary,
-    primaryContainer = DarkThemeColors.darkPrimaryContainer,
-    onPrimaryContainer = DarkThemeColors.darkOnPrimaryContainer,
-    secondary = DarkThemeColors.darkSecondary,
-    onSecondary = DarkThemeColors.darkOnSecondary,
-    secondaryContainer = DarkThemeColors.darkSecondaryContainer,
-    onSecondaryContainer = DarkThemeColors.darkOnSecondaryContainer,
-    tertiary = DarkThemeColors.darkSecondary,
-    onTertiary = DarkThemeColors.darkOnSecondary,
-    tertiaryContainer = DarkThemeColors.darkSecondaryContainer,
-    onTertiaryContainer = DarkThemeColors.darkOnSecondaryContainer,
-    background = DarkThemeColors.darkBackground,
-    onBackground = DarkThemeColors.darkOnBackground,
-    surface = DarkThemeColors.darkSurface,
-    onSurface = DarkThemeColors.darkOnSurface,
-    surfaceVariant = DarkThemeColors.darkSurfaceVariant,
-    onSurfaceVariant = DarkThemeColors.darkOnSurfaceVariant,
-    outline = Color(0xFF38403A),
-    outlineVariant = Color(0xFF242A26),
-    error = ErrorLight,
-    onError = Color.White,
-    errorContainer = ErrorLight.copy(alpha = 0.2f),
-    onErrorContainer = ErrorLight,
-    inverseSurface = DarkThemeColors.darkSurfaceVariant,
-    inverseOnSurface = DarkThemeColors.darkOnSurface,
-    inversePrimary = DarkThemeColors.darkPrimary,
-    surfaceTint = DarkThemeColors.darkPrimary,
-    scrim = Color(0x88000000)
-)
-
-private val LightGlassTokens = GlassColors(
-    containerTop = GlassTintTop,
-    containerBottom = GlassTintBottom.copy(alpha = 0.8f),
-    highlight = GlassHighlight,
-    borderBright = AccentPink.copy(alpha = 0.45f),
-    borderShadow = LightOutlineSoft.copy(alpha = 0.6f),
-    shadowColor = GlassShadow
-)
-
-private val DarkGlassTokens = GlassColors(
-    containerTop = DarkGlassColors.darkGlassTintTop,
-    containerBottom = DarkGlassColors.darkGlassTintBottom.copy(alpha = 0.8f),
-    highlight = DarkGlassColors.darkGlassHighlight,
-    borderBright = DarkGlassColors.darkGlassBorderBright,
-    borderShadow = DarkGlassColors.darkGlassBorderShadow,
-    shadowColor = DarkGlassColors.darkGlassShadow
-)
+import com.example.docapp.core.setSystemBarColors
 
 @Composable
 fun DocTheme(content: @Composable () -> Unit) {
     val isDarkTheme = ThemeManager.isDarkTheme
-    val colorScheme = if (isDarkTheme) DarkGlassColorScheme else LightGlassColorScheme
+    val colorScheme = remember(isDarkTheme) {
+        if (isDarkTheme) ThemePalette.darkColorScheme else ThemePalette.lightColorScheme
+    }
     val surfaceStyle = ThemeConfig.surfaceStyle
-    val surfaceTokens = SurfaceTokens.current(surfaceStyle)
-    val glassTokens = when (surfaceStyle) {
-        SurfaceStyle.Glass -> if (isDarkTheme) DarkGlassTokens else LightGlassTokens
-        SurfaceStyle.Matte -> matteTokensFor(colorScheme)
+    val surfaceTokens = remember(surfaceStyle) { SurfaceTokens.current(surfaceStyle) }
+    val glassTokens = remember(surfaceStyle, colorScheme, isDarkTheme) {
+        when (surfaceStyle) {
+            SurfaceStyle.Glass -> if (isDarkTheme) ThemePalette.darkGlassTokens else ThemePalette.lightGlassTokens
+            SurfaceStyle.Matte -> ThemePalette.matteGlassTokens(colorScheme)
+        }
+    }
+
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            view.setSystemBarColors(
+                statusColor = colorScheme.background.toArgb(),
+                navColor = colorScheme.surface.toArgb(),
+                darkIcons = !isDarkTheme
+            )
+        }
     }
     
     CompositionLocalProvider(LocalGlassColors provides glassTokens) {
@@ -152,12 +55,3 @@ fun DocTheme(content: @Composable () -> Unit) {
         }
     }
 }
-
-private fun matteTokensFor(colorScheme: ColorScheme): GlassColors = GlassColors(
-    containerTop = colorScheme.surface,
-    containerBottom = colorScheme.surface,
-    highlight = Color.Transparent,
-    borderBright = Color.Transparent,
-    borderShadow = Color.Transparent,
-    shadowColor = Color.Transparent
-)

@@ -21,11 +21,13 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
- 
 
 /**
  * Centralized design tokens: spacing, sizes, radii, durations, and semantic colors.
@@ -77,6 +79,157 @@ object AppRadii {
     val buttonCorner: Dp = radiusMd
     val smallButtonCorner: Dp = radiusSm
     val largeButtonCorner: Dp = radiusLg
+}
+
+object ThemePalette {
+    private val lightBackground = Color(0xFFF5F0EB)
+    private val lightSurface = Color(0xFFFFFFFF)
+    private val lightSurfaceVariant = Color(0xFFF0E3D8)
+    private val lightOutline = Color(0xFF7A4A33)
+    private val lightOutlineSoft = Color(0xFFE0D2C6)
+
+    private val textPrimaryLight = Color(0xFF2B2220)
+    private val textSecondaryLight = Color(0xFF6F6058)
+    private val textDisabledLight = Color(0xFFB5A7A0)
+
+    private val accentPink = Color(0xFFD2667A)
+    private val accentPinkDark = Color(0xFFB04E63)
+    private val accentPinkSoft = Color(0xFFF7DFE5)
+
+    private val accentBrown = Color(0xFF9C5A3C)
+    private val accentBrownDark = Color(0xFF6D3C28)
+    private val accentBrownSoft = Color(0xFFF2E1D7)
+
+    private val successLight = Color(0xFF3B8F6A)
+    private val warningLight = Color(0xFFD98A32)
+    private val errorLight = Color(0xFFD64545)
+
+    private val glassTintTop = Color(0xFFFFFFFF)
+    private val glassTintBottom = lightSurfaceVariant
+    private val glassHighlight = Color(0x66FFFFFF)
+    private val glassShadow = Color(0x33000000)
+
+    private val darkPrimary = Color(0xFFBCED57)
+    private val darkOnPrimary = Color(0xFF10140A)
+    private val darkPrimaryContainer = Color(0xFF1A2A11)
+    private val darkOnPrimaryContainer = Color(0xFFBCED57)
+
+    private val darkSecondary = Color(0xFFA4CF49)
+    private val darkOnSecondary = Color(0xFF0E1406)
+    private val darkSecondaryContainer = Color(0xFF233016)
+    private val darkOnSecondaryContainer = Color(0xFFA4CF49)
+
+    private val darkTertiary = Color(0xFFBCED57)
+    private val darkOnTertiary = Color(0xFF10140A)
+    private val darkTertiaryContainer = Color(0xFF233016)
+    private val darkOnTertiaryContainer = Color(0xFFBCED57)
+
+    private val darkBackground = Color(0xFF0F121A)
+    private val darkOnBackground = Color(0xFFFBFBFB)
+    private val darkSurface = Color(0xFF27292F)
+    private val darkOnSurface = Color(0xFFFBFBFB)
+    private val darkSurfaceVariant = Color(0xFF1C1F26)
+    private val darkOnSurfaceVariant = Color(0xFF8B8C8E)
+    private val darkOutline = Color(0xFF3A3D44)
+    private val darkOutlineVariant = Color(0xFF2B2E34)
+
+    private val darkGlassTintTop = Color(0x3327292F)
+    private val darkGlassTintBottom = Color(0x33181B22)
+    private val darkGlassHighlight = Color(0x268B8C8E)
+    private val darkGlassShadow = Color(0x40000000)
+    private val darkGlassBorderBright = Color(0x33BCED57)
+    private val darkGlassBorderShadow = Color(0x33202127)
+
+    val lightColorScheme: ColorScheme = lightColorScheme(
+        primary = accentPink,
+        onPrimary = Color.White,
+        primaryContainer = accentPinkSoft,
+        onPrimaryContainer = accentPinkDark,
+        secondary = accentBrown,
+        onSecondary = Color.White,
+        secondaryContainer = accentBrownSoft,
+        onSecondaryContainer = accentBrownDark,
+        tertiary = accentPinkDark,
+        onTertiary = Color.White,
+        tertiaryContainer = accentPinkSoft,
+        onTertiaryContainer = accentPinkDark,
+        background = lightBackground,
+        onBackground = textPrimaryLight,
+        surface = lightSurface,
+        onSurface = textPrimaryLight,
+        surfaceVariant = lightSurfaceVariant,
+        onSurfaceVariant = textSecondaryLight,
+        outline = lightOutline,
+        outlineVariant = lightOutlineSoft,
+        error = errorLight,
+        onError = Color.White,
+        errorContainer = errorLight.copy(alpha = 0.12f),
+        onErrorContainer = errorLight,
+        inverseSurface = accentBrownDark,
+        inverseOnSurface = lightSurface,
+        inversePrimary = accentPinkDark,
+        surfaceTint = accentPink,
+        scrim = Color(0x88000000)
+    )
+
+    val darkColorScheme: ColorScheme = darkColorScheme(
+        primary = darkPrimary,
+        onPrimary = darkOnPrimary,
+        primaryContainer = darkPrimaryContainer,
+        onPrimaryContainer = darkOnPrimaryContainer,
+        secondary = darkSecondary,
+        onSecondary = darkOnSecondary,
+        secondaryContainer = darkSecondaryContainer,
+        onSecondaryContainer = darkOnSecondaryContainer,
+        tertiary = darkSecondary,
+        onTertiary = darkOnSecondary,
+        tertiaryContainer = darkSecondaryContainer,
+        onTertiaryContainer = darkOnSecondaryContainer,
+        background = darkBackground,
+        onBackground = darkOnBackground,
+        surface = darkSurface,
+        onSurface = darkOnSurface,
+        surfaceVariant = darkSurfaceVariant,
+        onSurfaceVariant = darkOnSurfaceVariant,
+        outline = darkOutline,
+        outlineVariant = darkOutlineVariant,
+        error = errorLight,
+        onError = Color.White,
+        errorContainer = errorLight.copy(alpha = 0.2f),
+        onErrorContainer = errorLight,
+        inverseSurface = darkSurfaceVariant,
+        inverseOnSurface = darkOnSurface,
+        inversePrimary = darkPrimary,
+        surfaceTint = darkPrimary,
+        scrim = Color(0x88000000)
+    )
+
+    val lightGlassTokens = GlassColors(
+        containerTop = glassTintTop,
+        containerBottom = glassTintBottom.copy(alpha = 0.8f),
+        highlight = glassHighlight,
+        borderBright = accentPink.copy(alpha = 0.45f),
+        borderShadow = lightOutlineSoft.copy(alpha = 0.6f),
+        shadowColor = glassShadow
+    )
+
+    val darkGlassTokens = GlassColors(
+        containerTop = darkGlassTintTop,
+        containerBottom = darkGlassTintBottom.copy(alpha = 0.8f),
+        highlight = darkGlassHighlight,
+        borderBright = darkGlassBorderBright,
+        borderShadow = darkGlassBorderShadow,
+        shadowColor = darkGlassShadow
+    )
+
+    fun matteGlassTokens(colorScheme: ColorScheme): GlassColors = GlassColors(
+        containerTop = colorScheme.surface,
+        containerBottom = colorScheme.surface,
+        highlight = Color.Transparent,
+        borderBright = Color.Transparent,
+        borderShadow = Color.Transparent,
+        shadowColor = Color.Transparent
+    )
 }
 
 object AppShapes {

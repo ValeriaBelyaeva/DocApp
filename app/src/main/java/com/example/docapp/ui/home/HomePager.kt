@@ -48,7 +48,6 @@ import com.example.docapp.core.ThemeManager
 import com.example.docapp.domain.Document
 import com.example.docapp.domain.DocumentRepository
 import com.example.docapp.domain.Folder
-import com.example.docapp.domain.usecases.UseCases
 import com.example.docapp.ui.theme.AppColors
 import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.ui.theme.AppShapes
@@ -84,10 +83,11 @@ fun HomePager(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
-    val uc = ServiceLocator.useCases
+    val domainInteractors = ServiceLocator.domain
+    val documentInteractors = domainInteractors.documents
     val scope = rememberCoroutineScope()
     val ctx = LocalContext.current
-    val home by uc.observeHome().collectAsState(
+    val home by documentInteractors.observeHome().collectAsState(
         initial = DocumentRepository.HomeList(emptyList(), emptyList())
     )
 
@@ -176,7 +176,7 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
                                             } else if (first != document.id) {
                                                 scope.launch {
                                                     try {
-                                                        uc.swapPinned(first, document.id)
+                                                        documentInteractors.swapPinned(first, document.id)
                                                         toast("Documents swapped")
                                                         firstSelected = document.id
                                                     } catch (error: Exception) {
@@ -187,7 +187,7 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
                                         }
                                     },
                                     onTogglePin = {
-                                        scope.launch { uc.pinDoc(document.id, false) }
+                                        scope.launch { documentInteractors.pin(document.id, false) }
                                     },
                                     menuExpanded = menuOpen,
                                     onMenuOpen = {
@@ -223,7 +223,7 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
                                 isSelected = false,
                                 onClick = { openDoc(document.id) },
                                 onTogglePin = {
-                                    scope.launch { uc.pinDoc(document.id, true) }
+                                    scope.launch { documentInteractors.pin(document.id, true) }
                                 },
                                 menuExpanded = menuOpen,
                                 onMenuOpen = { menuOpen = true },
@@ -488,10 +488,12 @@ private fun TreeScreen(
     openDoc: (String) -> Unit,
     createInFolder: (String?) -> Unit
 ) {
-    val uc = ServiceLocator.useCases
+    val domainInteractors = ServiceLocator.domain
+    val documentInteractors = domainInteractors.documents
+    val folderInteractors = domainInteractors.folders
     val scope = rememberCoroutineScope()
-    val folders by uc.observeTree().collectAsState(initial = emptyList())
-    val home by uc.observeHome().collectAsState(
+    val folders by folderInteractors.observeTree().collectAsState(initial = emptyList())
+    val home by documentInteractors.observeHome().collectAsState(
         initial = DocumentRepository.HomeList(emptyList(), emptyList())
     )
 
@@ -592,7 +594,7 @@ private fun TreeScreen(
                     val validation = DataValidator.validateFolderName(newFolderName)
                     if (validation.isSuccess) {
                         scope.launch {
-                            ServiceLocator.repos.folders.addFolder(validation.getValue()!!, null)
+                            folderInteractors.add(validation.getValue()!!, null)
                             newFolderName = ""
                             showNewFolderDialog = false
                         }
@@ -676,37 +678,39 @@ private fun FolderSectionCard(
                     )
 
                     if (onCreateInFolder != null || onDeleteFolder != null) {
-                        IconButton(
-                            onClick = { menuOpen = true },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(AppShapes.iconButton())
-                                .background(iconBackground)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Tune,
-                                contentDescription = "Folder options",
-                            tint = NeoPalette.neon
-                            )
-                        }
-                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                            if (onCreateInFolder != null) {
-                                DropdownMenuItem(
-                                    text = { Text("Create document") },
-                                    onClick = {
-                                        menuOpen = false
-                                        onCreateInFolder()
-                                    }
+                        Box {
+                            IconButton(
+                                onClick = { menuOpen = true },
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(AppShapes.iconButton())
+                                    .background(iconBackground)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Tune,
+                                    contentDescription = "Folder options",
+                                    tint = NeoPalette.neon
                                 )
                             }
-                            if (onDeleteFolder != null) {
-                                DropdownMenuItem(
-                                    text = { Text("Delete folder") },
-                                    onClick = {
-                                        menuOpen = false
-                                        onDeleteFolder()
-                                    }
-                                )
+                            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                                if (onCreateInFolder != null) {
+                                    DropdownMenuItem(
+                                        text = { Text("Create document") },
+                                        onClick = {
+                                            menuOpen = false
+                                            onCreateInFolder()
+                                        }
+                                    )
+                                }
+                                if (onDeleteFolder != null) {
+                                    DropdownMenuItem(
+                                        text = { Text("Delete folder") },
+                                        onClick = {
+                                            menuOpen = false
+                                            onDeleteFolder()
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -861,13 +865,15 @@ private fun DockButton(
 @Composable
 private fun MoveToFolderDialogIfNeeded(moveDocId: String?, onClose: () -> Unit) {
     if (moveDocId == null) return
-    val uc: UseCases = ServiceLocator.useCases
+    val domainInteractors = ServiceLocator.domain
+    val folderInteractors = domainInteractors.folders
+    val documentInteractors = domainInteractors.documents
     val scope = rememberCoroutineScope()
     var folders by remember { mutableStateOf<List<Folder>>(emptyList()) }
-    var selected by remember { mutableStateOf<String?>(null) }
+    var selectedFolderId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
-        folders = uc.listFolders()
+        folders = folderInteractors.listAll()
     }
 
     AlertDialog(
@@ -877,14 +883,14 @@ private fun MoveToFolderDialogIfNeeded(moveDocId: String?, onClose: () -> Unit) 
             Column {
                 // "no folder" option
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(selected = selected == null, onClick = { selected = null })
+                    RadioButton(selected = selectedFolderId == null, onClick = { selectedFolderId = null })
                     Text("No folder")
                 }
                 Spacer(Modifier.height(AppDimens.spaceSm))
-                folders.forEach { f ->
+                folders.forEach { folder ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = selected == f.id, onClick = { selected = f.id })
-                        Text(f.name)
+                        RadioButton(selected = selectedFolderId == folder.id, onClick = { selectedFolderId = folder.id })
+                        Text(folder.name)
                     }
                 }
             }
@@ -892,7 +898,7 @@ private fun MoveToFolderDialogIfNeeded(moveDocId: String?, onClose: () -> Unit) 
         confirmButton = {
             TextButton(onClick = {
                 scope.launch {
-                    uc.moveDocToFolder(moveDocId, selected)
+                    documentInteractors.moveToFolder(moveDocId, selectedFolderId)
                     onClose()
                 }
             }) { Text("Move") }
@@ -908,7 +914,8 @@ private fun MoveToFolderDialogIfNeeded(moveDocId: String?, onClose: () -> Unit) 
 @Composable
 private fun InfoScreen() {
     val context = LocalContext.current
-    val useCases = ServiceLocator.useCases
+    val domainInteractors = ServiceLocator.domain
+    val settingsInteractors = domainInteractors.settings
     var changing by remember { mutableStateOf(false) }
     var oldPin by remember { mutableStateOf("") }
     var newPin by remember { mutableStateOf("") }
@@ -1041,12 +1048,12 @@ private fun InfoScreen() {
                                         toast("New PIN must differ from the current one")
                                         return@launch
                                     }
-                                    val ok = useCases.verifyPin(oldPin)
+                                    val ok = settingsInteractors.verifyPin(oldPin)
                                     if (!ok) {
                                         toast("Current PIN is incorrect")
                                         return@launch
                                     }
-                                    useCases.setNewPin(newPin)
+                                    settingsInteractors.setNewPin(newPin)
                                     toast("PIN updated")
                                     oldPin = ""
                                     newPin = ""
@@ -1381,14 +1388,16 @@ private fun SurfaceStyleOptionButton(
 private fun DeleteFolderDialogIfNeeded(deleteFolderId: String?, onClose: () -> Unit) {
     if (deleteFolderId == null) return
     
-    val uc: UseCases = ServiceLocator.useCases
+    val domainInteractors = ServiceLocator.domain
+    val documentInteractors = domainInteractors.documents
+    val folderInteractors = domainInteractors.folders
     val scope = rememberCoroutineScope()
     val ctx = LocalContext.current
     var documentsInFolder by remember { mutableStateOf<List<Document>>(emptyList()) }
     var deleteDocuments by remember { mutableStateOf(false) }
     
     LaunchedEffect(deleteFolderId) {
-        documentsInFolder = uc.getDocumentsInFolder(deleteFolderId)
+        documentsInFolder = documentInteractors.getDocumentsInFolder(deleteFolderId)
     }
     
     fun toast(s: String) = Toast.makeText(ctx, s, Toast.LENGTH_SHORT).show()
@@ -1425,7 +1434,16 @@ private fun DeleteFolderDialogIfNeeded(deleteFolderId: String?, onClose: () -> U
                 onClick = {
                     scope.launch {
                         try {
-                            uc.deleteFolder(deleteFolderId, deleteDocuments)
+                            if (deleteDocuments) {
+                                documentsInFolder.forEach { document: Document ->
+                                    documentInteractors.delete(document.id)
+                                }
+                            } else {
+                                documentsInFolder.forEach { document: Document ->
+                                    documentInteractors.moveToFolder(document.id, null)
+                                }
+                            }
+                            folderInteractors.delete(deleteFolderId)
                             toast(if (deleteDocuments) "Folder and documents removed" else "Folder deleted, documents moved")
                             onClose()
                         } catch (e: Exception) {

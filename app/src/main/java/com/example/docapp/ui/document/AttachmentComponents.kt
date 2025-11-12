@@ -35,7 +35,8 @@ fun AttachmentManager(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val useCases = ServiceLocator.useCases
+    val domainInteractors = ServiceLocator.domain
+    val attachmentInteractors = domainInteractors.attachments
     
     var attachments by remember { mutableStateOf<List<AttachmentEntity>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
@@ -46,7 +47,7 @@ fun AttachmentManager(
         LaunchedEffect(docId) {
             docId?.let { id ->
                 try {
-                    attachments = ServiceLocator.repos.attachments.getAttachmentsByDoc(id)
+                    attachments = attachmentInteractors.listByDocument(id)
                 } catch (e: Exception) {
                     AppLogger.log("AttachmentComponents", "ERROR: Failed to load attachments: ${e.message}")
                     ErrorHandler.showError("Failed to load attachments: ${e.message}")
@@ -105,7 +106,7 @@ fun AttachmentManager(
                         scope.launch {
                             isLoading = true
                             try {
-                                val result = useCases.cleanupOrphans()
+                                val result = attachmentInteractors.cleanupOrphans()
                                 if (result.deletedFiles > 0) {
                                     ErrorHandler.showSuccess("Removed ${result.deletedFiles} unused files")
                                     onAttachmentsChanged()
@@ -182,7 +183,7 @@ fun AttachmentManager(
                     onClick = {
                         scope.launch {
                             try {
-                                useCases.deleteAttachment(attachment.id)
+                                attachmentInteractors.delete(attachment.id)
                                 attachments = attachments.filter { it.id != attachment.id }
                                 onAttachmentsChanged()
                                 showDeleteDialog = null
