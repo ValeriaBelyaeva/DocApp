@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
 import com.example.docapp.ui.theme.AppRadii
+import com.example.docapp.ui.theme.AppBorderWidths
 
 data class SurfaceShapes(
     val largeCard: Shape,
@@ -41,23 +42,23 @@ data class SurfaceStyleTokens(
 
 object SurfaceTokens {
     private val glassShapes = SurfaceShapes(
-        largeCard = RoundedCornerShape(24.dp),
-        mediumCard = RoundedCornerShape(20.dp),
-        smallCard = RoundedCornerShape(16.dp),
+        largeCard = RoundedCornerShape(AppRadii.radiusLg),
+        mediumCard = RoundedCornerShape(AppRadii.radiusMd),
+        smallCard = RoundedCornerShape(AppRadii.radiusSm),
         icon = CircleShape,
-        button = RoundedCornerShape(16.dp),
-        buttonSmall = RoundedCornerShape(12.dp)
+        button = RoundedCornerShape(AppRadii.radiusSm),
+        buttonSmall = RoundedCornerShape(AppRadii.radiusXs)
     )
     
     private val glassMaterialShapes = Shapes(
-        small = RoundedCornerShape(12.dp),
-        medium = RoundedCornerShape(16.dp),
-        large = RoundedCornerShape(20.dp)
+        small = RoundedCornerShape(AppRadii.radiusXs),
+        medium = RoundedCornerShape(AppRadii.radiusSm),
+        large = RoundedCornerShape(AppRadii.radiusMd)
     )
 
     private val matteShapes = SurfaceShapes(
-        largeCard = RoundedCornerShape(48.dp),
-        mediumCard = RoundedCornerShape(48.dp),
+        largeCard = RoundedCornerShape(AppRadii.radiusXl),
+        mediumCard = RoundedCornerShape(AppRadii.radiusXl),
         smallCard = RoundedCornerShape(AppRadii.radiusMd),
         icon = RoundedCornerShape(AppRadii.radiusSm),
         button = RoundedCornerShape(AppRadii.radiusLg * 2),
@@ -87,7 +88,7 @@ object SurfaceTokens {
         materialShapes = glassMaterialShapes,
         useGradient = true,
         useInnerGlow = false,
-        borderWidth = 1.5.dp,
+        borderWidth = AppBorderWidths.hero,
         refs = glassShapes.toRefs()
     )
 

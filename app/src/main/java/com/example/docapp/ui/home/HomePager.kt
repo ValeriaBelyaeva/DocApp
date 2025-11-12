@@ -48,6 +48,8 @@ import com.example.docapp.core.ThemeManager
 import com.example.docapp.domain.Document
 import com.example.docapp.domain.DocumentRepository
 import com.example.docapp.domain.Folder
+import com.example.docapp.ui.theme.AppAlphas
+import com.example.docapp.ui.theme.AppBorderWidths
 import com.example.docapp.ui.theme.AppColors
 import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.ui.theme.AppShapes
@@ -289,13 +291,14 @@ private fun HistorySectionCard(
                 IconButton(
                     onClick = onToggleCollapse,
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(AppDimens.Home.folderToggleIconButton)
                         .clip(AppShapes.iconButton())
                 ) {
                     Icon(
                         imageVector = if (isCollapsed) Icons.Outlined.KeyboardArrowDown else Icons.Outlined.KeyboardArrowUp,
                         contentDescription = if (isCollapsed) "Expand" else "Collapse",
-                        tint = NeoPalette.neon
+                        tint = NeoPalette.neon,
+                        modifier = Modifier.size(AppDimens.Home.folderToggleIcon)
                     )
                 }
                 Spacer(Modifier.width(AppDimens.iconRowSpacing))
@@ -304,7 +307,7 @@ private fun HistorySectionCard(
                     contentDescription = null,
                     tint = NeoPalette.neon,
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(AppDimens.Home.folderGlyphIcon)
                 )
                 Spacer(Modifier.width(AppDimens.iconRowSpacing))
                 Text(
@@ -339,8 +342,8 @@ private fun HistoryDocumentRow(
 ) {
     var descriptionMasked by remember(document.id) { mutableStateOf(true) }
 
-    val rowBackground = if (isSelected) NeoPalette.item.copy(alpha = 0.9f) else NeoPalette.item
-    val borderColor = if (isSelected) NeoPalette.neon.copy(alpha = 0.6f) else Color.Transparent
+    val rowBackground = if (isSelected) NeoPalette.item.copy(alpha = AppAlphas.Home.selectedRowBackground) else NeoPalette.item
+    val borderColor = if (isSelected) NeoPalette.neon.copy(alpha = AppAlphas.Home.selectedBorderAccent) else Color.Transparent
 
     Box(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -355,7 +358,7 @@ private fun HistoryDocumentRow(
                     }
                 )
                 .border(
-                    width = if (borderColor == Color.Transparent) 0.dp else 1.5.dp,
+                    width = if (borderColor == Color.Transparent) 0.dp else AppDimens.Home.selectionBorderWidth,
                     color = borderColor,
                     shape = NeoShapes.row
                 )
@@ -368,7 +371,7 @@ private fun HistoryDocumentRow(
         IconButton(
             onClick = onTogglePin,
             modifier = Modifier
-                .size(40.dp)
+                .size(AppDimens.Home.documentActionIconButton)
                 .clip(AppShapes.iconButton())
         ) {
             Icon(
@@ -394,12 +397,12 @@ private fun HistoryDocumentRow(
                 }
             }
             Spacer(Modifier.width(AppDimens.iconRowSpacing))
-            IconButton(
-                onClick = { descriptionMasked = !descriptionMasked },
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(AppShapes.iconButton())
-            ) {
+        IconButton(
+            onClick = { descriptionMasked = !descriptionMasked },
+            modifier = Modifier
+                .size(AppDimens.Home.documentActionIconButton)
+                .clip(AppShapes.iconButton())
+        ) {
                 Icon(
                     imageVector = if (descriptionMasked) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
                     contentDescription = if (descriptionMasked) "Show" else "Hide",
@@ -645,14 +648,15 @@ private fun FolderSectionCard(
                         IconButton(
                             onClick = onToggleCollapse,
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(AppDimens.Home.folderToggleIconButton)
                                 .clip(AppShapes.iconButton())
                                 .background(iconBackground)
                         ) {
                             Icon(
                                 imageVector = if (isCollapsed) Icons.Outlined.KeyboardArrowDown else Icons.Outlined.KeyboardArrowUp,
                                 contentDescription = if (isCollapsed) "Expand" else "Collapse",
-                                tint = NeoPalette.neon
+                                tint = NeoPalette.neon,
+                                modifier = Modifier.size(AppDimens.Home.folderToggleIcon)
                             )
                         }
                         Spacer(Modifier.width(AppDimens.spaceMd))
@@ -663,7 +667,7 @@ private fun FolderSectionCard(
                             contentDescription = null,
                             tint = NeoPalette.neon,
                             modifier = Modifier
-                                .size(32.dp)
+                                .size(AppDimens.Home.folderGlyphIcon)
                                 .background(NeoPalette.controlBackground, NeoShapes.dockButton)
                                 .padding(AppDimens.spaceXs)
                         )
@@ -682,7 +686,7 @@ private fun FolderSectionCard(
                             IconButton(
                                 onClick = { menuOpen = true },
                                 modifier = Modifier
-                                    .size(40.dp)
+                                    .size(AppDimens.Home.documentActionIconButton)
                                     .clip(AppShapes.iconButton())
                                     .background(iconBackground)
                             ) {
@@ -766,7 +770,7 @@ private fun DocumentRow(
             contentDescription = null,
             tint = NeoPalette.neon,
             modifier = Modifier
-                .size(36.dp)
+                .size(AppDimens.Home.documentLeadingIcon)
         )
         Spacer(Modifier.width(AppDimens.spaceLg))
         Column(modifier = Modifier.weight(1f)) {
@@ -788,7 +792,7 @@ private fun DocumentRow(
         IconButton(
             onClick = { isMasked = !isMasked },
             modifier = Modifier
-                .size(40.dp)
+                .size(AppDimens.Home.documentActionIconButton)
                 .clip(AppShapes.iconButton())
         ) {
             Icon(
@@ -848,7 +852,7 @@ private fun DockButton(
     IconButton(
         onClick = onClick,
         modifier = Modifier
-            .size(56.dp)
+            .size(AppDimens.Home.dockButton)
             .clip(NeoShapes.dockButton)
             .background(NeoPalette.dockButtonBackground)
     ) {
@@ -856,7 +860,7 @@ private fun DockButton(
             imageVector = icon,
             contentDescription = description,
             tint = NeoPalette.neon,
-            modifier = Modifier.size(28.dp)
+            modifier = Modifier.size(AppDimens.Home.dockButtonIcon)
         )
     }
 }
@@ -1217,7 +1221,7 @@ private fun InformationGhostButton(text: String, onClick: () -> Unit) {
     OutlinedButton(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        border = BorderStroke(1.dp, NeoPalette.neon),
+        border = BorderStroke(AppBorderWidths.thin, NeoPalette.neon),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = NeoPalette.neon),
         shape = AppShapes.secondaryButton()
     ) {
@@ -1230,7 +1234,7 @@ private fun InformationLinkButton(text: String, onClick: () -> Unit) {
     OutlinedButton(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        border = BorderStroke(1.dp, NeoPalette.neon.copy(alpha = 0.6f)),
+        border = BorderStroke(AppBorderWidths.thin, NeoPalette.neon.copy(alpha = AppAlphas.Home.selectedBorderAccent)),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = NeoPalette.neon),
         shape = AppShapes.secondaryButton()
     ) {

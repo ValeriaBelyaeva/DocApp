@@ -13,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.docapp.ui.theme.AppBorderWidths
+import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.ui.theme.DocTheme
 
 /**
@@ -26,19 +28,19 @@ fun DesignSystemIntegrationTest() {
             Column(
                 Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(AppDimens.DesignDemo.showcasePadding),
+                verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingMedium),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text("Design system integration", style = DMText.H1)
                 
                 // Component showcase
                 SectionCard(title = "Component test") {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.arrangeSpacingSmall)) {
                         NeonPrimaryButton("Primary button")
                         NeonSecondaryButton("Secondary button")
                         
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingSmall)) {
                             NeonIconButton { 
                                 Icon(Icons.Outlined.Star, null, tint = DMColors.Accent) 
                             }
@@ -57,29 +59,29 @@ fun DesignSystemIntegrationTest() {
                 
                 // Color showcase
                 SectionCard(title = "Color test") {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingSmall)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingSmall)) {
                             Box(
                                 Modifier
-                                    .size(40.dp)
+                                    .size(AppDimens.DesignDemo.iconPreviewSize)
                                     .background(DMColors.Bg)
-                                    .border(1.dp, DMColors.Accent, RoundedCornerShape(8.dp))
+                                    .border(AppBorderWidths.thin, DMColors.Accent, RoundedCornerShape(AppDimens.DesignDemo.cornerMd))
                             )
                             Text("Bg", style = DMText.Body)
                         }
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingSmall)) {
                             Box(
                                 Modifier
-                                    .size(40.dp)
+                                    .size(AppDimens.DesignDemo.iconPreviewSize)
                                     .background(DMColors.Surface)
-                                    .border(1.dp, DMColors.Accent, RoundedCornerShape(8.dp))
+                                    .border(AppBorderWidths.thin, DMColors.Accent, RoundedCornerShape(AppDimens.DesignDemo.cornerMd))
                             )
                             Text("Surface", style = DMText.Body)
                         }
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingSmall)) {
                             Box(
                                 Modifier
-                                    .size(40.dp)
+                                    .size(AppDimens.DesignDemo.iconPreviewSize)
                                     .background(DMColors.Accent)
                             )
                             Text("Accent", style = DMText.Body, color = Color.Black)
@@ -89,7 +91,7 @@ fun DesignSystemIntegrationTest() {
                 
                 // Typography showcase
                 SectionCard(title = "Typography test") {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingSmall)) {
                         Text("Heading H1", style = DMText.H1)
                         Text("Heading H2", style = DMText.H2)
                         Text("Heading Title", style = DMText.Title)

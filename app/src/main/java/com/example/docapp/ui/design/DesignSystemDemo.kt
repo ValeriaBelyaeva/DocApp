@@ -12,7 +12,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.docapp.ui.theme.AppBorderWidths
+import com.example.docapp.ui.theme.AppDimens
+import com.example.docapp.ui.theme.AppFontSizes
 
 @Composable
 fun DesignSystemDemo() {
@@ -22,13 +24,13 @@ fun DesignSystemDemo() {
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(AppDimens.DesignDemo.showcasePadding),
+            verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingMedium)
         ) {
             // Navigation between showcase screens
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingSmall)
             ) {
                 DemoButton("PIN", currentScreen == DemoScreen.Pin) { currentScreen = DemoScreen.Pin }
                 DemoButton("Home", currentScreen == DemoScreen.Home) { currentScreen = DemoScreen.Home }
@@ -44,7 +46,7 @@ fun DesignSystemDemo() {
                     .fillMaxSize()
                     .clip(DMShapes.lg)
                     .background(DMColors.Surface)
-                    .padding(8.dp)
+                    .padding(AppDimens.DesignDemo.showcaseSpacingSmall)
             ) {
                 when (currentScreen) {
                     DemoScreen.Pin -> PinScreenDesign()
@@ -66,12 +68,12 @@ private fun DemoButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
             .clip(DMShapes.pill)
             .background(if (isSelected) DMColors.Accent else DMColors.SurfaceSoft)
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .padding(horizontal = AppDimens.DesignDemo.chipHorizontalPadding, vertical = AppDimens.DesignDemo.chipVerticalPadding)
     ) {
         Text(
             text = text,
             color = if (isSelected) Color.Black else DMColors.TextPri,
-            fontSize = 12.sp,
+            fontSize = AppFontSizes.DesignDemo.badgeLabel,
             fontWeight = FontWeight.Medium
         )
     }

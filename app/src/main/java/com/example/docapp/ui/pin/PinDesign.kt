@@ -44,7 +44,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.docapp.R
 import com.example.docapp.core.AppLogger
 import com.example.docapp.core.ErrorHandler
@@ -52,6 +51,8 @@ import com.example.docapp.core.ServiceLocator
 import com.example.docapp.ui.theme.AppShapes
 import com.example.docapp.ui.theme.AppColors
 import com.example.docapp.ui.theme.AppDimens
+import com.example.docapp.ui.theme.AppBorderWidths
+import com.example.docapp.ui.theme.AppFontSizes
 import kotlinx.coroutines.launch
 import kotlin.UninitializedPropertyAccessException
 
@@ -89,9 +90,9 @@ private fun RoundKey(
 ) {
     Box(
         Modifier
-            .size(60.dp) // Уменьшил с 78dp до 60dp для соответствия фото
+            .size(AppDimens.Pin.keySize)
             .clip(CircleShape)
-            .border(1.8.dp, PinColors.Neon, CircleShape)
+            .border(AppBorderWidths.hero, PinColors.Neon, CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -100,12 +101,12 @@ private fun RoundKey(
                 imageVector = Icons.AutoMirrored.Outlined.Backspace,
                 contentDescription = null,
                 tint = PinColors.Neon,
-                modifier = Modifier.size(20.dp) // Уменьшил иконку пропорционально
+                modifier = Modifier.size(AppDimens.Pin.keyIconSize)
             )
             !label.isNullOrEmpty() -> Text(
                 text = label,
                 color = PinColors.Neon,
-                fontSize = 24.sp, // Уменьшил с 28sp до 24sp
+                fontSize = AppFontSizes.Pin.keypadTitle, // formerly 28sp, tuned to design spec
                 fontWeight = FontWeight.Medium
             )
             else -> {} // пустой круг (как на макете)
@@ -120,13 +121,13 @@ private fun LogoBlock() {
             painter = painterResource(id = R.drawable.ic_dm_logo),
             contentDescription = null,
             tint = PinColors.Neon, // логотип в акценте
-            modifier = Modifier.size(56.dp)
+            modifier = Modifier.size(AppDimens.Pin.avatarSize)
         )
         Spacer(Modifier.height(AppDimens.spaceSm))
         Text(
             text = "DocManager",
             color = PinColors.Neon,
-            fontSize = 22.sp,
+            fontSize = AppFontSizes.Pin.keypadSubtitle,
             fontWeight = FontWeight.SemiBold
         )
     }
@@ -137,7 +138,7 @@ private fun PinCapsule(isVisible: Boolean = false, actualPin: String = "", onVis
     Row(
         Modifier
             .fillMaxWidth()
-            .height(56.dp) // Фиксированная высота капсулы
+            .height(AppDimens.Pin.pinButtonHeight)
             .clip(PinShapes.Capsule)
             .background(PinColors.Layer)
             .padding(
@@ -150,7 +151,7 @@ private fun PinCapsule(isVisible: Boolean = false, actualPin: String = "", onVis
             imageVector = Icons.Outlined.VpnKey,
             contentDescription = null,
             tint = PinColors.Neon,
-            modifier = Modifier.size(20.dp) // Фиксированный размер иконки
+            modifier = Modifier.size(AppDimens.Pin.keyIconSize)
         )
         Spacer(Modifier.width(AppDimens.spaceLg))
         Text(
@@ -176,7 +177,7 @@ private fun PinCapsule(isVisible: Boolean = false, actualPin: String = "", onVis
                 }
             },
             color = PinColors.Neon,
-            fontSize = 22.sp,
+            fontSize = AppFontSizes.Pin.keypadSubtitle,
             fontWeight = FontWeight.Medium, // Фиксированный стиль текста
             modifier = Modifier.weight(1f)
         )
@@ -185,7 +186,7 @@ private fun PinCapsule(isVisible: Boolean = false, actualPin: String = "", onVis
             contentDescription = if (isVisible) "Hide PIN" else "Show PIN",
             tint = PinColors.Neon,
             modifier = Modifier
-                .size(20.dp) // Фиксированный размер иконки глазика
+                .size(AppDimens.Pin.keyIconSize)
                 .clickable(onClick = onVisibilityToggle)
         )
     }
@@ -303,7 +304,7 @@ fun PinScreenNew(onSuccess: () -> Unit) {
                     painter = painterResource(id = R.drawable.ic_dm_logo),
                     contentDescription = null,
                     tint = PinColors.Neon,
-                    modifier = Modifier.size(56.dp)
+                    modifier = Modifier.size(AppDimens.Pin.avatarSize)
                 )
                 Spacer(Modifier.height(AppDimens.spaceSm))
                 Text(
@@ -314,7 +315,7 @@ fun PinScreenNew(onSuccess: () -> Unit) {
                         PinStageNew.Loading -> "DocManager"
                     },
                     color = PinColors.Neon,
-                    fontSize = 22.sp,
+                    fontSize = AppFontSizes.Pin.keypadSubtitle,
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -334,7 +335,7 @@ fun PinScreenNew(onSuccess: () -> Unit) {
                 Text(
                     text = errorText,
                     color = MaterialTheme.colorScheme.error,
-                    fontSize = 16.sp,
+                    fontSize = AppFontSizes.Pin.keypadLabel,
                     fontWeight = FontWeight.Medium
                 )
             }

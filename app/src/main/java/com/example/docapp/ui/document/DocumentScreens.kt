@@ -72,6 +72,8 @@ import com.example.docapp.domain.DocumentRepository
 import com.example.docapp.domain.Template
 import com.example.docapp.domain.TemplateField
 import com.example.docapp.domain.usecases.UseCases
+import com.example.docapp.ui.theme.AppAlphas
+import com.example.docapp.ui.theme.AppBorderWidths
 import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.ui.theme.AppLayout
 import com.example.docapp.ui.theme.AppShapes
@@ -821,7 +823,7 @@ fun DocumentEditScreen(
                 TextButton(
                     onClick = { },
                     enabled = false,
-                    colors = ButtonDefaults.textButtonColors(contentColor = EditorPalette.neon.copy(alpha = 0.4f))
+                    colors = ButtonDefaults.textButtonColors(contentColor = EditorPalette.neon.copy(alpha = AppAlphas.Document.outlineDisabledContent))
                 ) { Text("Cancel") }
             }
         )
@@ -892,7 +894,7 @@ private fun NeonCircleButton(
     IconButton(
         onClick = onClick,
         modifier = Modifier
-            .size(40.dp)
+            .size(AppDimens.Document.toolbarActionIcon)
             .clip(EditorShapes.icon)
             .background(containerColor)
     ) {
@@ -900,7 +902,7 @@ private fun NeonCircleButton(
             imageVector = icon,
             contentDescription = description,
             tint = iconColor,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(AppDimens.Document.metadataIcon)
         )
     }
 }
@@ -997,8 +999,9 @@ private fun EditorFieldInput(
                     description = "Remove field",
                     onClick = onRemove,
                     background = EditorPalette.controlBackground,
-                    tint = EditorPalette.neon.copy(alpha = 0.8f),
-                    size = 36.dp
+                    tint = EditorPalette.neon.copy(alpha = AppAlphas.Document.fieldActionTint),
+                    size = AppDimens.Document.fieldActionIcon,
+                    iconSize = AppDimens.Document.actionChipIcon
                 )
             }
         }
@@ -1089,7 +1092,7 @@ private fun EditorPhotoCard(
             contentDescription = photo.displayName ?: "Photo",
             modifier = Modifier
                 .fillMaxWidth()
-                .height(220.dp)
+                .height(AppDimens.Document.previewCardHeight)
                 .clip(EditorShapes.row)
                 .background(EditorPalette.iconBackground)
                 .clickable(onClick = onOpen),
@@ -1126,7 +1129,7 @@ private fun EditorPdfCard(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
-                    .size(44.dp)
+                    .size(AppDimens.Document.actionChip)
                     .clip(EditorShapes.badge)
                     .background(EditorPalette.badgeBackground),
                 contentAlignment = Alignment.Center
@@ -1135,7 +1138,7 @@ private fun EditorPdfCard(
                     imageVector = Icons.Default.PictureAsPdf,
                     contentDescription = null,
                     tint = EditorPalette.neon,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(AppDimens.Document.actionChipIcon)
                 )
             }
             Spacer(Modifier.width(AppDimens.spaceLg))
@@ -1190,7 +1193,8 @@ private fun EditorIconButton(
     onClick: () -> Unit,
     background: Color = EditorPalette.controlBackground,
     tint: Color = EditorPalette.neon,
-    size: androidx.compose.ui.unit.Dp = 40.dp
+    size: androidx.compose.ui.unit.Dp = AppDimens.Document.toolbarActionIcon,
+    iconSize: androidx.compose.ui.unit.Dp = AppDimens.Document.metadataIcon
 ) {
     IconButton(
         onClick = onClick,
@@ -1203,7 +1207,7 @@ private fun EditorIconButton(
             imageVector = icon,
             contentDescription = description,
             tint = tint,
-            modifier = Modifier.size(size * 0.45f)
+            modifier = Modifier.size(iconSize)
         )
     }
 }
@@ -1227,7 +1231,7 @@ private fun ViewFieldCard(
     ) {
         Box(
             modifier = Modifier
-                .size(44.dp)
+                .size(AppDimens.Document.actionChip)
                 .clip(CircleShape)
                 .background(EditorPalette.controlBackground),
             contentAlignment = Alignment.Center
@@ -1236,7 +1240,7 @@ private fun ViewFieldCard(
                 imageVector = Icons.Default.Description,
                 contentDescription = null,
                 tint = EditorPalette.neon,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(AppDimens.Document.actionChipIcon)
             )
         }
 
@@ -1274,7 +1278,7 @@ private fun AttachmentChip(
     Surface(
         shape = shape,
         color = EditorPalette.item,
-        border = BorderStroke(1.dp, EditorPalette.neon.copy(alpha = 0.3f)),
+        border = BorderStroke(AppBorderWidths.thin, EditorPalette.neon.copy(alpha = AppAlphas.Document.infoBorder)),
         modifier = Modifier
             .clip(shape)
             .clickable(onClick = onOpen)
@@ -1289,7 +1293,7 @@ private fun AttachmentChip(
         ) {
             Box(
                 modifier = Modifier
-                    .size(44.dp, 52.dp)
+                    .size(AppDimens.Document.actionChip, AppDimens.Document.actionChipTallHeight)
                     .clip(CircleShape)
                     .background(EditorPalette.badgeBackground),
                 contentAlignment = Alignment.Center
@@ -1298,7 +1302,7 @@ private fun AttachmentChip(
                     imageVector = Icons.Default.PictureAsPdf,
                     contentDescription = null,
                     tint = EditorPalette.neon,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(AppDimens.Document.actionChipIcon)
                 )
             }
             Text(
@@ -1321,15 +1325,15 @@ private fun NeonOutlineButton(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier
-            .height(54.dp),
+            .height(AppDimens.Document.editorToolbarHeight),
         shape = AppShapes.secondaryButton(),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
             contentColor = AppColors.iconAccent(),
             disabledContainerColor = Color.Transparent,
-            disabledContentColor = AppColors.iconAccent().copy(alpha = 0.4f)
+            disabledContentColor = AppColors.iconAccent().copy(alpha = AppAlphas.Document.outlineDisabledContent)
         ),
-        border = BorderStroke(1.6.dp, AppColors.iconAccent())
+        border = BorderStroke(AppBorderWidths.medium, AppColors.iconAccent())
     ) {
         Text(text)
     }
@@ -1346,13 +1350,13 @@ private fun NeonPrimaryButton(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier
-            .height(58.dp),
+            .height(AppDimens.Document.editorBottomBarHeight),
         shape = AppShapes.primaryButton(),
         colors = ButtonDefaults.buttonColors(
             containerColor = AppColors.iconAccent(),
             contentColor = AppColors.background(),
-            disabledContainerColor = AppColors.iconAccent().copy(alpha = 0.3f),
-            disabledContentColor = AppColors.background().copy(alpha = 0.5f)
+            disabledContainerColor = AppColors.iconAccent().copy(alpha = AppAlphas.Document.primaryDisabledContainer),
+            disabledContentColor = AppColors.background().copy(alpha = AppAlphas.Document.primaryDisabledContent)
         )
     ) {
         Text(text)

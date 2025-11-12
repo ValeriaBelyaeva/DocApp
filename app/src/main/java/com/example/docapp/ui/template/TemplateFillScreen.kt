@@ -50,6 +50,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.docapp.core.DataValidator
 import com.example.docapp.core.ErrorHandler
@@ -61,6 +62,8 @@ import com.example.docapp.ui.theme.AppRadii
 import com.example.docapp.ui.theme.AppColors
 import kotlinx.coroutines.launch
 import com.example.docapp.ui.theme.AppLayout
+import com.example.docapp.ui.theme.AppAlphas
+import com.example.docapp.ui.theme.AppBorderWidths
 import com.example.docapp.ui.theme.AppDimens
 
 @Composable
@@ -375,7 +378,7 @@ private fun AttachmentGroup(
         shape = AppShapes.panelMedium(),
         color = MaterialTheme.colorScheme.surfaceVariant,
         tonalElevation = 0.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+        border = BorderStroke(AppBorderWidths.thin, MaterialTheme.colorScheme.outline.copy(alpha = AppAlphas.TemplateFill.inputOutline))
     ) {
         Column(
             modifier = Modifier
@@ -397,7 +400,7 @@ private fun AttachmentGroup(
                     shape = AppShapes.listItem(),
                     color = MaterialTheme.colorScheme.surface,
                     tonalElevation = 0.dp,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.16f))
+                    border = BorderStroke(AppBorderWidths.thin, MaterialTheme.colorScheme.outline.copy(alpha = AppAlphas.TemplateFill.optionOutline))
                 ) {
                     Row(
                         modifier = Modifier
@@ -411,7 +414,7 @@ private fun AttachmentGroup(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(AppDimens.TemplateFill.optionIcon)
                                 .clip(AppShapes.badge())
                                 .background(badgeColor),
                             contentAlignment = Alignment.Center
@@ -447,10 +450,10 @@ private fun SecondaryButton(
 ) {
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier.height(52.dp),
+        modifier = modifier.height(AppDimens.TemplateFill.buttonHeight),
         enabled = enabled,
         shape = AppShapes.secondaryButton(),
-        border = BorderStroke(1.dp, AppColors.iconAccent()),
+        border = BorderStroke(AppBorderWidths.thin, AppColors.iconAccent()),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = AppColors.iconAccent())
     ) {
         Text(text)
@@ -466,14 +469,14 @@ private fun PrimaryButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.height(52.dp),
+        modifier = modifier.height(AppDimens.TemplateFill.buttonHeight),
         enabled = enabled,
         shape = AppShapes.primaryButton(),
         colors = ButtonDefaults.buttonColors(
             containerColor = AppColors.iconAccent(),
-            contentColor = AppColors.background().copy(alpha = 0.95f),
-            disabledContainerColor = AppColors.iconAccent().copy(alpha = 0.3f),
-            disabledContentColor = AppColors.background().copy(alpha = 0.5f)
+            contentColor = AppColors.background().copy(alpha = AppAlphas.TemplateFill.primaryContent),
+            disabledContainerColor = AppColors.iconAccent().copy(alpha = AppAlphas.Document.primaryDisabledContainer),
+            disabledContentColor = AppColors.background().copy(alpha = AppAlphas.Document.primaryDisabledContent)
         )
     ) {
         Text(text)

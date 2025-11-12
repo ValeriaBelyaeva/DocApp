@@ -38,6 +38,7 @@ object AppDimens {
     val contentPaddingVertical: Dp = 16.dp
     val contentPaddingHorizontal: Dp = 16.dp
     val cardPadding: Dp = 12.dp
+    val cardPaddingLarge: Dp = 24.dp
 
     // Spacing scale
     val spaceXxs: Dp = 4.dp
@@ -67,12 +68,298 @@ object AppDimens {
     val bottomButtonsVerticalPadding: Dp = 20.dp
     val bottomButtonsBetween: Dp = 12.dp
     val dockBottomPadding: Dp = 36.dp
+
+    
+    object Home {
+        /** Size of the expand/collapse icon button in folder cards */
+        val folderToggleIconButton: Dp = 48.dp
+        val folderToggleIcon: Dp = 32.dp
+
+        /** Size of the decorative icon inside non-collapsible folder cards */
+        val folderGlyphIcon: Dp = 32.dp
+
+        /** Size of the leading document icon inside the history card */
+        val documentLeadingIcon: Dp = 36.dp
+
+        /** Size of contextual action icons (eye toggle, pin, menu) */
+        val documentActionIconButton: Dp = 40.dp
+
+        /** Size of the floating dock circular button */
+        val dockButton: Dp = 56.dp
+
+        /** Size of the icon inside the floating dock button */
+        val dockButtonIcon: Dp = 28.dp
+
+        /** Width of the selection border that highlights chosen documents */
+        val selectionBorderWidth: Dp = 1.5.dp
+    }
+
+    object Document {
+        /** Size of toolbar action icons (share, edit etc.) on document view */
+        val toolbarActionIcon: Dp = 40.dp
+
+        /** Size of metadata icons that accompany document details */
+        val metadataIcon: Dp = 20.dp
+
+        /** Size of contextual icon buttons inside editable rows */
+        val fieldActionIcon: Dp = 36.dp
+
+        /** Height of preview blocks (photo/PDF) on the document screen */
+        val previewCardHeight: Dp = 220.dp
+
+        /** Size of action chips in document edit mode */
+        val actionChip: Dp = 44.dp
+
+        /** Height of the elongated action chips in document edit mode */
+        val actionChipTallHeight: Dp = 52.dp
+
+        /** Size of icons inside the document action chips */
+        val actionChipIcon: Dp = 22.dp
+
+        /** Height of the document editor toolbar */
+        val editorToolbarHeight: Dp = 54.dp
+
+        /** Height of the document editor bottom bar */
+        val editorBottomBarHeight: Dp = 58.dp
+    }
+
+    /**
+     * Document edit attachments section dimensions
+     * (если нужно менять превью вложений или список)
+     */
+    object Attachments {
+        /** Maximum height for attachments list inside document editor */
+        val listMaxHeight: Dp = 300.dp
+    }
+
+    /**
+     * Template fill screen dimensions
+     * (иконки выбора шаблонов и высота кнопок)
+     */
+    object TemplateFill {
+        /** Size of the icon used inside template add buttons */
+        val optionIcon: Dp = 40.dp
+
+        /** Height of the large action buttons on the template fill screen */
+        val buttonHeight: Dp = 52.dp
+    }
+
+    /**
+     * Design showcase/demo screens (used for design QA)
+     */
+    object DesignDemo {
+        val cornerXl: Dp = 28.dp
+        val cornerLg: Dp = 22.dp
+        val cornerMd: Dp = 16.dp
+        val pillCorner: Dp = 50.dp
+
+        val iconPreviewSize: Dp = 44.dp
+        val iconBorderWidth: Dp = 1.2.dp
+        val fullButtonHeight: Dp = 56.dp
+        val chipHorizontalPadding: Dp = 14.dp
+        val chipVerticalPadding: Dp = 12.dp
+        val heroIconSize: Dp = 56.dp
+        val heroBlockSpacing: Dp = 32.dp
+        val heroPaddingHorizontal: Dp = 24.dp
+        val heroPaddingVertical: Dp = 14.dp
+        val heroCircleSize: Dp = 76.dp
+        val heroCircleBorder: Dp = 1.5.dp
+        val heroPhotoHeight: Dp = 230.dp
+
+        val showcasePadding: Dp = 16.dp
+        val showcaseSpacingLarge: Dp = 18.dp
+        val showcaseSpacingMedium: Dp = 14.dp
+        val showcaseSpacingSmall: Dp = 10.dp
+
+        val detailSpacingXs: Dp = 2.dp
+        val detailSpacingSm: Dp = 4.dp
+        val detailSpacingMd: Dp = 6.dp
+
+        val badgeSizeSmall: Dp = 34.dp
+        val badgeSizeMedium: Dp = 42.dp
+        val badgeSizeLarge: Dp = 72.dp
+        val badgeBorderSmall: Dp = 1.dp
+        val badgeBorderLarge: Dp = 2.dp
+
+        val cardPadding: Dp = 14.dp
+        val cardPaddingLarge: Dp = 24.dp
+        val listPaddingBottom: Dp = 100.dp
+        val arrangeSpacingLarge: Dp = 28.dp
+        val arrangeSpacingMedium: Dp = 20.dp
+        val arrangeSpacingSmall: Dp = 12.dp
+        val formSpacingLarge: Dp = 26.dp
+        val formSpacingHuge: Dp = 40.dp
+        val rowSpacingLarge: Dp = 26.dp
+        val rowSpacingMedium: Dp = 16.dp
+        val rowSpacingSmall: Dp = 8.dp
+
+        val chipHeight: Dp = 54.dp
+        val chipBorder: Dp = 1.2.dp
+        val chipIconSize: Dp = 36.dp
+
+        val railPadding: Dp = 16.dp
+        val railSpacing: Dp = 12.dp
+        val keypadSpacingLarge: Dp = 18.dp
+        val keypadCircleSize: Dp = 76.dp
+        val keypadPaddingHorizontal: Dp = 20.dp
+        val keypadRowSpacing: Dp = 26.dp
+        val bottomBarHeight: Dp = 66.dp
+    }
+
+    object Pin {
+        /** Размер цифр на клавиатуре можно править через AppFontSizes.Pin */
+        val keySize: Dp = 60.dp
+        val keyIconSize: Dp = 20.dp
+        val avatarSize: Dp = 56.dp
+        val pinButtonSize: Dp = 56.dp
+        val pinButtonHeight: Dp = 56.dp
+        /** Width reserved for legacy clear button placeholder in keypad row */
+        val legacyClearButtonWidth: Dp = 80.dp
+    }
+
+    /**
+     * Template selector screen dimensions
+     */
+    object TemplateSelector {
+        val tileIconSize: Dp = 44.dp
+        val minBottomSheetHeight: Dp = 180.dp
+    }
+
+    /**
+     * Widgets / reusable components
+     */
+    object Widgets {
+        val compactButtonHeight: Dp = 52.dp
+    }
+
+    /**
+     * Glass card styling
+     */
+    object Glass {
+        val shadowHigh: Dp = 20.dp
+        val shadowLow: Dp = 6.dp
+    }
+
+    /**
+     * Progress indicators
+     */
+    object Progress {
+        val indicatorSmall: Dp = 16.dp
+    }
+
+    /**
+     * Elevation presets
+     */
+    object Elevation {
+        val tonalLow: Dp = 1.dp
+    }
+}
+
+object AppBorderWidths {
+    /** Default thin border used for cards, chips and badges */
+    val thin: Dp = 1.dp
+
+    /** Medium border used for emphasis on document editor callouts */
+    val medium: Dp = 1.6.dp
+
+    /** Accent border used in design preview components */
+    val accent: Dp = 1.2.dp
+
+    /** Hero border weight for highlighted elements */
+    val hero: Dp = 1.5.dp
+
+    /** Strong border for bold emphasis */
+    val strong: Dp = 2.dp
+
+    /** Stroke width for progress indicators */
+    val progress: Dp = 2.dp
+}
+
+object AppAlphas {
+    object Home {
+        /** Opacity applied to selected document row background */
+        const val selectedRowBackground: Float = 0.9f
+
+        /** Opacity applied to selected document border accent */
+        const val selectedBorderAccent: Float = 0.6f
+    }
+
+    object Document {
+        /** Soft neon border for secondary info blocks */
+        const val infoBorder: Float = 0.3f
+
+        /** Tint for removable field icons */
+        const val fieldActionTint: Float = 0.8f
+
+        /** Disabled state opacity for outline buttons */
+        const val outlineDisabledContent: Float = 0.4f
+
+        /** Disabled state background opacity for primary buttons */
+        const val primaryDisabledContainer: Float = 0.3f
+
+        /** Disabled state content opacity for primary buttons */
+        const val primaryDisabledContent: Float = 0.5f
+    }
+
+    object TemplateFill {
+        /** Outline border around input cells */
+        const val inputOutline: Float = 0.2f
+
+        /** Outline border for list items inside template options */
+        const val optionOutline: Float = 0.16f
+
+        /** Primary button content alpha */
+        const val primaryContent: Float = 0.95f
+    }
+}
+
+object AppDurations {
+    /** Timeout before pin screen protects the app after inactivity (milliseconds) */
+    const val inactivityTimeoutMs: Long = 30_000L
+
+    /** Delay before clearing sensitive clipboard data (milliseconds) */
+    const val clipboardAutoClearMs: Long = 30_000L
+
+    /** Короткая анимация для быстрых откликов интерфейса */
+    const val shortAnimMs: Int = 150
+
+    /** Средняя анимация (переключения состояний) */
+    const val mediumAnimMs: Int = 300
+
+    /** Длинная анимация (развороты карточек/панелей) */
+    const val longAnimMs: Int = 600
+}
+
+object AppFontSizes {
+    object Pin {
+        /** Title displayed above keypad instructions on pin screen */
+        val keypadTitle = 24.sp
+        /** Subtitle for keypad instructions on pin screen */
+        val keypadSubtitle = 22.sp
+        /** Default label size for keypad buttons */
+        val keypadLabel = 16.sp
+    }
+
+    object DesignDemo {
+        /** Hero card title within design showcase */
+        val heroTitle = 24.sp
+        /** Secondary copy used across design showcase blocks */
+        val heroSubtitle = 16.sp
+        /** Label inside showcase badges and filter chips */
+        val badgeLabel = 12.sp
+        /** Brand logotype caption in design hero block */
+        val brandTitle = 22.sp
+        /** Extra large label for hero badges and highlights */
+        val heroBadgeLabel = 28.sp
+    }
 }
 
 object AppRadii {
     val radiusLg: Dp = 24.dp
     val radiusMd: Dp = 20.dp
     val radiusSm: Dp = 16.dp
+    val radiusXs: Dp = 12.dp
+    val radiusXl: Dp = 48.dp
     val radiusPill: Dp = 9999.dp
 
     val cardCorner: Dp = radiusMd
@@ -262,12 +549,6 @@ object AppShapes {
 
     @Composable
     fun badge(): Shape = tokens().badge
-}
-
-object AppDurations {
-    const val shortAnimMs: Int = 150
-    const val mediumAnimMs: Int = 300
-    const val longAnimMs: Int = 600
 }
 
 /**

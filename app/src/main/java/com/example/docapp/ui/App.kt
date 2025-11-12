@@ -4,6 +4,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -21,6 +22,7 @@ import com.example.docapp.ui.theme.DocTheme
 import com.example.docapp.core.AppLogger
 import com.example.docapp.ui.navigation.AppDestination
 import com.example.docapp.ui.navigation.rememberAppNavigator
+import com.example.docapp.ui.theme.AppDurations
 import kotlinx.coroutines.delay
 
 @Composable
@@ -36,7 +38,10 @@ fun App() {
         val nav = rememberNavController()
         val navigator = rememberAppNavigator(nav)
         var lastInteraction by remember { mutableStateOf(System.currentTimeMillis()) }
-        val inactivityTimeoutMs = 30_000L
+        val inactivityTimeoutMs = AppDurations.inactivityTimeoutMs
+        val updateInteraction = remember {
+            { lastInteraction = System.currentTimeMillis() }
+        }
         LaunchedEffect(Unit) {
             while (true) {
                 delay(1_000L)
@@ -51,17 +56,23 @@ fun App() {
         }
 
         AppLogger.log("App", "Navigation controller created")
+        val interactionModifier = Modifier
+            .pointerInteropFilter {
+                updateInteraction()
+                false
+            }
+            .onKeyEvent {
+                updateInteraction()
+                false
+            }
         NavHost(
             navController = nav,
             startDestination = AppDestination.Pin.route,
-            modifier = Modifier.pointerInteropFilter {
-                lastInteraction = System.currentTimeMillis()
-                false
-            }
+            modifier = interactionModifier
         ) {
             composable(AppDestination.Pin.route) {
                 PinScreenNew(onSuccess = {
-                    lastInteraction = System.currentTimeMillis()
+                    updateInteraction()
                     navigator.openHome(popUpTo = AppDestination.Pin, inclusive = true)
                 })
             }

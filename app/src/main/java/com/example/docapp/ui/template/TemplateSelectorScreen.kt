@@ -47,6 +47,7 @@ import com.example.docapp.ui.theme.AppShapes
 import com.example.docapp.ui.theme.SurfaceTokens
 import com.example.docapp.ui.theme.ThemeConfig
 import com.example.docapp.ui.theme.AppColors
+import com.example.docapp.ui.theme.AppAlphas
 import com.example.docapp.ui.theme.AppLayout
 import com.example.docapp.ui.theme.AppDimens
 import kotlinx.coroutines.launch
@@ -217,7 +218,7 @@ private fun TemplateOptionCard(
     onClick: () -> Unit
 ) {
     GlassCard(
-        modifier = modifier.heightIn(min = 180.dp),
+        modifier = modifier.heightIn(min = AppDimens.TemplateSelector.minBottomSheetHeight),
         onClick = onClick,
         shape = AppShapes.panelMedium()
     ) {
@@ -235,7 +236,7 @@ private fun TemplateOptionCard(
                 contentDescription = null,
                 tint = AppColors.iconAccent(),
                 modifier = Modifier
-                    .size(44.dp)
+                    .size(AppDimens.TemplateSelector.tileIconSize)
                     .padding(AppDimens.spaceXs)
             )
             Spacer(Modifier.height(AppDimens.listSpacing))
@@ -407,7 +408,7 @@ private fun TemplateDialog(
                     IconButton(
                         onClick = onAddField,
                         modifier = Modifier
-                            .size(44.dp)
+                            .size(AppDimens.TemplateSelector.tileIconSize)
                             .clip(AppShapes.iconButton())
                     ) {
                         Icon(
@@ -461,15 +462,15 @@ private fun TemplateDialog(
                 },
                 confirmButton = {
                         Button(
-                onClick = onConfirm,
-                enabled = confirmEnabled,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.iconAccent(),
-                    contentColor = AppColors.background(),
-                    disabledContainerColor = AppColors.iconAccent().copy(alpha = 0.3f),
-                    disabledContentColor = AppColors.background().copy(alpha = 0.5f)
-                ),
-                shape = AppShapes.panelMedium()
+                            onClick = onConfirm,
+                            enabled = confirmEnabled,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = AppColors.iconAccent(),
+                                contentColor = AppColors.background(),
+                                disabledContainerColor = AppColors.iconAccent().copy(alpha = AppAlphas.Document.primaryDisabledContainer),
+                                disabledContentColor = AppColors.background().copy(alpha = AppAlphas.Document.primaryDisabledContent)
+                            ),
+                            shape = AppShapes.panelMedium()
                         ) {
                             Text("Create template")
                         }

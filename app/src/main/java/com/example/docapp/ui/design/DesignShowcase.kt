@@ -12,7 +12,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.docapp.ui.theme.AppBorderWidths
+import com.example.docapp.ui.theme.AppDimens
+import com.example.docapp.ui.theme.AppFontSizes
 import com.example.docapp.ui.pin.PinScreenDesign
 
 @Composable
@@ -23,13 +25,13 @@ fun DesignShowcase() {
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(AppDimens.DesignDemo.showcasePadding),
+            verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingMedium)
         ) {
             // Simple navigation without extra headers
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingSmall)
             ) {
                 ShowcaseButton("PIN", currentScreen == ShowcaseScreen.Pin) { 
                     currentScreen = ShowcaseScreen.Pin 
@@ -52,9 +54,9 @@ fun DesignShowcase() {
             Box(
                 Modifier
                     .fillMaxSize()
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(AppDimens.DesignDemo.cornerMd))
                     .background(Color(0xFF161D24))
-                    .padding(8.dp)
+                    .padding(AppDimens.DesignDemo.showcaseSpacingSmall)
             ) {
                 when (currentScreen) {
                     ShowcaseScreen.Pin -> PinScreenDesign()
@@ -72,15 +74,15 @@ fun DesignShowcase() {
 private fun ShowcaseButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
     Box(
         Modifier
-            .clip(RoundedCornerShape(100))
+            .clip(RoundedCornerShape(AppDimens.DesignDemo.cornerMd))
             .background(if (isSelected) Color(0xFFC6FF00) else Color(0xFF1E2630))
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .padding(horizontal = AppDimens.DesignDemo.chipHorizontalPadding, vertical = AppDimens.DesignDemo.chipVerticalPadding)
     ) {
         Text(
             text = text,
             color = if (isSelected) Color.Black else Color(0xFFE9EFF6),
-            fontSize = 12.sp,
+            fontSize = AppFontSizes.DesignDemo.badgeLabel,
             fontWeight = FontWeight.Medium
         )
     }

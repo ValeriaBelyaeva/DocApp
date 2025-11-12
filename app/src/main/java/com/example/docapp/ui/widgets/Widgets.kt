@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.docapp.ui.theme.AppShapes
 import com.example.docapp.ui.theme.AppDimens
+import com.example.docapp.ui.theme.AppDurations
 
 @Composable
 fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -24,7 +25,7 @@ fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .height(52.dp),
+            .height(AppDimens.Widgets.compactButtonHeight),
         shape = AppShapes.primaryButton()
     ) {
         Text(text)
@@ -49,7 +50,7 @@ fun FieldTile(
 ) {
     Surface(
         shape = AppShapes.listItem(),
-        tonalElevation = 1.dp,
+        tonalElevation = AppDimens.Elevation.tonalLow,
         modifier = modifier.fillMaxWidth()
     ) {
         Row(
@@ -117,5 +118,5 @@ fun copyToClipboard(ctx: Context, label: String, text: String) {
     
     // Cancel previous cleanup tasks to avoid stacking them
     handler.removeCallbacks(runnable)
-    handler.postDelayed(runnable, 30_000) // 30 seconds
+    handler.postDelayed(runnable, AppDurations.clipboardAutoClearMs)
 }

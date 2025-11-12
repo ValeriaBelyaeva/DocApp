@@ -11,7 +11,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.docapp.ui.theme.AppDimens
+import com.example.docapp.ui.theme.AppFontSizes
 
 @Composable
 fun PinDesignDemo() {
@@ -19,32 +20,32 @@ fun PinDesignDemo() {
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(AppDimens.DesignDemo.showcasePadding),
+            verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingMedium),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = "PIN Screen Design Demo",
                 color = PinColors.TextPri,
-                fontSize = 24.sp,
+                fontSize = AppFontSizes.DesignDemo.heroTitle,
                 fontWeight = FontWeight.SemiBold
             )
             
             Text(
                 text = "Exact layout replica",
                 color = PinColors.Neon,
-                fontSize = 16.sp
+                fontSize = AppFontSizes.DesignDemo.heroSubtitle
             )
             
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(AppDimens.DesignDemo.showcaseSpacingMedium))
             
             // Отображение PIN экрана
             Box(
                 Modifier
                     .fillMaxSize()
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(AppDimens.DesignDemo.cornerMd))
                     .background(PinColors.Layer)
-                    .padding(8.dp)
+                    .padding(AppDimens.DesignDemo.showcaseSpacingSmall)
             ) {
                 PinScreenDesign()
             }

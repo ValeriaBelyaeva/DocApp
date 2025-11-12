@@ -146,7 +146,7 @@ fun AttachmentManager(
         } else {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(AppDimens.spaceXs),
-                modifier = Modifier.heightIn(max = 300.dp)
+                modifier = Modifier.heightIn(max = AppDimens.Attachments.listMaxHeight)
             ) {
                 items(attachments) { attachment ->
                     AttachmentItem(

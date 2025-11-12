@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.core.AppLogger
 import com.example.docapp.ui.theme.GlassCard
 import java.io.File
@@ -36,12 +37,12 @@ fun LogViewerScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(AppDimens.DesignDemo.showcasePadding)
     ) {
         Text(
             text = "Application logs",
             style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(bottom = AppDimens.DesignDemo.showcaseSpacingMedium)
         )
         
         if (isLoading) {
@@ -61,7 +62,7 @@ fun LogViewerScreen() {
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(8.dp)
+                        .padding(AppDimens.DesignDemo.showcaseSpacingSmall)
                         .verticalScroll(rememberScrollState())
                 )
             }

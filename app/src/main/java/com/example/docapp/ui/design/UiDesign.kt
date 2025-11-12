@@ -19,7 +19,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.docapp.ui.theme.AppBorderWidths
+import com.example.docapp.ui.theme.AppDimens
+import com.example.docapp.ui.theme.AppFontSizes
 
 /* -----------------------------------------------------------
    ПАЛИТРА / ФОРМЫ / ТЕКСТ
@@ -38,10 +40,10 @@ object DMColors {
 }
 
 object DMShapes {
-    val xl = RoundedCornerShape(28.dp)
-    val lg = RoundedCornerShape(22.dp)
-    val md = RoundedCornerShape(16.dp)
-    val pill = RoundedCornerShape(50)
+    val xl = RoundedCornerShape(DemoDim.cornerXl)
+    val lg = RoundedCornerShape(DemoDim.cornerLg)
+    val md = RoundedCornerShape(DemoDim.cornerMd)
+    val pill = RoundedCornerShape(DemoDim.pillCorner)
 }
 
 object DMText {
@@ -52,6 +54,9 @@ object DMText {
     val Hint = Typography().bodySmall.copy(color = DMColors.TextSec)
 }
 
+private val DemoDim = AppDimens.DesignDemo
+private val DemoBorder = AppBorderWidths
+
 /* -----------------------------------------------------------
    БАЗОВЫЕ ВИЗУАЛЬНЫЕ КОМПОНЕНТЫ
 ----------------------------------------------------------- */
@@ -60,9 +65,9 @@ object DMText {
 fun NeonIconButton(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Box(
         modifier
-            .size(44.dp)
+            .size(DemoDim.iconPreviewSize)
             .clip(CircleShape)
-            .border(1.2.dp, DMColors.Accent, CircleShape),
+            .border(DemoDim.iconBorderWidth, DMColors.Accent, CircleShape),
         contentAlignment = Alignment.Center
     ) { content() }
 }
@@ -72,12 +77,12 @@ fun NeonPrimaryButton(text: String, modifier: Modifier = Modifier) {
     Box(
         modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(DemoDim.fullButtonHeight)
             .clip(DMShapes.pill)
             .background(DMColors.Accent),
         contentAlignment = Alignment.Center
     ) {
-        Text(text, color = Color.Black, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+        Text(text, color = Color.Black, fontWeight = FontWeight.SemiBold, fontSize = AppFontSizes.DesignDemo.heroSubtitle)
     }
 }
 
@@ -86,12 +91,12 @@ fun NeonSecondaryButton(text: String, modifier: Modifier = Modifier) {
     Box(
         modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(DemoDim.fullButtonHeight)
             .clip(DMShapes.pill)
-            .border(1.2.dp, DMColors.Accent, DMShapes.pill),
+            .border(DemoBorder.accent, DMColors.Accent, DMShapes.pill),
         contentAlignment = Alignment.Center
     ) {
-        Text(text, color = DMColors.Accent, fontWeight = FontWeight.Medium, fontSize = 16.sp)
+        Text(text, color = DMColors.Accent, fontWeight = FontWeight.Medium, fontSize = AppFontSizes.DesignDemo.heroSubtitle)
     }
 }
 
@@ -106,7 +111,7 @@ fun SectionCard(
             .fillMaxWidth()
             .clip(DMShapes.xl)
             .background(DMColors.Surface)
-            .padding(16.dp)
+            .padding(DemoDim.showcasePadding)
     ) {
         Row(
             Modifier.fillMaxWidth(),
@@ -115,12 +120,12 @@ fun SectionCard(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.ExpandLess, null, tint = DMColors.Accent)
-                Spacer(Modifier.width(10.dp))
+                Spacer(Modifier.width(DemoDim.showcaseSpacingSmall))
                 Text(title, style = DMText.H2)
             }
             if (trailing != null) Row { trailing() }
         }
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(DemoDim.showcaseSpacingSmall))
         content()
     }
 }
@@ -132,27 +137,27 @@ fun DocRow(title: String, subtitle: String, trailing: @Composable () -> Unit) {
             .fillMaxWidth()
             .clip(DMShapes.lg)
             .background(DMColors.SurfaceSoft)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
+            .padding(horizontal = DemoDim.chipHorizontalPadding, vertical = DemoDim.chipVerticalPadding),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             Modifier
-                .size(42.dp)
+                .size(DemoDim.badgeSizeMedium)
                 .clip(CircleShape)
                 .background(DMColors.Bg)
-                .border(1.dp, DMColors.Outline, CircleShape),
+                .border(DemoBorder.thin, DMColors.Outline, CircleShape),
             contentAlignment = Alignment.Center
         ) { Icon(Icons.Outlined.Description, null, tint = DMColors.Accent) }
 
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(DemoDim.arrangeSpacingSmall))
 
         Column(Modifier.weight(1f)) {
             Text(title, style = DMText.Title, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(DemoDim.detailSpacingXs))
             Text(subtitle, style = DMText.Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
 
-        Spacer(Modifier.width(10.dp))
+        Spacer(Modifier.width(DemoDim.showcaseSpacingSmall))
         trailing()
     }
 }
@@ -167,31 +172,31 @@ fun PinScreenDesign() {
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = DemoDim.heroPaddingHorizontal),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(32.dp))
-            Icon(Icons.Outlined.Description, null, tint = DMColors.Accent, modifier = Modifier.size(56.dp))
-            Spacer(Modifier.height(8.dp))
-            Text("DocManager", color = DMColors.Accent, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(DemoDim.heroBlockSpacing))
+            Icon(Icons.Outlined.Description, null, tint = DMColors.Accent, modifier = Modifier.size(DemoDim.heroIconSize))
+            Spacer(Modifier.height(DemoDim.rowSpacingSmall))
+            Text("DocManager", color = DMColors.Accent, fontSize = AppFontSizes.DesignDemo.brandTitle, fontWeight = FontWeight.SemiBold)
 
-            Spacer(Modifier.height(26.dp))
+            Spacer(Modifier.height(DemoDim.formSpacingLarge))
 
             Row(
                 Modifier
                     .fillMaxWidth()
                     .clip(DMShapes.xl)
                     .background(DMColors.Surface)
-                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                    .padding(horizontal = DemoDim.keypadPaddingHorizontal, vertical = DemoDim.heroPaddingVertical),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(Icons.Outlined.VpnKey, null, tint = DMColors.Accent)
-                Spacer(Modifier.width(16.dp))
+                Spacer(Modifier.width(DemoDim.rowSpacingMedium))
                 Text("•  •  •  •", style = DMText.H2, modifier = Modifier.weight(1f))
                 Icon(Icons.Outlined.Visibility, null, tint = DMColors.Accent)
             }
 
-            Spacer(Modifier.height(40.dp))
+            Spacer(Modifier.height(DemoDim.formSpacingHuge))
 
             val keys = listOf(
                 "1","2","3",
@@ -199,17 +204,17 @@ fun PinScreenDesign() {
                 "7","8","9",
                 "","0","⌫"
             )
-            Column(verticalArrangement = Arrangement.spacedBy(18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(verticalArrangement = Arrangement.spacedBy(DemoDim.keypadSpacingLarge), horizontalAlignment = Alignment.CenterHorizontally) {
                 keys.chunked(3).forEach { row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(26.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(DemoDim.keypadRowSpacing)) {
                         row.forEach { label ->
                             Box(
                                 Modifier
-                                    .size(76.dp)
+                                    .size(DemoDim.keypadCircleSize)
                                     .clip(CircleShape)
-                                    .border(1.5.dp, DMColors.Accent, CircleShape),
+                                    .border(DemoBorder.hero, DMColors.Accent, CircleShape),
                                 contentAlignment = Alignment.Center
-                            ) { Text(label, color = DMColors.Accent, fontSize = 28.sp, fontWeight = FontWeight.Medium) }
+                            ) { Text(label, color = DMColors.Accent, fontSize = AppFontSizes.DesignDemo.heroBadgeLabel, fontWeight = FontWeight.Medium) }
                         }
                     }
                 }
@@ -229,16 +234,16 @@ fun HomeScreenDesign() {
             LazyColumn(
                 Modifier
                     .fillMaxSize()
-                    .padding(bottom = 100.dp),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(bottom = DemoDim.listPaddingBottom),
+                contentPadding = PaddingValues(DemoDim.showcasePadding),
+                verticalArrangement = Arrangement.spacedBy(DemoDim.rowSpacingMedium)
             ) {
                 // My documents
                 item {
                     SectionCard(title = "My documents", trailing = {
                         NeonIconButton { Icon(Icons.Outlined.Tune, null, tint = DMColors.Accent) }
                     }) {
-                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(DemoDim.showcaseSpacingSmall)) {
                             DocRow("Passport details", "4006 45869721") {
                                 NeonIconButton { Icon(Icons.Outlined.Visibility, null, tint = DMColors.Accent) }
                             }
@@ -259,7 +264,7 @@ fun HomeScreenDesign() {
                     SectionCard(title = "Without a folder", trailing = {
                         NeonIconButton { Icon(Icons.Outlined.Tune, null, tint = DMColors.Accent) }
                     }) {
-                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(DemoDim.showcaseSpacingSmall)) {
                             DocRow("Saw size", "456x589") {
                                 NeonIconButton { Icon(Icons.Outlined.VisibilityOff, null, tint = DMColors.Accent) }
                             }
@@ -278,36 +283,36 @@ fun HomeScreenDesign() {
             Row(
                 Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(24.dp),
-                horizontalArrangement = Arrangement.spacedBy(28.dp)
+                    .padding(DemoDim.cardPaddingLarge),
+                horizontalArrangement = Arrangement.spacedBy(DemoDim.arrangeSpacingLarge)
             ) {
                 Box(
                     Modifier
                         .weight(1f)
-                        .height(66.dp)
+                        .height(DemoDim.bottomBarHeight)
                         .clip(DMShapes.xl)
                         .background(DMColors.Surface)
-                        .border(1.dp, DMColors.Outline, DMShapes.xl),
+                        .border(DemoBorder.thin, DMColors.Outline, DMShapes.xl),
                     contentAlignment = Alignment.Center
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Outlined.Description, null, tint = DMColors.Accent)
-                        Spacer(Modifier.width(10.dp))
+                        Spacer(Modifier.width(DemoDim.showcaseSpacingSmall))
                         Icon(Icons.Outlined.AddCircleOutline, null, tint = DMColors.Accent)
                     }
                 }
                 Box(
                     Modifier
                         .weight(1f)
-                        .height(66.dp)
+                        .height(DemoDim.bottomBarHeight)
                         .clip(DMShapes.xl)
                         .background(DMColors.Surface)
-                        .border(1.dp, DMColors.Outline, DMShapes.xl),
+                        .border(DemoBorder.thin, DMColors.Outline, DMShapes.xl),
                     contentAlignment = Alignment.Center
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Outlined.Folder, null, tint = DMColors.Accent)
-                        Spacer(Modifier.width(10.dp))
+                        Spacer(Modifier.width(DemoDim.showcaseSpacingSmall))
                         Icon(Icons.Outlined.AddCircleOutline, null, tint = DMColors.Accent)
                     }
                 }
@@ -327,21 +332,21 @@ private fun FieldTile(title: String, value: String, trailing: @Composable () -> 
             .fillMaxWidth()
             .clip(DMShapes.lg)
             .background(DMColors.Surface)
-            .padding(14.dp)
+            .padding(DemoDim.cardPadding)
     ) {
         Text(title, style = DMText.Hint)
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(DemoDim.detailSpacingMd))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     Modifier
-                        .size(34.dp)
+                        .size(DemoDim.badgeSizeSmall)
                         .clip(CircleShape)
                         .background(DMColors.Bg)
-                        .border(1.dp, DMColors.Outline, CircleShape),
+                        .border(DemoBorder.thin, DMColors.Outline, CircleShape),
                     contentAlignment = Alignment.Center
                 ) { Icon(Icons.Outlined.Description, null, tint = DMColors.Accent) }
-                Spacer(Modifier.width(10.dp))
+                Spacer(Modifier.width(DemoDim.showcaseSpacingSmall))
                 Text(value, style = DMText.Title)
             }
             NeonIconButton { trailing() }
@@ -354,13 +359,13 @@ private fun PdfChip(name: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             Modifier
-                .size(72.dp)
+                .size(DemoDim.badgeSizeLarge)
                 .clip(DMShapes.md)
-                .border(2.dp, DMColors.Danger, DMShapes.md)
+                .border(DemoBorder.strong, DMColors.Danger, DMShapes.md)
                 .background(DMColors.SurfaceSoft),
             contentAlignment = Alignment.Center
-        ) { Icon(Icons.Outlined.PictureAsPdf, null, tint = DMColors.Danger, modifier = Modifier.size(36.dp)) }
-        Spacer(Modifier.height(6.dp))
+        ) { Icon(Icons.Outlined.PictureAsPdf, null, tint = DMColors.Danger, modifier = Modifier.size(DemoDim.chipIconSize)) }
+        Spacer(Modifier.height(DemoDim.detailSpacingMd))
         Text(name, style = DMText.Body, color = DMColors.TextPri)
     }
 }
@@ -369,8 +374,8 @@ private fun PdfChip(name: String) {
 fun DocumentScreenDesign() {
     Surface(color = DMColors.Bg, modifier = Modifier.fillMaxSize()) {
         LazyColumn(
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            contentPadding = PaddingValues(DemoDim.showcasePadding),
+            verticalArrangement = Arrangement.spacedBy(DemoDim.showcaseSpacingMedium)
         ) {
             item {
                 Row(
@@ -378,11 +383,11 @@ fun DocumentScreenDesign() {
                         .fillMaxWidth()
                         .clip(DMShapes.xl)
                         .background(DMColors.Surface)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = DemoDim.showcasePadding, vertical = DemoDim.chipVerticalPadding),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(Icons.Outlined.Edit, null, tint = DMColors.Accent)
-                    Spacer(Modifier.width(10.dp))
+                    Spacer(Modifier.width(DemoDim.showcaseSpacingSmall))
                     Text("Passport", style = DMText.H2, modifier = Modifier.weight(1f))
                     Text("Copy all", color = DMColors.Accent, fontWeight = FontWeight.Medium)
                 }
@@ -399,12 +404,12 @@ fun DocumentScreenDesign() {
                         .fillMaxWidth()
                         .clip(DMShapes.xl)
                         .background(DMColors.Surface)
-                        .padding(12.dp)
+                        .padding(DemoDim.arrangeSpacingSmall)
                 ) {
                     Box(
                         Modifier
                             .fillMaxWidth()
-                            .height(230.dp)
+                            .height(DemoDim.heroPhotoHeight)
                             .clip(DMShapes.lg)
                             .background(DMColors.SurfaceSoft),
                         contentAlignment = Alignment.Center
@@ -419,11 +424,11 @@ fun DocumentScreenDesign() {
                         .fillMaxWidth()
                         .clip(DMShapes.xl)
                         .background(DMColors.Surface)
-                        .padding(14.dp)
+                        .padding(DemoDim.cardPadding)
                 ) {
                     Text("Attached files", style = DMText.Title)
-                    Spacer(Modifier.height(10.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Spacer(Modifier.height(DemoDim.showcaseSpacingSmall))
+                    Row(horizontalArrangement = Arrangement.spacedBy(DemoDim.showcaseSpacingMedium)) {
                         PdfChip("Polis.pdf")
                         PdfChip("Scan.pdf")
                     }
@@ -444,23 +449,23 @@ private fun AttributeTile(label: String, value: String, removable: Boolean = fal
             .fillMaxWidth()
             .clip(DMShapes.lg)
             .background(DMColors.Surface)
-            .padding(14.dp),
+            .padding(DemoDim.cardPadding),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             Modifier
-                .size(34.dp)
+                .size(DemoDim.badgeSizeSmall)
                 .clip(CircleShape)
                 .background(DMColors.Bg)
-                .border(1.dp, DMColors.Outline, CircleShape),
+                .border(DemoBorder.thin, DMColors.Outline, CircleShape),
             contentAlignment = Alignment.Center
         ) { Icon(Icons.Outlined.Description, null, tint = DMColors.Accent) }
 
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(DemoDim.arrangeSpacingSmall))
 
         Column(Modifier.weight(1f)) {
             Text(label, style = DMText.Hint)
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(DemoDim.detailSpacingSm))
             Text(value, style = DMText.Title)
         }
 
@@ -475,10 +480,10 @@ fun NewDocumentScreenDesign() {
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(DemoDim.showcasePadding)
                     .clip(DMShapes.xl)
                     .background(DMColors.Surface)
-                    .padding(16.dp),
+                    .padding(DemoDim.showcasePadding),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("New document", style = DMText.H1, modifier = Modifier.weight(1f))
@@ -488,16 +493,16 @@ fun NewDocumentScreenDesign() {
             LazyColumn(
                 Modifier
                     .weight(1f)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = DemoDim.showcasePadding),
+                verticalArrangement = Arrangement.spacedBy(DemoDim.arrangeSpacingSmall)
             ) {
                 item { AttributeTile("Document name:", "Passport") }
                 item { AttributeTile("Description:", "4067 457703") }
                 item { AttributeTile("Passport issue date:", "20.12.2008", removable = true) }
-                item { Spacer(Modifier.height(24.dp)) }
+                item { Spacer(Modifier.height(DemoDim.cardPaddingLarge)) }
             }
 
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.padding(DemoDim.showcasePadding), verticalArrangement = Arrangement.spacedBy(DemoDim.arrangeSpacingSmall)) {
                 NeonSecondaryButton("Add attribut")
                 NeonSecondaryButton("Add file")
                 NeonPrimaryButton("Save document")
@@ -519,26 +524,26 @@ fun TemplatePickerDesign() {
         Column(Modifier.fillMaxSize()) {
             Row(
                 Modifier
-                    .padding(16.dp)
+                    .padding(DemoDim.showcasePadding)
                     .fillMaxWidth()
                     .clip(DMShapes.xl)
                     .background(DMColors.Surface)
-                    .padding(10.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    .padding(DemoDim.showcaseSpacingSmall),
+                horizontalArrangement = Arrangement.spacedBy(DemoDim.showcaseSpacingSmall)
             ) {
                 Box(
                     Modifier
                         .weight(1f)
-                        .height(54.dp)
+                        .height(DemoDim.chipHeight)
                         .clip(DMShapes.pill)
-                        .border(1.2.dp, DMColors.Accent, DMShapes.pill),
+                        .border(DemoBorder.accent, DMColors.Accent, DMShapes.pill),
                     contentAlignment = Alignment.Center
                 ) { Text("Add file", color = DMColors.Accent, fontWeight = FontWeight.Medium) }
 
                 Box(
                     Modifier
                         .weight(1f)
-                        .height(54.dp)
+                        .height(DemoDim.chipHeight)
                         .clip(DMShapes.pill)
                         .background(DMColors.Accent),
                     contentAlignment = Alignment.Center
@@ -549,8 +554,8 @@ fun TemplatePickerDesign() {
             LazyColumn(
                 Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(DemoDim.showcasePadding),
+                verticalArrangement = Arrangement.spacedBy(DemoDim.arrangeSpacingSmall)
             ) {
                 items(templates) { item ->
                     Row(
@@ -558,7 +563,7 @@ fun TemplatePickerDesign() {
                             .fillMaxWidth()
                             .clip(DMShapes.xl)
                             .background(DMColors.Surface)
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                            .padding(horizontal = DemoDim.showcasePadding, vertical = DemoDim.heroPaddingVertical),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(item.name, style = DMText.H2, modifier = Modifier.weight(1f))

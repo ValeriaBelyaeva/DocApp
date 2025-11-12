@@ -26,6 +26,13 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import com.example.docapp.ui.theme.AppShapes
+import com.example.docapp.ui.theme.AppDimens
+
+private const val GLASS_FALLBACK_RADIUS_FRACTION = 0.12f
+private const val GLASS_HIGHLIGHT_DIAGONAL_FACTOR = 1.4f
+private const val RIPPLE_ALPHA = 0.18f
+private const val FALLBACK_HIGHLIGHT_ALPHA_DARK = 0.12f
+private const val FALLBACK_HIGHLIGHT_ALPHA_LIGHT = 0.08f
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -41,13 +48,13 @@ fun GlassCard(
     val surfaceTokens = SurfaceTokens.current(ThemeConfig.surfaceStyle)
     val scheme = MaterialTheme.colorScheme
     val isDark = scheme.background.luminance() < 0.5f
-    val fallbackGlow = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.08f)
+    val fallbackGlow = if (isDark) Color.White.copy(alpha = FALLBACK_HIGHLIGHT_ALPHA_DARK) else Color.Black.copy(alpha = FALLBACK_HIGHLIGHT_ALPHA_LIGHT)
     val targetShape = shape ?: AppShapes.panelLarge()
     val isInteractive = onClick != null || onLongClick != null
     val interactionSource = remember { MutableInteractionSource() }
     val ripple = rememberRipple(
         bounded = true,
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+        color = MaterialTheme.colorScheme.primary.copy(alpha = RIPPLE_ALPHA)
     )
     val clickableModifier = if (isInteractive) {
         Modifier.combinedClickable(
@@ -72,7 +79,7 @@ fun GlassCard(
         )
     } else null
 
-    val shadowElevation = if (glassColors.shadowColor.alpha > 0f) 20.dp else 6.dp
+    val shadowElevation = if (glassColors.shadowColor.alpha > 0f) AppDimens.Glass.shadowHigh else AppDimens.Glass.shadowLow
 
     Surface(
         modifier = modifier.shadow(
@@ -100,7 +107,7 @@ fun GlassCard(
                 )
                 .then(clickableModifier)
                 .drawBehind {
-                    val fallbackRadius = size.minDimension * 0.12f
+                    val fallbackRadius = size.minDimension * GLASS_FALLBACK_RADIUS_FRACTION
                     val cornerRadius = when (val outline = targetShape.createOutline(size, layoutDirection, this)) {
                         is Outline.Rounded -> {
                             val radius = outline.roundRect.topLeftCornerRadius
@@ -113,7 +120,7 @@ fun GlassCard(
                         val highlightBrush = Brush.linearGradient(
                             colors = listOf(glassColors.highlight, Color.Transparent),
                             start = Offset.Zero,
-                            end = Offset(size.width, size.height / 1.4f)
+                            end = Offset(size.width, size.height / GLASS_HIGHLIGHT_DIAGONAL_FACTOR)
                         )
                         drawRoundRect(
                             brush = highlightBrush,

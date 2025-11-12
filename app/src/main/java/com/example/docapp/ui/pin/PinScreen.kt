@@ -200,7 +200,7 @@ private fun Numpad(onDigit: (String) -> Unit, onDelete: () -> Unit) {
                                 else -> onDigit(label)
                             }
                         },
-                        modifier = Modifier.size(80.dp, 56.dp)
+                        modifier = Modifier.size(AppDimens.Pin.legacyClearButtonWidth, AppDimens.Pin.pinButtonHeight)
                     ) { Text(label) }
                 }
             }

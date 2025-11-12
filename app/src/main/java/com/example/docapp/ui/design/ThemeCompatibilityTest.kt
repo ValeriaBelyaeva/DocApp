@@ -10,6 +10,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.docapp.ui.theme.AppBorderWidths
+import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.ui.theme.DocTheme
 
 /**
@@ -22,14 +24,14 @@ fun ThemeCompatibilityTest() {
             Column(
                 Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(AppDimens.DesignDemo.showcasePadding),
+                verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingMedium)
             ) {
                 Text("Theme compatibility test", style = DMText.H1)
                 
                 // Compare colors
                 SectionCard(title = "Color scheme comparison") {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.arrangeSpacingSmall)) {
                         Row(
                             Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -38,9 +40,9 @@ fun ThemeCompatibilityTest() {
                                 Text("New design system", style = DMText.Title)
                                 Box(
                                     Modifier
-                                        .size(60.dp)
+                                        .size(AppDimens.DesignDemo.heroIconSize)
                                         .background(DMColors.Bg)
-                                        .border(1.dp, DMColors.Accent, RoundedCornerShape(8.dp))
+                                        .border(AppBorderWidths.thin, DMColors.Accent, RoundedCornerShape(AppDimens.DesignDemo.cornerMd))
                                 )
                                 Text("Bg", style = DMText.Body)
                             }
@@ -48,9 +50,9 @@ fun ThemeCompatibilityTest() {
                                 Text("Legacy theme", style = DMText.Title)
                                 Box(
                                     Modifier
-                                        .size(60.dp)
+                                        .size(AppDimens.DesignDemo.heroIconSize)
                                         .background(MaterialTheme.colorScheme.background)
-                                        .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
+                                        .border(AppBorderWidths.thin, MaterialTheme.colorScheme.primary, RoundedCornerShape(AppDimens.DesignDemo.cornerMd))
                                 )
                                 Text("Background", style = DMText.Body)
                             }
@@ -63,18 +65,18 @@ fun ThemeCompatibilityTest() {
                             Column {
                                 Box(
                                     Modifier
-                                        .size(60.dp)
+                                        .size(AppDimens.DesignDemo.heroIconSize)
                                         .background(DMColors.Surface)
-                                        .border(1.dp, DMColors.Accent, RoundedCornerShape(8.dp))
+                                        .border(AppBorderWidths.thin, DMColors.Accent, RoundedCornerShape(AppDimens.DesignDemo.cornerMd))
                                 )
                                 Text("Surface", style = DMText.Body)
                             }
                             Column {
                                 Box(
                                     Modifier
-                                        .size(60.dp)
+                                        .size(AppDimens.DesignDemo.heroIconSize)
                                         .background(MaterialTheme.colorScheme.surface)
-                                        .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
+                                        .border(AppBorderWidths.thin, MaterialTheme.colorScheme.primary, RoundedCornerShape(AppDimens.DesignDemo.cornerMd))
                                 )
                                 Text("Surface", style = DMText.Body)
                             }
@@ -87,7 +89,7 @@ fun ThemeCompatibilityTest() {
                             Column {
                                 Box(
                                     Modifier
-                                        .size(60.dp)
+                                        .size(AppDimens.DesignDemo.heroIconSize)
                                         .background(DMColors.Accent)
                                 )
                                 Text("Accent", style = DMText.Body, color = Color.Black)
@@ -95,7 +97,7 @@ fun ThemeCompatibilityTest() {
                             Column {
                                 Box(
                                     Modifier
-                                        .size(60.dp)
+                                        .size(AppDimens.DesignDemo.heroIconSize)
                                         .background(MaterialTheme.colorScheme.primary)
                                 )
                                 Text("Primary", style = DMText.Body, color = MaterialTheme.colorScheme.onPrimary)
@@ -106,7 +108,7 @@ fun ThemeCompatibilityTest() {
                 
                 // Components with legacy theme
                 SectionCard(title = "Components with legacy theme") {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.arrangeSpacingSmall)) {
                         // Standard Material3 button
                         Button(
                             onClick = { },
@@ -133,7 +135,7 @@ fun ThemeCompatibilityTest() {
                 
                 // Typography comparison
                 SectionCard(title = "Typography comparison") {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingSmall)) {
                         Text("Material3 Typography", style = MaterialTheme.typography.headlineMedium)
                         Text("Our typography", style = DMText.H1)
                         

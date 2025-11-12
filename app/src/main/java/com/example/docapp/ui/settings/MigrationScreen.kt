@@ -19,6 +19,10 @@ import com.example.docapp.ui.theme.GlassCard
 import com.example.docapp.ui.theme.AppColors
 import kotlinx.coroutines.launch
 import com.example.docapp.ui.theme.AppDimens
+import com.example.docapp.ui.theme.AppBorderWidths
+import com.example.docapp.ui.theme.AppAlphas
+
+private const val MIGRATION_PROGRESS_STEP = 0.3f
 
 @Composable
 fun MigrationScreen() {
@@ -95,7 +99,7 @@ fun MigrationScreen() {
                                     ErrorHandler.showInfo("Starting legacy URI migration...")
                                     
                                     // Симуляция прогресса
-                                    migrationProgress = 0.3f
+                                    migrationProgress = MIGRATION_PROGRESS_STEP
                                     
                                     val result = useCases.migrateExternalUris(context)
                                     
@@ -123,14 +127,14 @@ fun MigrationScreen() {
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AppColors.iconAccent(),
                         contentColor = AppColors.background(),
-                        disabledContainerColor = AppColors.iconAccent().copy(alpha = 0.3f),
-                        disabledContentColor = AppColors.background().copy(alpha = 0.5f)
+                        disabledContainerColor = AppColors.iconAccent().copy(alpha = AppAlphas.Document.primaryDisabledContainer),
+                        disabledContentColor = AppColors.background().copy(alpha = AppAlphas.Document.primaryDisabledContent)
                     )
                 ) {
                     if (isMigrating) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            strokeWidth = 2.dp
+                            modifier = Modifier.size(AppDimens.Progress.indicatorSmall),
+                            strokeWidth = AppBorderWidths.progress
                         )
                         Spacer(modifier = Modifier.width(AppDimens.spaceSm))
                     }
@@ -219,14 +223,14 @@ fun MigrationScreen() {
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AppColors.iconAccent(),
                         contentColor = AppColors.background(),
-                        disabledContainerColor = AppColors.iconAccent().copy(alpha = 0.3f),
-                        disabledContentColor = AppColors.background().copy(alpha = 0.5f)
+                        disabledContainerColor = AppColors.iconAccent().copy(alpha = AppAlphas.Document.primaryDisabledContainer),
+                        disabledContentColor = AppColors.background().copy(alpha = AppAlphas.Document.primaryDisabledContent)
                     )
                 ) {
                     if (isCleaningUp) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            strokeWidth = 2.dp
+                            modifier = Modifier.size(AppDimens.Progress.indicatorSmall),
+                            strokeWidth = AppBorderWidths.progress
                         )
                         Spacer(modifier = Modifier.width(AppDimens.spaceSm))
                     }

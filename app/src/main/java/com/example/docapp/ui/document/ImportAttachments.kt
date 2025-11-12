@@ -17,6 +17,7 @@ import com.example.docapp.core.AppLogger
 import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.ServiceLocator
 import com.example.docapp.ui.theme.GlassCard
+import com.example.docapp.ui.theme.AppDimens
 import kotlinx.coroutines.launch
 
 @Composable
@@ -108,7 +109,7 @@ fun ImportAttachmentsButton(
     
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceSm)
     ) {
         // Кнопка импорта фотографий
         OutlinedButton(
@@ -121,7 +122,7 @@ fun ImportAttachmentsButton(
             modifier = Modifier.weight(1f)
         ) {
             Icon(Icons.Default.Photo, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(AppDimens.spaceSm))
             Text("Add photo")
         }
         
@@ -136,7 +137,7 @@ fun ImportAttachmentsButton(
             modifier = Modifier.weight(1f)
         ) {
             Icon(Icons.Default.PictureAsPdf, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(AppDimens.spaceSm))
             Text("Add PDF")
         }
     }
@@ -149,7 +150,7 @@ fun ImportAttachmentsButton(
             text = {
                 Column {
                     Text("File import in progress...")
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(AppDimens.spaceLg))
                     LinearProgressIndicator(
                         progress = { importProgress },
                         modifier = Modifier.fillMaxWidth()
@@ -240,11 +241,11 @@ fun ImportAttachmentsForNewDocument(
             style = MaterialTheme.typography.titleMedium
         )
         
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(AppDimens.spaceSm))
         
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceSm)
         ) {
             // Кнопка импорта фотографий
             OutlinedButton(
@@ -257,7 +258,7 @@ fun ImportAttachmentsForNewDocument(
                 modifier = Modifier.weight(1f)
             ) {
                 Icon(Icons.Default.Photo, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(AppDimens.spaceSm))
                 Text("Photos")
             }
             
@@ -272,20 +273,20 @@ fun ImportAttachmentsForNewDocument(
                 modifier = Modifier.weight(1f)
             ) {
                 Icon(Icons.Default.PictureAsPdf, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(AppDimens.spaceSm))
                 Text("PDF")
             }
         }
         
         // Показать импортированные файлы
         if (importedPhotos.isNotEmpty() || importedPdfs.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(AppDimens.spaceLg))
             
             GlassCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(AppDimens.cardPaddingLarge)
                 ) {
                     Text(
                         text = "Imported files:",
@@ -300,11 +301,11 @@ fun ImportAttachmentsForNewDocument(
                         Text("PDFs: ${importedPdfs.size}")
                     }
                     
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(AppDimens.spaceSm))
                     
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceSm)
                     ) {
                         OutlinedButton(
                             onClick = {
