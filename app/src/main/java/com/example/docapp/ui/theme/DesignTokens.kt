@@ -79,7 +79,7 @@ object AppDimens {
         val folderGlyphIcon: Dp = 32.dp
 
         /** Size of the leading document icon inside the history card */
-        val documentLeadingIcon: Dp = 36.dp
+        val documentLeadingIcon: Dp = 24.dp
 
         /** Size of contextual action icons (eye toggle, pin, menu) */
         val documentActionIconButton: Dp = 40.dp
