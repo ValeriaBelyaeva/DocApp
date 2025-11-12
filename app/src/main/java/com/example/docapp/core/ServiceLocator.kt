@@ -29,19 +29,19 @@ object ServiceLocator {
         AppLogger.log("ServiceLocator", "Initializing ServiceLocator...")
         appContext = appCtx
         
-        // Инициализируем дебаг системы
+        // Initialize debugging utilities
         UriDebugger.init(appCtx)
         
-        // Инициализируем SQLite (SQLCipher больше не используется)
+        // Initialize SQLite (SQLCipher is no longer used)
         try {
             if (!sqlCipherInitialized) {
-                ErrorHandler.showInfo("ServiceLocator: Инициализируем SQLite...")
+                ErrorHandler.showInfo("ServiceLocator: Initializing SQLite...")
                 synchronized(this) {
                     if (!sqlCipherInitialized) {
-                        // Стандартная SQLite не требует loadLibs
+                        // Standard SQLite does not require loadLibs
                         sqlCipherInitialized = true
                         AppLogger.log("ServiceLocator", "SQLite database ready")
-                        ErrorHandler.showSuccess("База данных SQLite готова")
+                        ErrorHandler.showSuccess("SQLite database is ready")
                     }
                 }
             } else {
@@ -49,109 +49,109 @@ object ServiceLocator {
             }
         } catch (e: Exception) {
             AppLogger.log("ServiceLocator", "ERROR: Failed to load SQLCipher libraries: ${e.message}")
-            ErrorHandler.showCriticalError("Не удалось загрузить библиотеки шифрования: ${e.message}", e)
+            ErrorHandler.showCriticalError("Failed to load encryption libraries: ${e.message}", e)
             throw e
         }
         
-        // Инициализируем криптографию
+        // Initialize cryptography
         crypto = CryptoManager(appCtx)
         AppLogger.log("ServiceLocator", "CryptoManager initialized")
         
-        // НЕ создаем базу данных здесь! База создается только при первом входе с PIN
+        // Do NOT create the database here! It is created the first time the PIN is entered
         AppLogger.log("ServiceLocator", "ServiceLocator initialized, database will be created on first PIN entry")
     }
     
     /**
-     * Инициализирует базу данных с ключом, выведенным из PIN
-     * Вызывается при первом входе или для проверки существующего PIN
+     * Initializes the database with a key derived from the PIN.
+     * Called on the first login or when validating an existing PIN.
      */
     fun initializeWithPin(pin: String, isNewPin: Boolean = false) {
         AppLogger.log("ServiceLocator", "Initializing with PIN... (isNewPin: $isNewPin)")
-        ErrorHandler.showInfo("ServiceLocator: Инициализация с PIN (isNewPin: $isNewPin)")
+        ErrorHandler.showInfo("ServiceLocator: Initializing with PIN (isNewPin: $isNewPin)")
         
         try {
             val dbKey = if (crypto.isPinSet() && !isNewPin) {
-                // PIN уже установлен и это не новый PIN - СНАЧАЛА ПРОВЕРЯЕМ ПИН, затем получаем ключ
+                // PIN already set and this is not a new PIN: verify PIN first, then fetch the DB key
                 AppLogger.log("ServiceLocator", "PIN is set, verifying PIN first...")
-                ErrorHandler.showInfo("ServiceLocator: PIN установлен, проверяем PIN...")
+                ErrorHandler.showInfo("ServiceLocator: PIN is set, verifying PIN...")
                 val isPinValid = crypto.verifyPin(pin)
                 if (!isPinValid) {
                     AppLogger.log("ServiceLocator", "ERROR: Invalid PIN provided")
-                    ErrorHandler.showCriticalError("Неверный PIN-код")
+                    ErrorHandler.showCriticalError("Incorrect PIN code")
                     throw SecurityException("Invalid PIN")
                 }
                 
-                ErrorHandler.showInfo("ServiceLocator: PIN проверен, получаем ключ БД...")
+                ErrorHandler.showInfo("ServiceLocator: PIN verified, retrieving DB key...")
                 val existingKey = crypto.getExistingDbKey()
                 if (existingKey == null) {
                     AppLogger.log("ServiceLocator", "ERROR: PIN is set but DB key is missing")
-                    ErrorHandler.showCriticalError("Ошибка безопасности: отсутствует ключ базы данных")
+                    ErrorHandler.showCriticalError("Security error: database key is missing")
                     throw IllegalStateException("DB key is missing, but PIN is set")
                 }
-                ErrorHandler.showInfo("ServiceLocator: PIN проверен успешно")
+                ErrorHandler.showInfo("ServiceLocator: PIN verified successfully")
                 existingKey
             } else if (!crypto.isPinSet() && isNewPin) {
-                // PIN не установлен И это новый PIN - создаем новый ключ из PIN
+                // PIN not set and this is a new PIN: create a new key from the PIN
                 AppLogger.log("ServiceLocator", "PIN not set and new PIN, creating new key from PIN...")
-                ErrorHandler.showInfo("ServiceLocator: PIN не установлен, создаем новый ключ...")
+                ErrorHandler.showInfo("ServiceLocator: PIN is not set, creating new key...")
                 val newKey = crypto.setInitialPin(pin)
-                ErrorHandler.showInfo("ServiceLocator: PIN установлен")
+                ErrorHandler.showInfo("ServiceLocator: PIN has been set")
                 newKey
             } else if (crypto.isPinSet() && isNewPin) {
-                // PIN уже установлен, но это новый PIN - проверяем PIN перед установкой нового
+                // PIN set but a new PIN requested: verify current PIN before updating
                 AppLogger.log("ServiceLocator", "PIN is set but new PIN requested, verifying current PIN first...")
-                ErrorHandler.showInfo("ServiceLocator: PIN установлен, но запрошен новый PIN...")
+                ErrorHandler.showInfo("ServiceLocator: PIN is set, validating before updating...")
                 val isPinValid = crypto.verifyPin(pin)
                 if (!isPinValid) {
                     AppLogger.log("ServiceLocator", "ERROR: Invalid current PIN provided for new PIN setup")
-                    ErrorHandler.showCriticalError("Неверный текущий PIN-код")
+                    ErrorHandler.showCriticalError("Incorrect current PIN code")
                     throw SecurityException("Invalid current PIN")
                 }
                 
-                // Устанавливаем новый PIN, но сохраняем существующий ключ БД
+                // Update the PIN while preserving the existing DB key
                 AppLogger.log("ServiceLocator", "Current PIN verified, setting new PIN but keeping DB key...")
-                ErrorHandler.showInfo("ServiceLocator: Текущий PIN проверен, устанавливаем новый...")
+                ErrorHandler.showInfo("ServiceLocator: Current PIN verified, updating...")
                 crypto.getExistingDbKey() ?: throw IllegalStateException("Current DB key is missing")
-                // Просто перезаписываем PIN, сохраняя существующий ключ БД
-                val newKey = crypto.setInitialPin(pin) // Используем setInitialPin, но он сохранит существующий ключ
-                ErrorHandler.showInfo("ServiceLocator: Новый PIN установлен")
+                // Overwrite the stored PIN while keeping the DB key intact
+                val newKey = crypto.setInitialPin(pin) // setInitialPin keeps the existing key if present
+                ErrorHandler.showInfo("ServiceLocator: New PIN saved")
                 newKey
             } else {
-                // Неожиданная ситуация
+                // Unexpected branch
                 AppLogger.log("ServiceLocator", "ERROR: Unexpected PIN state - isPinSet: ${crypto.isPinSet()}, isNewPin: $isNewPin")
-                ErrorHandler.showCriticalError("Неожиданная ошибка состояния PIN")
+                ErrorHandler.showCriticalError("Unexpected PIN state")
                 throw IllegalStateException("Unexpected PIN state")
             }
             
-            // Создаем базу данных только если она еще не создана ИЛИ это новый PIN
+            // Create the database only if it has not been initialized yet, or when setting a new PIN
             if (!::db.isInitialized || isNewPin) {
                 if (::db.isInitialized && isNewPin) {
                     AppLogger.log("ServiceLocator", "New PIN detected, recreating database...")
-                    ErrorHandler.showInfo("ServiceLocator: Новый PIN обнаружен, пересоздаем БД...")
-                    // Закрываем старую базу данных
+                    ErrorHandler.showInfo("ServiceLocator: New PIN detected, recreating DB...")
+                    // Close the previous database instance
                     try {
                         db.encryptedWritableDatabase.close()
-                        ErrorHandler.showInfo("ServiceLocator: Старая БД закрыта")
+                        ErrorHandler.showInfo("ServiceLocator: Previous database closed")
                     } catch (e: Exception) {
                         AppLogger.log("ServiceLocator", "Warning: Failed to close old database: ${e.message}")
-                        ErrorHandler.showWarning("Не удалось закрыть старую БД: ${e.message}")
+                        ErrorHandler.showWarning("Failed to close previous database: ${e.message}")
                     }
                 }
                 
                 AppLogger.log("ServiceLocator", "Creating database...")
-                ErrorHandler.showInfo("ServiceLocator: Создаем базу данных...")
+                ErrorHandler.showInfo("ServiceLocator: Creating database...")
                 db = AppDb(appContext, dbKey)
-                ErrorHandler.showInfo("ServiceLocator: БД создана, инициализируем компоненты...")
+                ErrorHandler.showInfo("ServiceLocator: Database created, initializing components...")
                 dao = SqlDaoFactory(db)
-                // Инициализируем совместимость со старым кодом
+                // Initialize compatibility layer for legacy code paths
                 files = AttachmentStoreImpl(appContext)
                 repos = RepositoriesImpl(dao, crypto, files, appContext)
                 useCases = UseCases(repos, files, dao.documents)
                 AppLogger.log("ServiceLocator", "Database and components initialized successfully")
-                ErrorHandler.showSuccess("ServiceLocator: База данных и компоненты инициализированы")
+                ErrorHandler.showSuccess("ServiceLocator: Database and components initialized")
             } else {
                 AppLogger.log("ServiceLocator", "Database already exists, PIN verification completed")
-                ErrorHandler.showInfo("ServiceLocator: БД уже существует, проверка PIN завершена")
+                ErrorHandler.showInfo("ServiceLocator: Database already exists, PIN verification completed")
             }
         } catch (e: Exception) {
             AppLogger.log("ServiceLocator", "ERROR: Failed to initialize with PIN: ${e.message}")
@@ -159,10 +159,10 @@ object ServiceLocator {
             AppLogger.log("ServiceLocator", "ERROR: Stack trace: ${e.stackTraceToString()}")
             
             val errorMessage = when (e) {
-                is RuntimeException -> "Критическая ошибка инициализации: ${e.message}"
-                is SecurityException -> "Ошибка безопасности: ${e.message}"
-                is IllegalStateException -> "Ошибка состояния системы: ${e.message}"
-                else -> "Не удалось инициализировать базу данных: ${e.message}"
+                is RuntimeException -> "Critical initialization error: ${e.message}"
+                is SecurityException -> "Security error: ${e.message}"
+                is IllegalStateException -> "System state error: ${e.message}"
+                else -> "Failed to initialize database: ${e.message}"
             }
             
             ErrorHandler.showCriticalError(errorMessage, e)

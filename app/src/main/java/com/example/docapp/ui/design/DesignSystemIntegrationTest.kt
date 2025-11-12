@@ -16,8 +16,8 @@ import androidx.compose.ui.unit.dp
 import com.example.docapp.ui.theme.DocTheme
 
 /**
- * Тестовый экран для проверки интеграции новой дизайн-системы
- * с существующей темой приложения
+ * Test screen to verify integration of the new design system
+ * with the existing application theme.
  */
 @Composable
 fun DesignSystemIntegrationTest() {
@@ -30,13 +30,13 @@ fun DesignSystemIntegrationTest() {
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Интеграция дизайн-системы", style = DMText.H1)
+                Text("Design system integration", style = DMText.H1)
                 
-                // Тест компонентов
-                SectionCard(title = "Тест компонентов") {
+                // Component showcase
+                SectionCard(title = "Component test") {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        NeonPrimaryButton("Основная кнопка")
-                        NeonSecondaryButton("Вторичная кнопка")
+                        NeonPrimaryButton("Primary button")
+                        NeonSecondaryButton("Secondary button")
                         
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             NeonIconButton { 
@@ -47,7 +47,7 @@ fun DesignSystemIntegrationTest() {
                             }
                         }
                         
-                        DocRow("Тестовый документ", "123456789") {
+                        DocRow("Sample document", "123456789") {
                             NeonIconButton { 
                                 Icon(Icons.Outlined.Visibility, null, tint = DMColors.Accent) 
                             }
@@ -55,8 +55,8 @@ fun DesignSystemIntegrationTest() {
                     }
                 }
                 
-                // Тест цветов
-                SectionCard(title = "Тест цветов") {
+                // Color showcase
+                SectionCard(title = "Color test") {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Box(
@@ -87,14 +87,14 @@ fun DesignSystemIntegrationTest() {
                     }
                 }
                 
-                // Тест типографики
-                SectionCard(title = "Тест типографики") {
+                // Typography showcase
+                SectionCard(title = "Typography test") {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Заголовок H1", style = DMText.H1)
-                        Text("Заголовок H2", style = DMText.H2)
-                        Text("Заголовок Title", style = DMText.Title)
-                        Text("Основной текст Body", style = DMText.Body)
-                        Text("Подсказка Hint", style = DMText.Hint)
+                        Text("Heading H1", style = DMText.H1)
+                        Text("Heading H2", style = DMText.H2)
+                        Text("Heading Title", style = DMText.Title)
+                        Text("Body text", style = DMText.Body)
+                        Text("Helper text", style = DMText.Hint)
                     }
                 }
             }

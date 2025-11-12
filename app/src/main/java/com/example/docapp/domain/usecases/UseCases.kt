@@ -22,7 +22,7 @@ class UseCases(
     suspend fun importAttachments(context: Context, docId: String?, uris: List<Uri>): ImportResult {
         return try {
             AppLogger.log("UseCases", "Importing ${uris.size} attachments for doc: $docId")
-            ErrorHandler.showInfo("Импорт ${uris.size} файлов...")
+            ErrorHandler.showInfo("Importing ${uris.size} files...")
             
             val imported = repos.attachments.importAttachments(context, uris)
             
@@ -42,16 +42,16 @@ class UseCases(
             AppLogger.log("UseCases", "Import completed: $result")
             
             if (result.failed == 0) {
-                ErrorHandler.showSuccess("Все файлы импортированы успешно")
+                ErrorHandler.showSuccess("All files imported successfully")
             } else {
-                ErrorHandler.showWarning("Импорт завершен: ${result.successful} успешно, ${result.failed} ошибок")
+                ErrorHandler.showWarning("Import finished: ${result.successful} succeeded, ${result.failed} failed")
             }
             
             result
             
         } catch (e: Exception) {
             AppLogger.log("UseCases", "ERROR: Import failed: ${e.message}")
-            ErrorHandler.showError("Ошибка импорта файлов: ${e.message}")
+            ErrorHandler.showError("File import failed: ${e.message}")
             throw e
         }
     }
@@ -64,17 +64,17 @@ class UseCases(
             
             if (result) {
                 AppLogger.log("UseCases", "Attachment deleted successfully: $attachmentId")
-                ErrorHandler.showSuccess("Файл удален")
+                ErrorHandler.showSuccess("File deleted")
             } else {
                 AppLogger.log("UseCases", "Failed to delete attachment: $attachmentId")
-                ErrorHandler.showWarning("Не удалось удалить файл")
+                ErrorHandler.showWarning("Unable to delete file")
             }
             
             result
             
         } catch (e: Exception) {
             AppLogger.log("UseCases", "ERROR: Failed to delete attachment: ${e.message}")
-            ErrorHandler.showError("Ошибка при удалении файла: ${e.message}")
+            ErrorHandler.showError("Failed to delete file: ${e.message}")
             false
         }
     }
@@ -82,7 +82,7 @@ class UseCases(
     suspend fun cleanupOrphans(): FileGc.CleanupResult {
         return try {
             AppLogger.log("UseCases", "Starting orphan cleanup...")
-            ErrorHandler.showInfo("Очистка неиспользуемых файлов...")
+            ErrorHandler.showInfo("Cleaning up unused files...")
             
             val result = repos.attachments.cleanupOrphans()
             
@@ -90,13 +90,13 @@ class UseCases(
             
             when {
                 result.errors == 0 && result.deletedFiles > 0 -> {
-                    ErrorHandler.showSuccess("Очистка завершена: удалено ${result.deletedFiles} файлов")
+                    ErrorHandler.showSuccess("Cleanup complete: ${result.deletedFiles} files removed")
                 }
                 result.errors == 0 && result.deletedFiles == 0 -> {
-                    ErrorHandler.showInfo("Неиспользуемые файлы не найдены")
+                    ErrorHandler.showInfo("No unused files found")
                 }
                 else -> {
-                    ErrorHandler.showWarning("Очистка завершена с ошибками: ${result.deletedFiles} файлов, ${result.errors} ошибок")
+                    ErrorHandler.showWarning("Cleanup finished with issues: ${result.deletedFiles} files, ${result.errors} errors")
                 }
             }
             
@@ -104,7 +104,7 @@ class UseCases(
             
         } catch (e: Exception) {
             AppLogger.log("UseCases", "ERROR: Cleanup failed: ${e.message}")
-            ErrorHandler.showError("Ошибка при очистке файлов: ${e.message}")
+            ErrorHandler.showError("File cleanup failed: ${e.message}")
             throw e
         }
     }
@@ -112,7 +112,7 @@ class UseCases(
     suspend fun migrateExternalUris(context: Context): MigrationResult {
         return try {
             AppLogger.log("UseCases", "Starting migration of external URIs...")
-            ErrorHandler.showInfo("Миграция внешних URI...")
+            ErrorHandler.showInfo("Migrating external URIs...")
             
             var migratedDocuments = 0
             var migratedAttachments = 0
@@ -156,7 +156,7 @@ class UseCases(
                 } catch (e: Exception) {
                     errors++
                     AppLogger.log("UseCases", "ERROR: Failed to migrate document $docId: ${e.message}")
-                    ErrorHandler.showWarning("Ошибка миграции документа $docId: ${e.message}")
+                    ErrorHandler.showWarning("Document migration error for $docId: ${e.message}")
                 }
             }
             
@@ -169,16 +169,16 @@ class UseCases(
             AppLogger.log("UseCases", "Migration completed: $result")
             
             if (errors == 0) {
-                ErrorHandler.showSuccess("Миграция завершена: $migratedDocuments документов, $migratedAttachments вложений")
+                ErrorHandler.showSuccess("Migration complete: $migratedDocuments documents, $migratedAttachments attachments")
             } else {
-                ErrorHandler.showWarning("Миграция завершена с ошибками: $migratedDocuments документов, $errors ошибок")
+                ErrorHandler.showWarning("Migration completed with errors: $migratedDocuments documents, $errors errors")
             }
             
             result
             
         } catch (e: Exception) {
             AppLogger.log("UseCases", "ERROR: Migration failed: ${e.message}")
-            ErrorHandler.showError("Ошибка миграции: ${e.message}")
+            ErrorHandler.showError("Migration failed: ${e.message}")
             throw e
         }
     }
@@ -205,7 +205,7 @@ class UseCases(
                 
             } catch (e: Exception) {
                 AppLogger.log("UseCases", "ERROR: Failed to migrate $type $uri: ${e.message}")
-                ErrorHandler.showWarning("Ошибка миграции файла $uri: ${e.message}")
+                ErrorHandler.showWarning("Failed to migrate file $uri: ${e.message}")
             }
         }
         
@@ -257,25 +257,25 @@ class UseCases(
     suspend fun getDoc(id: String) = repos.documents.getDocument(id)
 
     suspend fun updateDoc(fd: DocumentRepository.FullDocument) {
-        ErrorHandler.showInfo("UseCases: Обновляем документ с ${fd.photos.size} фото и ${fd.pdfs.size} PDF")
+        ErrorHandler.showInfo("UseCases: Updating document with ${fd.photos.size} photos and ${fd.pdfs.size} PDFs")
         
         val preparedAttachments = buildList {
             addAll(fd.photos)
             addAll(fd.pdfs)
         }.map { attachment ->
-            UriDebugger.showUriDebug("ВЛОЖЕНИЕ: ${attachment.displayName}", attachment.uri)
+            UriDebugger.showUriDebug("ATTACHMENT: ${attachment.displayName}", attachment.uri)
             
             if (attachment.requiresPersist) {
-                UriDebugger.showUriDebug("СОХРАНИТЬ: ${attachment.displayName}", attachment.uri)
+                UriDebugger.showUriDebug("SAVE: ${attachment.displayName}", attachment.uri)
                 val persistedUri = attachmentStore.persist(attachment.uri)
-                UriDebugger.showUriSuccess("СОХРАНЕНО: ${attachment.displayName}", persistedUri)
+                UriDebugger.showUriSuccess("SAVED: ${attachment.displayName}", persistedUri)
                 attachment.copy(
                     uri = persistedUri,
                     createdAt = if (attachment.createdAt <= 0L) System.currentTimeMillis() else attachment.createdAt,
                     requiresPersist = false
                 )
             } else {
-                UriDebugger.showUriSuccess("УЖЕ СОХРАНЕНО: ${attachment.displayName}", attachment.uri)
+                UriDebugger.showUriSuccess("ALREADY SAVED: ${attachment.displayName}", attachment.uri)
                 attachment
             }
         }

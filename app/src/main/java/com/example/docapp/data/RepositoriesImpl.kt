@@ -99,61 +99,61 @@ class RepositoriesImpl(
             photoFiles: List<Pair<Uri, String>>, // URI, displayName
             pdfFiles: List<Pair<Uri, String>> // URI, displayName
         ): String {
-            ErrorHandler.showInfo("RepositoriesImpl: Создаем документ: $name")
-            ErrorHandler.showInfo("RepositoriesImpl: Фото: ${photoFiles.size}, PDF: ${pdfFiles.size}")
+            ErrorHandler.showInfo("RepositoriesImpl: Creating document: $name")
+            ErrorHandler.showInfo("RepositoriesImpl: Photos: ${photoFiles.size}, PDFs: ${pdfFiles.size}")
             
             val photos = photoFiles.mapIndexed { index, (uri, displayName) -> 
-                ErrorHandler.showInfo("RepositoriesImpl: Обрабатываем фото $index: $displayName")
-                ErrorHandler.showInfo("RepositoriesImpl: Исходный URI: $uri")
+                ErrorHandler.showInfo("RepositoriesImpl: Processing photo $index: $displayName")
+                ErrorHandler.showInfo("RepositoriesImpl: Source URI: $uri")
                 val persistedUri = files.persist(uri)
                 val persistedUriString = persistedUri.toString()
-                ErrorHandler.showInfo("RepositoriesImpl: Фото $index сохранено: ${persistedUriString.take(50)}...")
+                ErrorHandler.showInfo("RepositoriesImpl: Photo $index saved: ${persistedUriString.take(50)}...")
                 Pair(persistedUriString, displayName)
             }
             
             val pdfs = pdfFiles.mapIndexed { index, (uri, displayName) -> 
-                ErrorHandler.showInfo("RepositoriesImpl: Обрабатываем PDF $index: $displayName")
-                ErrorHandler.showInfo("RepositoriesImpl: Исходный URI: $uri")
+                ErrorHandler.showInfo("RepositoriesImpl: Processing PDF $index: $displayName")
+                ErrorHandler.showInfo("RepositoriesImpl: Source URI: $uri")
                 val persistedUri = files.persist(uri)
                 val persistedUriString = persistedUri.toString()
-                ErrorHandler.showInfo("RepositoriesImpl: PDF $index сохранен: ${persistedUriString.take(50)}...")
+                ErrorHandler.showInfo("RepositoriesImpl: PDF $index saved: ${persistedUriString.take(50)}...")
                 Pair(persistedUriString, displayName)
             }
             
-            ErrorHandler.showInfo("RepositoriesImpl: Сохраняем в БД: ${photos.size} фото, ${pdfs.size} PDF")
+            ErrorHandler.showInfo("RepositoriesImpl: Persisting ${photos.size} photos and ${pdfs.size} PDFs")
             val id = dao.documents.createWithNames(templateId, folderId, name, description, fields, photos, pdfs)
-            ErrorHandler.showInfo("RepositoriesImpl: Документ создан с ID: $id")
+            ErrorHandler.showInfo("RepositoriesImpl: Document created with ID: $id")
             dao.documents.touch(id)
             return id
         }
 
         override suspend fun getDocument(id: String) = dao.documents.getFull(id).also { fullDoc ->
-            ErrorHandler.showInfo("RepositoriesImpl: Загружаем документ: $id")
+            ErrorHandler.showInfo("RepositoriesImpl: Loading document: $id")
             fullDoc?.let { doc ->
-                ErrorHandler.showInfo("RepositoriesImpl: Документ: ${doc.doc.name}")
-                ErrorHandler.showInfo("RepositoriesImpl: Фото: ${doc.photos.size}, PDF: ${doc.pdfs.size}")
+                ErrorHandler.showInfo("RepositoriesImpl: Document: ${doc.doc.name}")
+                ErrorHandler.showInfo("RepositoriesImpl: Photos: ${doc.photos.size}, PDFs: ${doc.pdfs.size}")
                 
                 doc.photos.forEachIndexed { index, photo ->
-                    ErrorHandler.showInfo("RepositoriesImpl: Фото $index: ${photo.displayName ?: "Без имени"}")
-                    // Проверяем существование файла через новую систему AttachStorage
+                    ErrorHandler.showInfo("RepositoriesImpl: Photo $index: ${photo.displayName ?: "Untitled"}")
+                    // Verify file existence through AttachStorage
                     try {
                         val file = java.io.File(photo.uri.path ?: "")
                         val exists = file.exists() && file.canRead()
-                        ErrorHandler.showInfo("RepositoriesImpl: Фото $index существует: $exists")
+                        ErrorHandler.showInfo("RepositoriesImpl: Photo $index exists: $exists")
                     } catch (e: Exception) {
-                        ErrorHandler.showWarning("RepositoriesImpl: Ошибка проверки фото $index: ${e.message}")
+                        ErrorHandler.showWarning("RepositoriesImpl: Photo $index validation error: ${e.message}")
                     }
                 }
                 
                 doc.pdfs.forEachIndexed { index, pdf ->
-                    ErrorHandler.showInfo("RepositoriesImpl: PDF $index: ${pdf.displayName ?: "Без имени"}")
-                    // Проверяем существование файла через новую систему AttachStorage
+                    ErrorHandler.showInfo("RepositoriesImpl: PDF $index: ${pdf.displayName ?: "Untitled"}")
+                    // Verify file existence through AttachStorage
                     try {
                         val file = java.io.File(pdf.uri.path ?: "")
                         val exists = file.exists() && file.canRead()
-                        ErrorHandler.showInfo("RepositoriesImpl: PDF $index существует: $exists")
+                        ErrorHandler.showInfo("RepositoriesImpl: PDF $index exists: $exists")
                     } catch (e: Exception) {
-                        ErrorHandler.showWarning("RepositoriesImpl: Ошибка проверки PDF $index: ${e.message}")
+                        ErrorHandler.showWarning("RepositoriesImpl: PDF $index validation error: ${e.message}")
                     }
                 }
             }
@@ -164,22 +164,22 @@ class RepositoriesImpl(
             fields: List<DocumentField>,
             attachments: List<Attachment>
         ) {
-            ErrorHandler.showInfo("RepositoriesImpl: Обновляем документ: ${doc.name}")
-            ErrorHandler.showInfo("RepositoriesImpl: Вложений: ${attachments.size}")
+            ErrorHandler.showInfo("RepositoriesImpl: Updating document: ${doc.name}")
+            ErrorHandler.showInfo("RepositoriesImpl: Attachments: ${attachments.size}")
             
-            // Обрабатываем все вложения через AttachmentStore.persist()
+            // Persist each attachment via AttachmentStore.persist()
             val persistedAttachments = attachments.mapIndexed { index, attachment ->
-                ErrorHandler.showInfo("RepositoriesImpl: Обрабатываем вложение $index: ${attachment.displayName}")
+                ErrorHandler.showInfo("RepositoriesImpl: Processing attachment $index: ${attachment.displayName}")
                 val originalUri = attachment.uri
                 val persistedUri = files.persist(originalUri)
                 val persistedUriString = persistedUri.toString()
-                ErrorHandler.showInfo("RepositoriesImpl: Вложение $index сохранено: ${persistedUriString.take(50)}...")
+                ErrorHandler.showInfo("RepositoriesImpl: Attachment $index saved: ${persistedUriString.take(50)}...")
                 
-                // Создаем новый Attachment с сохраненным URI
+                // Create a new Attachment with the persisted URI
                 attachment.copy(uri = persistedUri)
             }
             
-            ErrorHandler.showInfo("RepositoriesImpl: Сохраняем в БД: ${persistedAttachments.size} вложений")
+            ErrorHandler.showInfo("RepositoriesImpl: Persisting ${persistedAttachments.size} attachments")
             dao.documents.update(doc, fields, persistedAttachments)
         }
 

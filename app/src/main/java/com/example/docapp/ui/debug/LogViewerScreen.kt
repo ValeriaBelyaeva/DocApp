@@ -24,10 +24,10 @@ fun LogViewerScreen() {
             if (logFile?.exists() == true) {
                 logContent = logFile.readText()
             } else {
-                logContent = "Лог файл не найден"
+                logContent = "Log file not found"
             }
         } catch (e: Exception) {
-            logContent = "Ошибка чтения логов: ${e.message}"
+            logContent = "Failed to read logs: ${e.message}"
         } finally {
             isLoading = false
         }
@@ -39,7 +39,7 @@ fun LogViewerScreen() {
             .padding(16.dp)
     ) {
         Text(
-            text = "Логи приложения",
+            text = "Application logs",
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 16.dp)
         )

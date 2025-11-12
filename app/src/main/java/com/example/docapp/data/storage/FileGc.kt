@@ -15,14 +15,14 @@ class FileGc(
     suspend fun cleanupOrphans(): CleanupResult = withContext(Dispatchers.IO) {
         try {
             AppLogger.log("FileGc", "Starting orphan cleanup...")
-            ErrorHandler.showInfo("Очистка неиспользуемых файлов...")
+            ErrorHandler.showInfo("Cleaning up unused files...")
             
             val orphans = attachmentDao.listOrphans()
             AppLogger.log("FileGc", "Found ${orphans.size} orphan attachments")
             
             if (orphans.isEmpty()) {
                 AppLogger.log("FileGc", "No orphans found")
-                ErrorHandler.showInfo("Неиспользуемые файлы не найдены")
+                ErrorHandler.showInfo("No unused files found")
                 return@withContext CleanupResult(0, 0, 0)
             }
             
@@ -32,13 +32,13 @@ class FileGc(
             
             orphans.forEach { orphan ->
                 try {
-                    // Удаляем физический файл
+                    // Remove the physical file
                     val fileDeleted = attachStorage.deletePhysical(orphan)
                     
                     if (fileDeleted) {
                         deletedFiles++
                         
-                        // Удаляем запись из БД только если физический файл удален успешно
+                        // Remove the database record only if the physical file is gone
                         attachmentDao.deleteById(orphan.id)
                         deletedRecords++
                         
@@ -46,14 +46,14 @@ class FileGc(
                     } else {
                         errors++
                         AppLogger.log("FileGc", "Failed to delete physical file: ${orphan.path}")
-                        // Не удаляем запись из БД, если файл не удалился
+                        // Skip deleting the record when the file cannot be removed
                     }
                     
                 } catch (e: Exception) {
                     errors++
                     AppLogger.log("FileGc", "ERROR: Failed to cleanup orphan ${orphan.id}: ${e.message}")
-                    ErrorHandler.showWarning("Ошибка при удалении файла ${orphan.name}: ${e.message}")
-                    // Не удаляем запись из БД при исключении
+                    ErrorHandler.showWarning("Failed to delete file ${orphan.name}: ${e.message}")
+                    // Keep the database record when an exception occurs
                 }
             }
             
@@ -61,16 +61,16 @@ class FileGc(
             AppLogger.log("FileGc", "Cleanup completed: $result")
             
             if (errors == 0) {
-                ErrorHandler.showSuccess("Очистка завершена: удалено $deletedFiles файлов")
+                ErrorHandler.showSuccess("Cleanup complete: $deletedFiles files removed")
             } else {
-                ErrorHandler.showWarning("Очистка завершена с ошибками: $deletedFiles файлов, $errors ошибок")
+                ErrorHandler.showWarning("Cleanup completed with errors: $deletedFiles files removed, $errors errors")
             }
             
             result
             
         } catch (e: Exception) {
             AppLogger.log("FileGc", "ERROR: Cleanup failed: ${e.message}")
-            ErrorHandler.showError("Ошибка при очистке файлов: ${e.message}")
+            ErrorHandler.showError("File cleanup failed: ${e.message}")
             throw e
         }
     }
@@ -86,26 +86,26 @@ class FileGc(
             
             attachments.forEach { attachment ->
                 try {
-                    // Удаляем физический файл
+                    // Remove the physical file
                     val fileDeleted = attachStorage.deletePhysical(attachment)
                     
                     if (fileDeleted) {
                         deletedFiles++
-                        // Удаляем запись из БД только если физический файл удален успешно
+                        // Remove the record only after successfully deleting the file
                         attachmentDao.deleteById(attachment.id)
                         deletedRecords++
                         AppLogger.log("FileGc", "Cleaned up attachment: ${attachment.name}")
                     } else {
                         errors++
                         AppLogger.log("FileGc", "Failed to delete physical file: ${attachment.path}")
-                        // Не удаляем запись из БД, если файл не удалился
+                        // Skip deleting the record when the file removal fails
                     }
                     
                 } catch (e: Exception) {
                     errors++
                     AppLogger.log("FileGc", "ERROR: Failed to cleanup attachment ${attachment.id}: ${e.message}")
-                    ErrorHandler.showWarning("Ошибка при удалении вложения ${attachment.name}: ${e.message}")
-                    // Не удаляем запись из БД при исключении
+                    ErrorHandler.showWarning("Failed to delete attachment ${attachment.name}: ${e.message}")
+                    // Keep the record if an exception is thrown
                 }
             }
             
@@ -126,7 +126,7 @@ class FileGc(
             val missingFiles = mutableListOf<AttachmentEntity>()
             val corruptedFiles = mutableListOf<AttachmentEntity>()
             
-            // Проверяем сироты
+            // Review orphan attachments
             orphanAttachments.forEach { orphan ->
                 if (!attachStorage.exists(orphan)) {
                     missingFiles.add(orphan)

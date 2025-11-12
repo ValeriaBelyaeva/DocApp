@@ -32,9 +32,9 @@ fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
 }
 
 /**
- * Плитка поля.
- * Если showValue=true и передан value — показываем ПОЛНОЕ ЗНАЧЕНИЕ и скрываем title,
- * иначе показываем title и его краткий preview.
+ * Field tile widget.
+ * When showValue=true and value is provided — reveal the full value and hide the title,
+ * otherwise show the title with a short preview snippet.
  */
 @Composable
 fun FieldTile(
@@ -61,13 +61,13 @@ fun FieldTile(
         ) {
             Column(Modifier.weight(1f)) {
                 if (showValue && !value.isNullOrEmpty()) {
-                    // Показать данные полностью, без названия
+                    // Show the complete value without the title
                     Text(
                         text = value,
                         style = MaterialTheme.typography.bodyLarge
                     )
                 } else {
-                    // Обычный режим: название + серый превью (первые символы)
+                    // Default mode: title plus gray preview (first characters)
                     Text(title, style = MaterialTheme.typography.titleSmall)
                     if (!preview.isNullOrBlank()) {
                         Text(
@@ -82,17 +82,17 @@ fun FieldTile(
             Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.iconRowSpacing)) {
                 if (onCopy != null) {
                     IconButton(onClick = onCopy) {
-                        Icon(Icons.Default.ContentCopy, contentDescription = "Копировать")
+                        Icon(Icons.Default.ContentCopy, contentDescription = "Copy")
                     }
                 }
                 if (onToggleSecret != null) {
                     IconButton(onClick = onToggleSecret) {
-                        Icon(Icons.Default.RemoveRedEye, contentDescription = "Показать/скрыть")
+                        Icon(Icons.Default.RemoveRedEye, contentDescription = "Show or hide")
                     }
                 }
                 if (onDelete != null) {
                     IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = "Удалить")
+                        Icon(Icons.Default.Delete, contentDescription = "Delete")
                     }
                 }
             }
@@ -103,19 +103,19 @@ fun FieldTile(
 fun copyToClipboard(ctx: Context, label: String, text: String) {
     val clip = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     clip.setPrimaryClip(ClipData.newPlainText(label, text))
-    Toast.makeText(ctx, "Скопировано", Toast.LENGTH_SHORT).show()
+    Toast.makeText(ctx, "Copied", Toast.LENGTH_SHORT).show()
     
-    // Автоматическая очистка буфера через 30 секунд для безопасности
+    // Automatically clear clipboard after 30 seconds for safety
     val handler = android.os.Handler(android.os.Looper.getMainLooper())
     val runnable = Runnable {
         try {
             clip.setPrimaryClip(ClipData.newPlainText("", ""))
         } catch (e: Exception) {
-            // Игнорируем ошибки очистки
+            // Ignore cleanup failures
         }
     }
     
-    // Отменяем предыдущие задачи очистки для предотвращения накопления
+    // Cancel previous cleanup tasks to avoid stacking them
     handler.removeCallbacks(runnable)
-    handler.postDelayed(runnable, 30_000) // 30 секунд
+    handler.postDelayed(runnable, 30_000) // 30 seconds
 }

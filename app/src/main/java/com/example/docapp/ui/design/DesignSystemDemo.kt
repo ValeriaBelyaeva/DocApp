@@ -25,7 +25,7 @@ fun DesignSystemDemo() {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Навигация между экранами
+            // Navigation between showcase screens
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -38,7 +38,7 @@ fun DesignSystemDemo() {
                 DemoButton("Test", currentScreen == DemoScreen.Test) { currentScreen = DemoScreen.Test }
             }
             
-            // Отображение выбранного экрана
+            // Render the selected showcase content
             Box(
                 Modifier
                     .fillMaxSize()

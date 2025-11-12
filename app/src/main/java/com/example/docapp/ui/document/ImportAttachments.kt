@@ -44,23 +44,23 @@ fun ImportAttachmentsButton(
                     importProgress = 0f
                     
                     AppLogger.log("ImportAttachments", "Importing ${uris.size} photos")
-                    ErrorHandler.showInfo("Импорт ${uris.size} фотографий...")
+                    ErrorHandler.showInfo("Importing ${uris.size} photos...")
                     
                     val result = useCases.importAttachments(context, docId, uris)
                     
                     importProgress = 1f
                     
                     if (result.failed == 0) {
-                        ErrorHandler.showSuccess("Все фотографии импортированы успешно")
+                        ErrorHandler.showSuccess("All photos imported successfully")
                     } else {
-                        ErrorHandler.showWarning("Импорт завершен: ${result.successful} успешно, ${result.failed} ошибок")
+                        ErrorHandler.showWarning("Import finished: ${result.successful} succeeded, ${result.failed} failed")
                     }
                     
                     onImportComplete(result.attachments.map { it.id })
                     
                 } catch (e: Exception) {
                     AppLogger.log("ImportAttachments", "ERROR: Photo import failed: ${e.message}")
-                    ErrorHandler.showError("Ошибка импорта фотографий: ${e.message}")
+                    ErrorHandler.showError("Photo import failed: ${e.message}")
                 } finally {
                     isImporting = false
                     showProgressDialog = false
@@ -81,23 +81,23 @@ fun ImportAttachmentsButton(
                     importProgress = 0f
                     
                     AppLogger.log("ImportAttachments", "Importing ${uris.size} documents")
-                    ErrorHandler.showInfo("Импорт ${uris.size} документов...")
+                    ErrorHandler.showInfo("Importing ${uris.size} documents...")
                     
                     val result = useCases.importAttachments(context, docId, uris)
                     
                     importProgress = 1f
                     
                     if (result.failed == 0) {
-                        ErrorHandler.showSuccess("Все документы импортированы успешно")
+                        ErrorHandler.showSuccess("All documents imported successfully")
                     } else {
-                        ErrorHandler.showWarning("Импорт завершен: ${result.successful} успешно, ${result.failed} ошибок")
+                        ErrorHandler.showWarning("Import finished: ${result.successful} succeeded, ${result.failed} failed")
                     }
                     
                     onImportComplete(result.attachments.map { it.id })
                     
                 } catch (e: Exception) {
                     AppLogger.log("ImportAttachments", "ERROR: Document import failed: ${e.message}")
-                    ErrorHandler.showError("Ошибка импорта документов: ${e.message}")
+                    ErrorHandler.showError("Document import failed: ${e.message}")
                 } finally {
                     isImporting = false
                     showProgressDialog = false
@@ -122,7 +122,7 @@ fun ImportAttachmentsButton(
         ) {
             Icon(Icons.Default.Photo, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Добавить фото")
+            Text("Add photo")
         }
         
         // Кнопка импорта PDF
@@ -137,18 +137,18 @@ fun ImportAttachmentsButton(
         ) {
             Icon(Icons.Default.PictureAsPdf, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Добавить PDF")
+            Text("Add PDF")
         }
     }
     
     // Диалог прогресса импорта
     if (showProgressDialog) {
         AlertDialog(
-            onDismissRequest = { /* Нельзя отменить */ },
-            title = { Text("Импорт файлов") },
+            onDismissRequest = { /* cannot cancel */ },
+            title = { Text("Importing files") },
             text = {
                 Column {
-                    Text("Импорт файлов в процессе...")
+                    Text("File import in progress...")
                     Spacer(modifier = Modifier.height(16.dp))
                     LinearProgressIndicator(
                         progress = { importProgress },
@@ -158,10 +158,10 @@ fun ImportAttachmentsButton(
             },
             confirmButton = {
                 TextButton(
-                    onClick = { /* Нельзя отменить */ },
+                    onClick = { /* cannot cancel */ },
                     enabled = false
                 ) {
-                    Text("Отмена")
+                    Text("Cancel")
                 }
             }
         )
@@ -194,11 +194,11 @@ fun ImportAttachmentsForNewDocument(
                     val result = useCases.importAttachments(context, null, uris)
                     importedPhotos = uris
                     
-                    ErrorHandler.showSuccess("Импортировано ${result.successful} фотографий")
+                    ErrorHandler.showSuccess("Imported ${result.successful} photos")
                     
                 } catch (e: Exception) {
                     AppLogger.log("ImportAttachments", "ERROR: Photo import failed: ${e.message}")
-                    ErrorHandler.showError("Ошибка импорта фотографий: ${e.message}")
+                    ErrorHandler.showError("Photo import failed: ${e.message}")
                 } finally {
                     isImporting = false
                 }
@@ -220,11 +220,11 @@ fun ImportAttachmentsForNewDocument(
                     val result = useCases.importAttachments(context, null, uris)
                     importedPdfs = uris
                     
-                    ErrorHandler.showSuccess("Импортировано ${result.successful} документов")
+                    ErrorHandler.showSuccess("Imported ${result.successful} documents")
                     
                 } catch (e: Exception) {
                     AppLogger.log("ImportAttachments", "ERROR: Document import failed: ${e.message}")
-                    ErrorHandler.showError("Ошибка импорта документов: ${e.message}")
+                    ErrorHandler.showError("Document import failed: ${e.message}")
                 } finally {
                     isImporting = false
                 }
@@ -236,7 +236,7 @@ fun ImportAttachmentsForNewDocument(
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
-            text = "Импорт файлов для нового документа",
+            text = "Import files for a new document",
             style = MaterialTheme.typography.titleMedium
         )
         
@@ -258,7 +258,7 @@ fun ImportAttachmentsForNewDocument(
             ) {
                 Icon(Icons.Default.Photo, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Фото")
+                Text("Photos")
             }
             
             // Кнопка импорта PDF
@@ -288,16 +288,16 @@ fun ImportAttachmentsForNewDocument(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Импортированные файлы:",
+                        text = "Imported files:",
                         style = MaterialTheme.typography.titleSmall
                     )
                     
                     if (importedPhotos.isNotEmpty()) {
-                        Text("Фото: ${importedPhotos.size}")
+                        Text("Photos: ${importedPhotos.size}")
                     }
                     
                     if (importedPdfs.isNotEmpty()) {
-                        Text("PDF: ${importedPdfs.size}")
+                        Text("PDFs: ${importedPdfs.size}")
                     }
                     
                     Spacer(modifier = Modifier.height(8.dp))
@@ -312,7 +312,7 @@ fun ImportAttachmentsForNewDocument(
                             },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Использовать")
+                            Text("Use")
                         }
                         
                         OutlinedButton(
@@ -322,7 +322,7 @@ fun ImportAttachmentsForNewDocument(
                             },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Очистить")
+                            Text("Clear")
                         }
                     }
                 }

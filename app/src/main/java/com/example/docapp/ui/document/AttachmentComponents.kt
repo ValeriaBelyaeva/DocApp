@@ -49,7 +49,7 @@ fun AttachmentManager(
                     attachments = ServiceLocator.repos.attachments.getAttachmentsByDoc(id)
                 } catch (e: Exception) {
                     AppLogger.log("AttachmentComponents", "ERROR: Failed to load attachments: ${e.message}")
-                    ErrorHandler.showError("Не удалось загрузить вложения: ${e.message}")
+                    ErrorHandler.showError("Failed to load attachments: ${e.message}")
                     attachments = emptyList()
                 }
             } ?: run {
@@ -67,7 +67,7 @@ fun AttachmentManager(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "ВЛОЖЕНИЯ (${attachments.size})",
+                text = "ATTACHMENTS (${attachments.size})",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -80,10 +80,10 @@ fun AttachmentManager(
                         val intent = Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
                         intent.type = "image/*"
                         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-                        context.startActivity(Intent.createChooser(intent, "Выберите фото"))
+                        context.startActivity(Intent.createChooser(intent, "Select photos"))
                     }
                 ) {
-                    Icon(Icons.Default.Photo, contentDescription = "Добавить фото")
+                    Icon(Icons.Default.Photo, contentDescription = "Add photo")
                 }
                 
                 // Кнопка добавления PDF
@@ -93,10 +93,10 @@ fun AttachmentManager(
                         val intent = Intent(Intent.ACTION_GET_CONTENT)
                         intent.type = "application/pdf"
                         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-                        context.startActivity(Intent.createChooser(intent, "Выберите PDF"))
+                        context.startActivity(Intent.createChooser(intent, "Select PDFs"))
                     }
                 ) {
-                    Icon(Icons.Default.PictureAsPdf, contentDescription = "Добавить PDF")
+                    Icon(Icons.Default.PictureAsPdf, contentDescription = "Add PDF")
                 }
                 
                 // Кнопка очистки сирот
@@ -107,20 +107,20 @@ fun AttachmentManager(
                             try {
                                 val result = useCases.cleanupOrphans()
                                 if (result.deletedFiles > 0) {
-                                    ErrorHandler.showSuccess("Удалено ${result.deletedFiles} неиспользуемых файлов")
+                                    ErrorHandler.showSuccess("Removed ${result.deletedFiles} unused files")
                                     onAttachmentsChanged()
                                 } else {
-                                    ErrorHandler.showInfo("Неиспользуемые файлы не найдены")
+                                    ErrorHandler.showInfo("No orphan files found")
                                 }
                             } catch (e: Exception) {
-                                ErrorHandler.showError("Ошибка очистки: ${e.message}")
+                                ErrorHandler.showError("Cleanup failed: ${e.message}")
                             } finally {
                                 isLoading = false
                             }
                         }
                     }
                 ) {
-                    Icon(Icons.Default.CleaningServices, contentDescription = "Очистить неиспользуемые")
+                    Icon(Icons.Default.CleaningServices, contentDescription = "Clean unused files")
                 }
             }
         }
@@ -134,7 +134,7 @@ fun AttachmentManager(
         // Список вложений
         if (attachments.isEmpty()) {
             Text(
-                text = "Нет вложений",
+                text = "No attachments",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(
@@ -166,7 +166,7 @@ fun AttachmentManager(
             ) {
                 Icon(Icons.Default.Share, contentDescription = null)
                 Spacer(modifier = Modifier.width(AppDimens.spaceSm))
-                Text("Поделиться всеми (${attachments.size})")
+                Text("Share all (${attachments.size})")
             }
         }
     }
@@ -175,8 +175,8 @@ fun AttachmentManager(
     showDeleteDialog?.let { attachment ->
         AlertDialog(
             onDismissRequest = { showDeleteDialog = null },
-            title = { Text("Удалить вложение") },
-            text = { Text("Вы уверены, что хотите удалить \"${attachment.name}\"?") },
+            title = { Text("Delete attachment") },
+            text = { Text("Delete \"${attachment.name}\"?") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -187,17 +187,17 @@ fun AttachmentManager(
                                 onAttachmentsChanged()
                                 showDeleteDialog = null
                             } catch (e: Exception) {
-                                ErrorHandler.showError("Ошибка удаления: ${e.message}")
+                                ErrorHandler.showError("Failed to delete attachment: ${e.message}")
                             }
                         }
                     }
                 ) {
-                    Text("Удалить")
+                    Text("Delete")
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = null }) {
-                    Text("Отмена")
+                    Text("Cancel")
                 }
             }
         )
@@ -207,8 +207,8 @@ fun AttachmentManager(
     showShareDialog?.let { attachmentsToShare ->
         AlertDialog(
             onDismissRequest = { showShareDialog = null },
-            title = { Text("Поделиться вложениями") },
-            text = { Text("Открыть вложения для шаринга?") },
+            title = { Text("Share attachments") },
+            text = { Text("Open attachments for sharing?") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -216,12 +216,12 @@ fun AttachmentManager(
                         showShareDialog = null
                     }
                 ) {
-                    Text("Поделиться")
+                    Text("Share")
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showShareDialog = null }) {
-                    Text("Отмена")
+                    Text("Cancel")
                 }
             }
         )
@@ -274,13 +274,13 @@ private fun AttachmentItem(
             // Кнопки действий
             Row {
                 IconButton(onClick = onOpen) {
-                    Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = "Открыть", tint = AppColors.iconAccent())
+                    Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = "Open", tint = AppColors.iconAccent())
                 }
                 IconButton(onClick = onShare) {
-                    Icon(Icons.Default.Share, contentDescription = "Поделиться", tint = AppColors.iconAccent())
+                    Icon(Icons.Default.Share, contentDescription = "Share", tint = AppColors.iconAccent())
                 }
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Удалить", tint = AppColors.iconAccent())
+                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = AppColors.iconAccent())
                 }
             }
         }
@@ -302,14 +302,14 @@ private fun openAttachment(context: android.content.Context, attachment: Attachm
         if (activities.isNotEmpty()) {
             context.startActivity(intent)
             AppLogger.log("AttachmentComponents", "Attachment opened successfully")
-            ErrorHandler.showSuccess("Файл открыт: ${attachment.name}")
+            ErrorHandler.showSuccess("File opened: ${attachment.name}")
         } else {
-            ErrorHandler.showError("Нет приложений для открытия файла типа ${attachment.mime}")
+            ErrorHandler.showError("No apps can open files of type ${attachment.mime}")
         }
         
     } catch (e: Exception) {
         AppLogger.log("AttachmentComponents", "ERROR: Failed to open attachment: ${e.message}")
-        ErrorHandler.showError("Не удалось открыть файл: ${e.message}")
+        ErrorHandler.showError("Failed to open file: ${e.message}")
     }
 }
 
@@ -328,16 +328,16 @@ private fun shareAttachments(context: android.content.Context, attachments: List
         val activities = packageManager.queryIntentActivities(intent, 0)
         
         if (activities.isNotEmpty()) {
-            context.startActivity(Intent.createChooser(intent, "Поделиться файлами"))
+            context.startActivity(Intent.createChooser(intent, "Share files"))
             AppLogger.log("AttachmentComponents", "Share intent launched successfully")
-            ErrorHandler.showSuccess("Файлы готовы для шаринга")
+            ErrorHandler.showSuccess("Files ready to share")
         } else {
-            ErrorHandler.showError("Нет приложений для шаринга файлов")
+            ErrorHandler.showError("No apps available to share files")
         }
         
     } catch (e: Exception) {
         AppLogger.log("AttachmentComponents", "ERROR: Failed to share attachments: ${e.message}")
-        ErrorHandler.showError("Не удалось поделиться файлами: ${e.message}")
+        ErrorHandler.showError("Failed to share files: ${e.message}")
     }
 }
 

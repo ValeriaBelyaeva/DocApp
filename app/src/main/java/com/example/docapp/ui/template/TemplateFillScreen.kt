@@ -119,7 +119,7 @@ fun TemplateFillScreen(
             }
             documentName = ""
         } catch (e: Exception) {
-            ErrorHandler.showError("Не удалось загрузить шаблон: ${e.message}")
+            ErrorHandler.showError("Failed to load template: ${e.message}")
         }
     }
     
@@ -134,7 +134,7 @@ fun TemplateFillScreen(
 
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
         Text(
-                    text = "Заполнение шаблона",
+                    text = "Template fill",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
@@ -147,15 +147,15 @@ fun TemplateFillScreen(
                 )
             }
 
-            TemplateSectionCard(title = "Основные данные") {
+            TemplateSectionCard(title = "Basic info") {
                 TemplateTextField(
-                    label = "Название документа",
+                    label = "Document name",
                     value = documentName,
                     onValueChange = { documentName = it }
                 )
                 Spacer(Modifier.height(AppDimens.labelSpacing))
                 TemplateTextField(
-                    label = "Описание документа",
+                    label = "Document description",
                     value = documentDescription,
                     onValueChange = { documentDescription = it },
                     singleLine = false,
@@ -164,7 +164,7 @@ fun TemplateFillScreen(
             }
 
             if (templateFields.isNotEmpty()) {
-                TemplateSectionCard(title = "Заполните поля") {
+                TemplateSectionCard(title = "Fill the fields") {
                     Column(verticalArrangement = Arrangement.spacedBy(AppDimens.listSpacing)) {
                         templateFields.forEach { field ->
                             TemplateTextField(
@@ -179,7 +179,7 @@ fun TemplateFillScreen(
                 }
             }
 
-            TemplateSectionCard(title = "Прикреплённые файлы") {
+            TemplateSectionCard(title = "Attachments") {
                 AttachmentList(
                     photos = attachedPhotos,
                     pdfs = attachedPdfs,
@@ -196,12 +196,12 @@ fun TemplateFillScreen(
                     horizontalArrangement = Arrangement.spacedBy(AppDimens.listSpacing)
                 ) {
                     SecondaryButton(
-                        text = "Добавить фото",
+                        text = "Add photo",
                         onClick = { photoPickerLauncher.launch("image/*") },
                         modifier = Modifier.weight(1f)
                     )
                     SecondaryButton(
-                        text = "Добавить PDF",
+                        text = "Add PDF",
                         onClick = { documentPickerLauncher.launch(arrayOf("application/pdf")) },
                         modifier = Modifier.weight(1f)
                     )
@@ -217,12 +217,12 @@ fun TemplateFillScreen(
                 horizontalArrangement = Arrangement.spacedBy(AppDimens.listSpacing)
             ) {
                 SecondaryButton(
-                    text = "Отмена",
+                    text = "Cancel",
                 onClick = onCancel,
                 modifier = Modifier.weight(1f)
                 )
                 PrimaryButton(
-                    text = if (isCreating) "Создание..." else "Создать",
+                    text = if (isCreating) "Creating..." else "Create document",
                     enabled = !isCreating && documentName.isNotBlank(),
                     modifier = Modifier.weight(1f),
                 onClick = {
@@ -248,10 +248,10 @@ fun TemplateFillScreen(
                                         photoFiles = attachedPhotos.map { (uriString, name) -> Uri.parse(uriString) to name },
                                         pdfFiles = attachedPdfs.map { (uriString, name) -> Uri.parse(uriString) to name }
                                 )
-                                    ErrorHandler.showSuccess("Документ создан")
+                                    ErrorHandler.showSuccess("Document created")
                                 onDocumentCreated(docId)
                             } catch (e: Exception) {
-                                ErrorHandler.showError("Не удалось создать документ: ${e.message}")
+                                ErrorHandler.showError("Failed to create document: ${e.message}")
                             } finally {
                                 isCreating = false
                             }
@@ -260,7 +260,7 @@ fun TemplateFillScreen(
                             val errors = buildList {
                                 if (!nameValidation.isSuccess) add(nameValidation.getError()!!)
                         fieldValidations.forEachIndexed { index, validation ->
-                                    if (!validation.isSuccess) add("Поле ${templateFields[index].name}: ${validation.getError()}")
+                                    if (!validation.isSuccess) add("Field ${templateFields[index].name}: ${validation.getError()}")
                             }
                         }
                         ErrorHandler.showError(errors.joinToString("\n"))
@@ -336,7 +336,7 @@ private fun AttachmentList(
     Column(verticalArrangement = Arrangement.spacedBy(AppDimens.spaceMd)) {
         if (photos.isNotEmpty()) {
             AttachmentGroup(
-                title = "Фото",
+                title = "Photos",
                 items = photos,
                 badgeColor = AppColors.iconAccentBackground(),
                 icon = Icons.Default.Photo,
@@ -345,7 +345,7 @@ private fun AttachmentList(
         }
         if (pdfs.isNotEmpty()) {
             AttachmentGroup(
-                title = "PDF файлы",
+                title = "PDF files",
                 items = pdfs,
                 badgeColor = AppColors.iconAccentBackground(),
                 icon = Icons.Default.PictureAsPdf,
@@ -354,7 +354,7 @@ private fun AttachmentList(
         }
         if (photos.isEmpty() && pdfs.isEmpty()) {
             Text(
-                text = "Файлы не прикреплены",
+                text = "No files attached",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -427,7 +427,7 @@ private fun AttachmentGroup(
                         IconButton(onClick = { onRemove(uri) }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
-                                contentDescription = "Удалить",
+                                contentDescription = "Remove",
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }

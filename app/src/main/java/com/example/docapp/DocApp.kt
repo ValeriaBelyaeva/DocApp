@@ -10,31 +10,31 @@ class DocApp : Application() {
     override fun onCreate() {
         super.onCreate()
         
-        // Инициализируем логгер первым
+        // Initialize logger first
         AppLogger.init(this)
         AppLogger.log("DocApp", "DocApp onCreate started")
         
-        // Инициализируем обработчик ошибок
+        // Initialize error handler
         ErrorHandler.init(this)
-        ErrorHandler.showInfo("Приложение запускается...")
+        ErrorHandler.showInfo("Application starting...")
         
-        // Инициализируем менеджер темы
+        // Initialize theme manager
         ThemeManager.initialize(this)
         
         try {
             ServiceLocator.init(this)
             AppLogger.log("DocApp", "ServiceLocator initialized successfully")
-            ErrorHandler.showSuccess("Приложение успешно инициализировано")
+            ErrorHandler.showSuccess("Application initialized successfully")
         } catch (e: Exception) {
             AppLogger.log("DocApp", "ERROR: Failed to initialize ServiceLocator: ${e.message}")
             AppLogger.log("DocApp", "ERROR: Exception type: ${e.javaClass.simpleName}")
             AppLogger.log("DocApp", "ERROR: Stack trace: ${e.stackTraceToString()}")
             
             val errorMessage = when (e) {
-                is RuntimeException -> "Критическая ошибка инициализации приложения: ${e.message}"
-                is SecurityException -> "Ошибка безопасности при инициализации: ${e.message}"
-                is IllegalStateException -> "Ошибка состояния системы: ${e.message}"
-                else -> "Не удалось инициализировать приложение: ${e.message}"
+                is RuntimeException -> "Critical application initialization error: ${e.message}"
+                is SecurityException -> "Security error during initialization: ${e.message}"
+                is IllegalStateException -> "System state error during initialization: ${e.message}"
+                else -> "Failed to initialize application: ${e.message}"
             }
             
             ErrorHandler.showCriticalError(errorMessage, e)

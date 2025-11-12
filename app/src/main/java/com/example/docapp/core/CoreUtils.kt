@@ -151,7 +151,7 @@ object ErrorHandler {
      */
     private fun formatErrorMessage(message: String, throwable: Throwable?): String {
         return if (throwable != null) {
-            "$message: ${throwable.message ?: "Неизвестная ошибка"}"
+            "$message: ${throwable.message ?: "Unknown error"}"
         } else {
             message
         }
@@ -193,7 +193,7 @@ object ErrorHandler {
                 if (DEBUG_MODE) {
                     context?.let { ctx ->
                         handler.post {
-                            val errorMessage = throwable.message ?: "Произошла ошибка при выполнении операции"
+                            val errorMessage = throwable.message ?: "An error occurred while executing the operation"
                             Toast.makeText(ctx, errorMessage, Toast.LENGTH_LONG).show()
                         }
                     }

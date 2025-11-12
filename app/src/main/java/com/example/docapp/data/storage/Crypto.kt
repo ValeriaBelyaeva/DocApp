@@ -21,7 +21,7 @@ class AttachmentCrypto(private val context: Context) {
         private const val ENCRYPTION_BLOCK_MODE = KeyProperties.BLOCK_MODE_GCM
         private const val ENCRYPTION_PADDING = KeyProperties.ENCRYPTION_PADDING_NONE
         
-        // Флаг для включения шифрования (можно сделать настройкой)
+        // Flag to enable encryption (can be toggled via settings)
         var encryptionEnabled: Boolean = false
             private set
     }
@@ -114,7 +114,7 @@ class AttachmentCrypto(private val context: Context) {
         return try {
             if (!encryptionEnabled) return false
             
-            // Проверяем, является ли файл зашифрованным
+            // Check whether the file is encrypted
             val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE)
             keyStore.load(null)
             keyStore.containsAlias(KEY_ALIAS)

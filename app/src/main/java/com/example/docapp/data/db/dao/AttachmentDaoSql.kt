@@ -39,7 +39,7 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
             attachment.docId?.let { emitDocAttachments(it) }
         } catch (e: Exception) {
             AppLogger.log("AttachmentDaoSql", "ERROR: Failed to insert attachment: ${e.message}")
-            ErrorHandler.showError("Не удалось сохранить вложение: ${e.message}")
+            ErrorHandler.showError("Failed to save attachment: ${e.message}")
             throw e
         }
     }
@@ -64,14 +64,14 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
             db.setTransactionSuccessful()
             AppLogger.log("AttachmentDaoSql", "Inserted ${attachments.size} attachments")
             
-            // Обновляем Flow для всех затронутых документов
+            // Notify all affected document flows
             attachments.mapNotNull { it.docId }.distinct().forEach { docId ->
-                // Обновляем Flow напрямую без suspend функции
-                docAttachments[docId]?.value = emptyList() // Временно очищаем, данные загрузятся при следующем обращении
+                // Update flow directly without a suspend function
+                docAttachments[docId]?.value = emptyList() // Temporarily clear; data will refresh on next access
             }
         } catch (e: Exception) {
             AppLogger.log("AttachmentDaoSql", "ERROR: Failed to insert attachments: ${e.message}")
-            ErrorHandler.showError("Не удалось сохранить вложения: ${e.message}")
+            ErrorHandler.showError("Failed to save attachments: ${e.message}")
             throw e
         } finally {
             db.endTransaction()
@@ -99,7 +99,7 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
     
     override suspend fun deleteById(id: String): Unit = withContext(Dispatchers.IO) {
         try {
-            // Сначала получаем docId для обновления Flow
+            // Fetch docId first to update the flow after deletion
             val docId = db.rawQuery("SELECT docId FROM attachments_new WHERE id = ?", arrayOf(id)).use { cursor ->
                 if (cursor.moveToFirst()) cursor.getString(0) else null
             }
@@ -113,7 +113,7 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
             }
         } catch (e: Exception) {
             AppLogger.log("AttachmentDaoSql", "ERROR: Failed to delete attachment: ${e.message}")
-            ErrorHandler.showError("Не удалось удалить вложение: ${e.message}")
+            ErrorHandler.showError("Failed to delete attachment: ${e.message}")
             throw e
         }
     }
@@ -130,7 +130,7 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
             emitDocAttachments(docId)
         } catch (e: Exception) {
             AppLogger.log("AttachmentDaoSql", "ERROR: Failed to bind attachments: ${e.message}")
-            ErrorHandler.showError("Не удалось привязать вложения: ${e.message}")
+            ErrorHandler.showError("Failed to bind attachments: ${e.message}")
             throw e
         } finally {
             db.endTransaction()
@@ -155,7 +155,7 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
             AppLogger.log("AttachmentDaoSql", "Found ${result.size} orphan attachments")
         } catch (e: Exception) {
             AppLogger.log("AttachmentDaoSql", "ERROR: Failed to list orphans: ${e.message}")
-            ErrorHandler.showError("Не удалось найти неиспользуемые вложения: ${e.message}")
+            ErrorHandler.showError("Failed to locate unused attachments: ${e.message}")
         }
         result
     }
@@ -167,7 +167,7 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
             emitDocAttachments(docId)
         } catch (e: Exception) {
             AppLogger.log("AttachmentDaoSql", "ERROR: Failed to delete attachments by docId: ${e.message}")
-            ErrorHandler.showError("Не удалось удалить вложения документа: ${e.message}")
+            ErrorHandler.showError("Failed to delete document attachments: ${e.message}")
             throw e
         }
     }

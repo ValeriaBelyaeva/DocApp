@@ -41,7 +41,7 @@ fun MigrationScreen() {
         verticalArrangement = Arrangement.spacedBy(AppDimens.sectionSpacing)
     ) {
         Text(
-            text = "Управление вложениями",
+            text = "Attachment management",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
@@ -66,7 +66,7 @@ fun MigrationScreen() {
                     )
                     Spacer(modifier = Modifier.width(AppDimens.spaceSm))
                     Text(
-                        text = "Миграция старых URI",
+                        text = "Migrate legacy URIs",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium
                     )
@@ -75,7 +75,7 @@ fun MigrationScreen() {
                 Spacer(modifier = Modifier.height(AppDimens.spaceSm))
                 
                 Text(
-                    text = "Переносит все внешние URI в локальное хранилище приложения для обеспечения стабильного доступа к файлам.",
+                    text = "Moves external URIs into local app storage to keep attachments accessible.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -92,7 +92,7 @@ fun MigrationScreen() {
                                 
                                 try {
                                     AppLogger.log("MigrationScreen", "Starting migration...")
-                                    ErrorHandler.showInfo("Запуск миграции старых URI...")
+                                    ErrorHandler.showInfo("Starting legacy URI migration...")
                                     
                                     // Симуляция прогресса
                                     migrationProgress = 0.3f
@@ -100,18 +100,18 @@ fun MigrationScreen() {
                                     val result = useCases.migrateExternalUris(context)
                                     
                                     migrationProgress = 1f
-                                    migrationResult = "Миграция завершена: ${result.migratedDocuments} документов, ${result.migratedAttachments} вложений"
+                                    migrationResult = "Migration finished: ${result.migratedDocuments} documents, ${result.migratedAttachments} attachments"
                                     
                                     if (result.errors == 0) {
-                                        ErrorHandler.showSuccess("Миграция завершена успешно")
+                                        ErrorHandler.showSuccess("Migration completed successfully")
                                     } else {
-                                        ErrorHandler.showWarning("Миграция завершена с ошибками: ${result.errors}")
+                                        ErrorHandler.showWarning("Migration completed with ${result.errors} errors")
                                     }
                                     
                                 } catch (e: Exception) {
                                     AppLogger.log("MigrationScreen", "ERROR: Migration failed: ${e.message}")
-                                    ErrorHandler.showError("Ошибка миграции: ${e.message}")
-                                    migrationResult = "Ошибка миграции: ${e.message}"
+                                    ErrorHandler.showError("Migration failed: ${e.message}")
+                                    migrationResult = "Migration failed: ${e.message}"
                                 } finally {
                                     isMigrating = false
                                 }
@@ -134,7 +134,7 @@ fun MigrationScreen() {
                         )
                         Spacer(modifier = Modifier.width(AppDimens.spaceSm))
                     }
-                    Text(if (isMigrating) "Миграция..." else "Запустить миграцию")
+                    Text(if (isMigrating) "Migrating..." else "Start migration")
                 }
                 
                 migrationResult?.let { result ->
@@ -168,7 +168,7 @@ fun MigrationScreen() {
                     )
                     Spacer(modifier = Modifier.width(AppDimens.spaceSm))
                     Text(
-                        text = "Очистка неиспользуемых файлов",
+                        text = "Clean unused files",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium
                     )
@@ -177,7 +177,7 @@ fun MigrationScreen() {
                 Spacer(modifier = Modifier.height(AppDimens.spaceSm))
                 
                 Text(
-                    text = "Удаляет файлы, которые не привязаны ни к одному документу (сироты).",
+                    text = "Deletes files that are no longer linked to any document.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -192,22 +192,22 @@ fun MigrationScreen() {
                                 
                                 try {
                                     AppLogger.log("MigrationScreen", "Starting cleanup...")
-                                    ErrorHandler.showInfo("Запуск очистки неиспользуемых файлов...")
+                                    ErrorHandler.showInfo("Starting orphan cleanup...")
                                     
                                     val result = useCases.cleanupOrphans()
                                     cleanupResult = result
                                     
                                     if (result.errors == 0 && result.deletedFiles > 0) {
-                                        ErrorHandler.showSuccess("Очистка завершена: удалено ${result.deletedFiles} файлов")
+                                        ErrorHandler.showSuccess("Cleanup complete: deleted ${result.deletedFiles} files")
                                     } else if (result.errors == 0 && result.deletedFiles == 0) {
-                                        ErrorHandler.showInfo("Неиспользуемые файлы не найдены")
+                                        ErrorHandler.showInfo("No orphan files found")
                                     } else {
-                                        ErrorHandler.showWarning("Очистка завершена с ошибками: ${result.errors}")
+                                        ErrorHandler.showWarning("Cleanup finished with ${result.errors} errors")
                                     }
                                     
                                 } catch (e: Exception) {
                                     AppLogger.log("MigrationScreen", "ERROR: Cleanup failed: ${e.message}")
-                                    ErrorHandler.showError("Ошибка очистки: ${e.message}")
+                                    ErrorHandler.showError("Cleanup failed: ${e.message}")
                                 } finally {
                                     isCleaningUp = false
                                 }
@@ -230,13 +230,13 @@ fun MigrationScreen() {
                         )
                         Spacer(modifier = Modifier.width(AppDimens.spaceSm))
                     }
-                    Text(if (isCleaningUp) "Очистка..." else "Запустить очистку")
+                    Text(if (isCleaningUp) "Cleaning..." else "Start cleanup")
                 }
                 
                 cleanupResult?.let { result ->
                     Spacer(modifier = Modifier.height(AppDimens.spaceSm))
                     Text(
-                        text = "Результат: ${result.deletedFiles} файлов удалено, ${result.deletedRecords} записей, ${result.errors} ошибок",
+                        text = "Result: ${result.deletedFiles} files removed, ${result.deletedRecords} records, ${result.errors} errors",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -264,7 +264,7 @@ fun MigrationScreen() {
                     )
                     Spacer(modifier = Modifier.width(AppDimens.spaceSm))
                     Text(
-                        text = "Информация",
+                        text = "Information",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium
                     )
@@ -273,9 +273,9 @@ fun MigrationScreen() {
                 Spacer(modifier = Modifier.height(AppDimens.spaceSm))
                 
                 Text(
-                    text = "• Миграция выполняется один раз при обновлении приложения\n" +
-                            "• Очистку можно запускать многократно для освобождения места\n" +
-                            "• Все операции безопасны и не влияют на существующие документы",
+                    text = "• Migration runs once after updating the app.\n" +
+                            "• Cleanup can run multiple times to free storage.\n" +
+                            "• Operations are safe and do not affect existing documents.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -286,11 +286,11 @@ fun MigrationScreen() {
     // Диалог прогресса миграции
     if (showMigrationDialog) {
         AlertDialog(
-            onDismissRequest = { /* Нельзя отменить */ },
-            title = { Text("Миграция URI") },
+            onDismissRequest = { /* cannot cancel */ },
+            title = { Text("URI migration") },
             text = {
                 Column {
-                    Text("Миграция внешних URI в локальное хранилище...")
+                    Text("Moving external URIs into local storage...")
                     Spacer(modifier = Modifier.height(AppDimens.spaceLg))
                     LinearProgressIndicator(
                         progress = { migrationProgress },
@@ -312,7 +312,7 @@ fun MigrationScreen() {
                     },
                     enabled = !isMigrating
                 ) {
-                    Text("Закрыть")
+                    Text("Close")
                 }
             }
         )

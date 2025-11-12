@@ -26,7 +26,7 @@ fun DesignShowcase() {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Простая навигация без лишних заголовков
+            // Simple navigation without extra headers
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -48,7 +48,7 @@ fun DesignShowcase() {
                 }
             }
             
-            // Отображение выбранного экрана
+            // Render the selected screen
             Box(
                 Modifier
                     .fillMaxSize()
@@ -58,10 +58,10 @@ fun DesignShowcase() {
             ) {
                 when (currentScreen) {
                     ShowcaseScreen.Pin -> PinScreenDesign()
-                    ShowcaseScreen.Home -> Text("Home Screen - в разработке", color = Color(0xFFE9EFF6))
-                    ShowcaseScreen.Document -> Text("Document Screen - в разработке", color = Color(0xFFE9EFF6))
-                    ShowcaseScreen.NewDocument -> Text("New Document Screen - в разработке", color = Color(0xFFE9EFF6))
-                    ShowcaseScreen.Template -> Text("Template Screen - в разработке", color = Color(0xFFE9EFF6))
+                    ShowcaseScreen.Home -> Text("Home Screen — in progress", color = Color(0xFFE9EFF6))
+                    ShowcaseScreen.Document -> Text("Document Screen — in progress", color = Color(0xFFE9EFF6))
+                    ShowcaseScreen.NewDocument -> Text("New Document Screen — in progress", color = Color(0xFFE9EFF6))
+                    ShowcaseScreen.Template -> Text("Template Screen — in progress", color = Color(0xFFE9EFF6))
                 }
             }
         }

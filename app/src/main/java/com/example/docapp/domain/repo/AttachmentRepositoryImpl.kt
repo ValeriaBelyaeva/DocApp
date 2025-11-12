@@ -44,13 +44,13 @@ class AttachmentRepositoryImpl(
             attachmentDao.insert(attachment)
             
             AppLogger.log("AttachmentRepository", "Attachment imported successfully: ${attachment.name}")
-            ErrorHandler.showSuccess("Файл импортирован: ${attachment.name}")
+            ErrorHandler.showSuccess("File imported: ${attachment.name}")
             
             attachment
             
         } catch (e: Exception) {
             AppLogger.log("AttachmentRepository", "ERROR: Failed to import attachment: ${e.message}")
-            ErrorHandler.showError("Не удалось импортировать файл: ${e.message}")
+            ErrorHandler.showError("Failed to import file: ${e.message}")
             throw e
         }
     }
@@ -58,7 +58,7 @@ class AttachmentRepositoryImpl(
     override suspend fun importAttachments(context: Context, uris: List<Uri>): List<AttachmentEntity> = withContext(Dispatchers.IO) {
         try {
             AppLogger.log("AttachmentRepository", "Importing ${uris.size} attachments")
-            ErrorHandler.showInfo("Импорт ${uris.size} файлов...")
+            ErrorHandler.showInfo("Importing ${uris.size} files...")
             
             val imported = mutableListOf<AttachmentEntity>()
             var successCount = 0
@@ -68,7 +68,7 @@ class AttachmentRepositoryImpl(
                 // Проверяем отмену операции
                 if (!kotlinx.coroutines.currentCoroutineContext().isActive) {
                     AppLogger.log("AttachmentRepository", "Import cancelled by user")
-                    ErrorHandler.showInfo("Импорт отменен")
+                    ErrorHandler.showInfo("Import cancelled")
                     return@withContext imported
                 }
                 
@@ -97,23 +97,23 @@ class AttachmentRepositoryImpl(
                 } catch (e: Exception) {
                     errorCount++
                     AppLogger.log("AttachmentRepository", "Failed to import attachment $index: ${e.message}")
-                    ErrorHandler.showWarning("Ошибка импорта файла $index: ${e.message}")
+                    ErrorHandler.showWarning("File $index import error: ${e.message}")
                 }
             }
             
             AppLogger.log("AttachmentRepository", "Import completed: $successCount success, $errorCount errors")
             
             if (errorCount == 0) {
-                ErrorHandler.showSuccess("Все файлы импортированы успешно")
+                ErrorHandler.showSuccess("All files imported successfully")
             } else {
-                ErrorHandler.showWarning("Импорт завершен: $successCount успешно, $errorCount ошибок")
+                ErrorHandler.showWarning("Import finished: $successCount succeeded, $errorCount failed")
             }
             
             imported
             
         } catch (e: Exception) {
             AppLogger.log("AttachmentRepository", "ERROR: Batch import failed: ${e.message}")
-            ErrorHandler.showError("Ошибка массового импорта: ${e.message}")
+            ErrorHandler.showError("Bulk import failed: ${e.message}")
             throw e
         }
     }
@@ -149,13 +149,13 @@ class AttachmentRepositoryImpl(
             attachmentDao.deleteById(id)
             
             AppLogger.log("AttachmentRepository", "Attachment deleted: ${attachment.name}")
-            ErrorHandler.showSuccess("Файл удален: ${attachment.name}")
+            ErrorHandler.showSuccess("File deleted: ${attachment.name}")
             
             fileDeleted
             
         } catch (e: Exception) {
             AppLogger.log("AttachmentRepository", "ERROR: Failed to delete attachment $id: ${e.message}")
-            ErrorHandler.showError("Не удалось удалить файл: ${e.message}")
+            ErrorHandler.showError("Failed to delete file: ${e.message}")
             false
         }
     }
@@ -171,7 +171,7 @@ class AttachmentRepositoryImpl(
             
         } catch (e: Exception) {
             AppLogger.log("AttachmentRepository", "ERROR: Failed to delete attachments for doc $docId: ${e.message}")
-            ErrorHandler.showError("Не удалось удалить вложения документа: ${e.message}")
+            ErrorHandler.showError("Failed to delete document attachments: ${e.message}")
             false
         }
     }
@@ -183,11 +183,11 @@ class AttachmentRepositoryImpl(
             attachmentDao.bindToDoc(attachmentIds, docId)
             
             AppLogger.log("AttachmentRepository", "Attachments bound successfully")
-            ErrorHandler.showSuccess("Вложения привязаны к документу")
+            ErrorHandler.showSuccess("Attachments linked to document")
             
         } catch (e: Exception) {
             AppLogger.log("AttachmentRepository", "ERROR: Failed to bind attachments: ${e.message}")
-            ErrorHandler.showError("Не удалось привязать вложения: ${e.message}")
+            ErrorHandler.showError("Failed to link attachments: ${e.message}")
             throw e
         }
     }
@@ -221,7 +221,7 @@ class AttachmentRepositoryImpl(
             
         } catch (e: Exception) {
             AppLogger.log("AttachmentRepository", "ERROR: Orphan cleanup failed: ${e.message}")
-            ErrorHandler.showError("Ошибка очистки неиспользуемых файлов: ${e.message}")
+            ErrorHandler.showError("Failed to clean up unused files: ${e.message}")
             throw e
         }
     }

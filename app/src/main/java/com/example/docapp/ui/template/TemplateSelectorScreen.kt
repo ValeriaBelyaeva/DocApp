@@ -32,7 +32,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -87,14 +86,14 @@ fun TemplateSelectorScreen(
                 item {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
             Text(
-                text = "Создание документа",
+                text = "Create a document",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Spacer(Modifier.height(AppDimens.listSpacing))
                         Text(
-                            text = "Выбери способ: новый документ или заготовка",
+                        text = "Choose how to start: blank document or template",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -109,15 +108,15 @@ fun TemplateSelectorScreen(
                     ) {
                         TemplateOptionCard(
                             icon = Icons.Default.Description,
-                            title = "Пустой документ",
-                            subtitle = "Начать с нуля",
+                            title = "Blank document",
+                            subtitle = "Start from scratch",
                             modifier = Modifier.weight(1f),
                             onClick = { onCreateEmpty(folderId) }
                         )
                         TemplateOptionCard(
                             icon = Icons.Default.ContentCopy,
-                            title = "Новый шаблон",
-                            subtitle = "Сохранить структуру",
+                            title = "New template",
+                            subtitle = "Save structure",
                             modifier = Modifier.weight(1f),
                             onClick = { showDialog = true }
                         )
@@ -127,7 +126,7 @@ fun TemplateSelectorScreen(
                 if (templates.isNotEmpty()) {
                     item {
                         Text(
-                            text = "Доступные шаблоны",
+                        text = "Available templates",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onBackground
@@ -143,9 +142,9 @@ fun TemplateSelectorScreen(
                                     try {
                                         uc.deleteTemplate(template.id)
                                         templates = uc.listTemplates()
-                                        ErrorHandler.showSuccess("Шаблон удален")
+                                        ErrorHandler.showSuccess("Template removed")
                                     } catch (e: Exception) {
-                                        ErrorHandler.showError("Не удалось удалить шаблон: ${e.message}")
+                                        ErrorHandler.showError("Failed to delete template: ${e.message}")
                                     }
                                 }
                             }
@@ -196,7 +195,7 @@ fun TemplateSelectorScreen(
                             val errors = buildList {
                                 if (!nameValidation.isSuccess) add(nameValidation.getError()!!)
                                 fieldValidations.forEachIndexed { index, validation ->
-                                    if (!validation.isSuccess) add("Поле ${index + 1}: ${validation.getError()}")
+                                    if (!validation.isSuccess) add("Field ${index + 1}: ${validation.getError()}")
                                 }
                             }
                             ErrorHandler.showError(errors.joinToString("\n"))
@@ -217,13 +216,11 @@ private fun TemplateOptionCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val iconBackground = if (SurfaceTokens.current(ThemeConfig.surfaceStyle).useGradient) {
-        AppColors.iconAccentBackground()
-    } else {
-        Color.Transparent
-    }
-
-    GlassCard(modifier = modifier, onClick = onClick, shape = AppShapes.panelMedium()) {
+    GlassCard(
+        modifier = modifier.heightIn(min = 180.dp),
+        onClick = onClick,
+        shape = AppShapes.panelMedium()
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -239,8 +236,6 @@ private fun TemplateOptionCard(
                 tint = AppColors.iconAccent(),
                 modifier = Modifier
                     .size(44.dp)
-                    .clip(AppShapes.badge())
-                    .background(iconBackground)
                     .padding(AppDimens.spaceXs)
             )
             Spacer(Modifier.height(AppDimens.listSpacing))
@@ -289,7 +284,7 @@ private fun TemplateListItem(
                 )
                 Spacer(Modifier.height(AppDimens.labelSpacing))
                                 Text(
-                    text = "Шаблон",
+                    text = "Template",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -297,7 +292,7 @@ private fun TemplateListItem(
             IconButton(onClick = onDelete) {
                                     Icon(
                     imageVector = Icons.Default.Delete,
-                                        contentDescription = "Удалить шаблон",
+                                        contentDescription = "Delete template",
                                         tint = MaterialTheme.colorScheme.error
                                     )
                                 }
@@ -318,14 +313,14 @@ private fun TemplateEmptyState() {
             horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Нет доступных шаблонов",
+                        text = "No templates yet",
                         style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center
                     )
             Spacer(Modifier.height(AppDimens.listSpacing))
                     Text(
-                text = "Создай шаблон, чтобы ускорить повторяющиеся документы",
+                text = "Create a template to speed up repetitive documents",
                         style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
@@ -351,7 +346,7 @@ private fun TemplateDialog(
         onDismissRequest = onDismiss,
                 title = { 
                     Text(
-                        text = "Новый шаблон",
+                        text = "New template",
                         style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -362,7 +357,7 @@ private fun TemplateDialog(
                         OutlinedTextField(
                             value = tplName,
                     onValueChange = onNameChange,
-                            label = { Text("Название шаблона") },
+                            label = { Text("Template name") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             shape = AppShapes.panelSmall(),
@@ -380,7 +375,7 @@ private fun TemplateDialog(
                         )
                         
                         Text(
-                    text = "Добавь поля для шаблона",
+                    text = "Add fields for the template",
                             style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface
@@ -393,7 +388,7 @@ private fun TemplateDialog(
                             OutlinedTextField(
                                 value = newField,
                         onValueChange = onFieldChange,
-                                label = { Text("Название поля") },
+                                label = { Text("Field name") },
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
                                 shape = AppShapes.panelSmall(),
@@ -414,11 +409,10 @@ private fun TemplateDialog(
                         modifier = Modifier
                             .size(44.dp)
                             .clip(AppShapes.iconButton())
-                            .background(AppColors.iconAccentBackground())
-                            ) {
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = "Добавить поле",
+                            contentDescription = "Add field",
                             tint = AppColors.iconAccent()
                         )
                             }
@@ -437,7 +431,7 @@ private fun TemplateDialog(
                         verticalArrangement = Arrangement.spacedBy(AppDimens.listSpacing)
                     ) {
                                     Text(
-                            text = "Поля шаблона",
+                            text = "Template fields",
                                         style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onSurface
                                     )
@@ -455,7 +449,7 @@ private fun TemplateDialog(
                                 IconButton(onClick = { onRemoveField(field) }) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
-                                        contentDescription = "Удалить",
+                                        contentDescription = "Delete",
                                         tint = MaterialTheme.colorScheme.error
                                             )
                                         }
@@ -477,7 +471,7 @@ private fun TemplateDialog(
                 ),
                 shape = AppShapes.panelMedium()
                         ) {
-                            Text("Создать шаблон")
+                            Text("Create template")
                         }
                 },
                 dismissButton = {
@@ -485,7 +479,7 @@ private fun TemplateDialog(
                 onClick = onDismiss,
                 colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
             ) {
-                        Text("Отмена") 
+                        Text("Cancel") 
                     }
                 }
             )

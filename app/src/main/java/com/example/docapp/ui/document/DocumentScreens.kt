@@ -104,7 +104,7 @@ fun DocumentViewScreen(
             fullDoc = doc
             useCases.touchOpened(docId)
         } catch (e: Exception) {
-            ErrorHandler.showError("Не удалось загрузить документ: ${e.message}")
+            ErrorHandler.showError("Failed to load document: ${e.message}")
         }
     }
 
@@ -114,7 +114,7 @@ fun DocumentViewScreen(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text("Загрузка...", style = MaterialTheme.typography.bodyLarge)
+            Text("Loading...", style = MaterialTheme.typography.bodyLarge)
         }
         return
     }
@@ -125,9 +125,9 @@ fun DocumentViewScreen(
             val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
             intent.setDataAndType(android.net.Uri.parse(pdfUri), "application/pdf")
             intent.flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-            context.startActivity(android.content.Intent.createChooser(intent, "Открыть PDF"))
+            context.startActivity(android.content.Intent.createChooser(intent, "Open PDF"))
         } catch (e: Exception) {
-            ErrorHandler.showError("Не удалось открыть PDF: ${e.message}")
+            ErrorHandler.showError("Failed to open PDF: ${e.message}")
         }
     }
 
@@ -137,9 +137,9 @@ fun DocumentViewScreen(
             val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
             intent.setDataAndType(android.net.Uri.parse(photoUri), "image/*")
             intent.flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-            context.startActivity(android.content.Intent.createChooser(intent, "Открыть фото"))
+            context.startActivity(android.content.Intent.createChooser(intent, "Open photo"))
         } catch (e: Exception) {
-            ErrorHandler.showError("Не удалось открыть фото: ${e.message}")
+            ErrorHandler.showError("Failed to open photo: ${e.message}")
         }
     }
 
@@ -162,7 +162,7 @@ fun DocumentViewScreen(
                 "$title: $value"
             }
             clipboardManager.setText(AnnotatedString(allFieldsText))
-            ErrorHandler.showSuccess("Все поля скопированы в буфер обмена")
+            ErrorHandler.showSuccess("All fields copied to clipboard")
         }
     }
 
@@ -211,7 +211,7 @@ fun DocumentViewScreen(
                     value = value,
                     onCopy = {
                         clipboardManager.setText(AnnotatedString(value))
-                        ErrorHandler.showSuccess("Скопировано: $label")
+                        ErrorHandler.showSuccess("Copied: $label")
                     }
                 )
                 Spacer(modifier = Modifier.height(AppDimens.spaceLg))
@@ -292,29 +292,29 @@ fun DocumentViewScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Удалить документ") },
-            text = { Text("Вы уверены, что хотите удалить этот документ?") },
+            title = { Text("Delete document") },
+            text = { Text("Are you sure you want to delete this document?") },
             confirmButton = {
                 TextButton(
                     onClick = {
                     scope.launch {
                             try {
                                 useCases.deleteDoc(docId)
-                                ErrorHandler.showSuccess("Документ удален")
+                                ErrorHandler.showSuccess("Document deleted")
                         onDeleted()
                             } catch (e: Exception) {
-                                ErrorHandler.showError("Не удалось удалить документ: ${e.message}")
+                                ErrorHandler.showError("Failed to delete document: ${e.message}")
                             }
                         }
                         showDeleteDialog = false
                     }
                 ) {
-                    Text("Удалить")
+                    Text("Delete")
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Отмена")
+                    Text("Cancel")
                 }
             }
         )
@@ -398,9 +398,9 @@ fun DocumentEditScreen(
                 if (existingDocId == null) {
                     importedAttachments = importedAttachments.filter { it != photoId }
                 }
-                ErrorHandler.showSuccess("Фотография удалена")
+                ErrorHandler.showSuccess("Photo removed")
             } catch (e: Exception) {
-                ErrorHandler.showError("Не удалось удалить фотографию: ${e.message}")
+                ErrorHandler.showError("Failed to delete photo: ${e.message}")
             }
         }
     }
@@ -414,9 +414,9 @@ fun DocumentEditScreen(
                 if (existingDocId == null) {
                     importedAttachments = importedAttachments.filter { it != pdfId }
                 }
-                ErrorHandler.showSuccess("PDF удален")
+                ErrorHandler.showSuccess("PDF removed")
             } catch (e: Exception) {
-                ErrorHandler.showError("Не удалось удалить PDF: ${e.message}")
+                ErrorHandler.showError("Failed to delete PDF: ${e.message}")
             }
         }
     }
@@ -426,9 +426,9 @@ fun DocumentEditScreen(
             val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
             intent.setDataAndType(android.net.Uri.parse(pdfUri), "application/pdf")
             intent.flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-            context.startActivity(android.content.Intent.createChooser(intent, "Открыть PDF"))
+            context.startActivity(android.content.Intent.createChooser(intent, "Open PDF"))
         } catch (e: Exception) {
-            ErrorHandler.showError("Не удалось открыть PDF: ${e.message}")
+            ErrorHandler.showError("Failed to open PDF: ${e.message}")
         }
     }
     
@@ -437,9 +437,9 @@ fun DocumentEditScreen(
             val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
             intent.setDataAndType(android.net.Uri.parse(photoUri), "image/*")
             intent.flags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-            context.startActivity(android.content.Intent.createChooser(intent, "Открыть фото"))
+            context.startActivity(android.content.Intent.createChooser(intent, "Open photo"))
         } catch (e: Exception) {
-            ErrorHandler.showError("Не удалось открыть фото: ${e.message}")
+            ErrorHandler.showError("Failed to open photo: ${e.message}")
         }
     }
     
@@ -469,7 +469,7 @@ fun DocumentEditScreen(
                 currentPhotos = doc?.photos ?: emptyList()
                 currentPdfs = doc?.pdfs ?: emptyList()
             } catch (e: Exception) {
-                ErrorHandler.showError("Не удалось загрузить документ: ${e.message}")
+                ErrorHandler.showError("Failed to load document: ${e.message}")
             }
         } else {
             // Для новых документов инициализируем пустые списки
@@ -522,7 +522,7 @@ fun DocumentEditScreen(
                 currentPhotos = currentPhotos + photos
                 currentPdfs = currentPdfs + pdfs
             } catch (e: Exception) {
-                ErrorHandler.showError("Не удалось обновить список файлов: ${e.message}")
+                ErrorHandler.showError("Failed to refresh file list: ${e.message}")
             }
         } else {
             try {
@@ -530,10 +530,10 @@ fun DocumentEditScreen(
                 currentPhotos = doc?.photos ?: emptyList()
                 currentPdfs = doc?.pdfs ?: emptyList()
             } catch (e: Exception) {
-                ErrorHandler.showError("Не удалось обновить список файлов: ${e.message}")
+                ErrorHandler.showError("Failed to refresh file list: ${e.message}")
             }
         }
-        ErrorHandler.showSuccess("Файлы импортированы успешно")
+        ErrorHandler.showSuccess("Files imported successfully")
     }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
@@ -549,7 +549,7 @@ fun DocumentEditScreen(
                     importProgress = 1f
                     handleImportedAttachments(result.attachments.map { it.id })
                 } catch (e: Exception) {
-                    ErrorHandler.showError("Ошибка импорта фотографий: ${e.message}")
+                    ErrorHandler.showError("Failed to import photos: ${e.message}")
                 } finally {
                     isImporting = false
                     showImportDialog = false
@@ -571,7 +571,7 @@ fun DocumentEditScreen(
                     importProgress = 1f
                     handleImportedAttachments(result.attachments.map { it.id })
                 } catch (e: Exception) {
-                    ErrorHandler.showError("Ошибка импорта файлов: ${e.message}")
+                    ErrorHandler.showError("Failed to import files: ${e.message}")
                 } finally {
                     isImporting = false
                     showImportDialog = false
@@ -597,7 +597,7 @@ fun DocumentEditScreen(
         ) {
             item {
                 EditorHeaderRow(
-                    title = if (existingDocId != null) "Редактирование документа" else "Создание документа",
+                    title = if (existingDocId != null) "Edit document" else "Create document",
                     onClose = {
                         if (existingDocId == null) {
                             onSaved("")
@@ -609,18 +609,18 @@ fun DocumentEditScreen(
             }
 
             item {
-                EditorSectionCard(title = "Основная информация") {
+                EditorSectionCard(title = "Main information") {
                     EditorFieldInput(
-                        label = "Название документа",
+                        label = "Document name",
                         value = name,
-                        placeholder = "Придумай короткое имя",
+                        placeholder = "Enter a short name",
                         onValueChange = { name = it }
                     )
                     Spacer(Modifier.height(AppDimens.sectionSpacing))
                     EditorFieldInput(
-                        label = "Описание",
+                            label = "Description",
                         value = description,
-                        placeholder = "Добавь пару слов о содержимом",
+                            placeholder = "Add a short summary",
                         onValueChange = { description = it },
                         singleLine = false
                     )
@@ -628,15 +628,15 @@ fun DocumentEditScreen(
             }
 
             item {
-                EditorSectionCard(title = "Поля документа") {
+                EditorSectionCard(title = "Document fields") {
                     if (fields.isEmpty()) {
-                        EditorEmptyPlaceholder("Пока здесь пусто. Добавь поле, чтобы заполнить документ содержимым.")
+                        EditorEmptyPlaceholder("Nothing here yet. Add a field to fill the document.")
                     } else {
                         fields.forEachIndexed { index, (fieldName, fieldValue) ->
                             EditorFieldInput(
                                 label = fieldName,
                                 value = fieldValue,
-                                placeholder = "Значение",
+                                placeholder = "Value",
                                 onValueChange = { newValue -> fields[index] = fieldName to newValue },
                                 removable = true,
                                 onRemove = { fields.removeAt(index) }
@@ -648,7 +648,7 @@ fun DocumentEditScreen(
                     }
                     Spacer(Modifier.height(AppDimens.sectionSpacing))
                     NeonOutlineButton(
-                        text = "Добавить поле",
+                        text = "Add field",
                         onClick = {
                             newFieldName = ""
                             showAddFieldDialog = true
@@ -659,10 +659,10 @@ fun DocumentEditScreen(
             }
 
             item {
-                EditorSectionCard(title = "Вложения") {
+                EditorSectionCard(title = "Attachments") {
                     Box {
                         NeonOutlineButton(
-                            text = if (isImporting) "Идет импорт..." else "Добавить файл",
+                            text = if (isImporting) "Importing..." else "Add file",
                             onClick = { if (!isImporting) showAttachmentMenu = true },
                             enabled = !isImporting
                         )
@@ -671,7 +671,7 @@ fun DocumentEditScreen(
                             onDismissRequest = { showAttachmentMenu = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text("Добавить фото", color = EditorPalette.textPrimary) },
+                                text = { Text("Add photo", color = EditorPalette.textPrimary) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     if (!isImporting) {
@@ -680,7 +680,7 @@ fun DocumentEditScreen(
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("Добавить PDF", color = EditorPalette.textPrimary) },
+                                text = { Text("Add PDF", color = EditorPalette.textPrimary) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     if (!isImporting) {
@@ -693,11 +693,11 @@ fun DocumentEditScreen(
 
                     if (currentPhotos.isEmpty() && currentPdfs.isEmpty()) {
                         Spacer(Modifier.height(AppDimens.spaceLg))
-                        EditorEmptyPlaceholder("После импорта здесь появятся фото и документы.")
+                        EditorEmptyPlaceholder("Photos and documents will appear here after import.")
                     } else {
                         if (currentPhotos.isNotEmpty()) {
                             Spacer(Modifier.height(AppDimens.spaceLg))
-                            EditorSubsectionTitle("Фото")
+                            EditorSubsectionTitle("Photos")
                             Spacer(Modifier.height(AppDimens.listSpacing))
                             currentPhotos.forEach { photo ->
                                 EditorPhotoCard(
@@ -711,7 +711,7 @@ fun DocumentEditScreen(
                         }
                         if (currentPdfs.isNotEmpty()) {
                             Spacer(Modifier.height(AppDimens.spaceLg))
-                            EditorSubsectionTitle("PDF файлы")
+                            EditorSubsectionTitle("PDF files")
                             Spacer(Modifier.height(AppDimens.listSpacing))
                             currentPdfs.forEach { pdf ->
                                 EditorPdfCard(
@@ -732,9 +732,9 @@ fun DocumentEditScreen(
             item {
                 NeonPrimaryButton(
                     text = when {
-                        isSaving -> "Сохраняю..."
-                        existingDocId != null -> "Сохранить изменения"
-                        else -> "Сохранить документ"
+                        isSaving -> "Saving..."
+                        existingDocId != null -> "Save changes"
+                        else -> "Save document"
                     },
                     onClick = {
                         if (name.isNotBlank()) {
@@ -743,7 +743,7 @@ fun DocumentEditScreen(
                                 try {
                                     val id = if (existingDocId != null) {
                                         val existingDoc = useCases.getDoc(existingDocId)
-                                            ?: throw Exception("Документ не найден")
+                                            ?: throw Exception("Document not found")
                                         useCases.updateDoc(
                                             existingDoc.copy(
                                                 doc = existingDoc.doc.copy(
@@ -782,16 +782,16 @@ fun DocumentEditScreen(
                                         }
                                         newDocId
                                     }
-                                    ErrorHandler.showSuccess("Документ сохранен")
+                                    ErrorHandler.showSuccess("Document saved")
                                     onSaved(id)
                                 } catch (error: Exception) {
-                                    ErrorHandler.showError("Не удалось сохранить документ: ${error.message}")
+                                    ErrorHandler.showError("Failed to save document: ${error.message}")
                                 } finally {
                                     isSaving = false
                                 }
                             }
                         } else {
-                            ErrorHandler.showError("Название документа не может быть пустым")
+                            ErrorHandler.showError("Document name cannot be empty")
                         }
                     },
                     enabled = !isSaving && name.isNotBlank()
@@ -804,10 +804,10 @@ fun DocumentEditScreen(
         AlertDialog(
             onDismissRequest = { },
             containerColor = EditorPalette.section,
-            title = { Text("Импорт файлов", color = EditorPalette.textPrimary) },
+            title = { Text("File import", color = EditorPalette.textPrimary) },
             text = {
                 Column {
-                    Text("Импорт файлов в процессе...", color = EditorPalette.textSecondary)
+                    Text("File import in progress...", color = EditorPalette.textSecondary)
                     Spacer(modifier = Modifier.height(AppDimens.spaceLg))
                     LinearProgressIndicator(
                         progress = { importProgress },
@@ -822,7 +822,7 @@ fun DocumentEditScreen(
                     onClick = { },
                     enabled = false,
                     colors = ButtonDefaults.textButtonColors(contentColor = EditorPalette.neon.copy(alpha = 0.4f))
-                ) { Text("Отмена") }
+                ) { Text("Cancel") }
             }
         )
     }
@@ -832,12 +832,12 @@ fun DocumentEditScreen(
         AlertDialog(
             onDismissRequest = { showAddFieldDialog = false },
             containerColor = EditorPalette.section,
-            title = { Text("Добавить поле", color = EditorPalette.textPrimary) },
+            title = { Text("Add field", color = EditorPalette.textPrimary) },
             text = {
                 OutlinedTextField(
                     value = newFieldName,
                     onValueChange = { newFieldName = it },
-                    label = { Text("Название поля") },
+                    label = { Text("Field name") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
@@ -865,7 +865,7 @@ fun DocumentEditScreen(
                     enabled = newFieldName.isNotBlank(),
                     colors = ButtonDefaults.textButtonColors(contentColor = EditorPalette.neon)
                 ) {
-                    Text("Добавить")
+                    Text("Add")
                 }
             },
             dismissButton = {
@@ -873,7 +873,7 @@ fun DocumentEditScreen(
                     onClick = { showAddFieldDialog = false },
                     colors = ButtonDefaults.textButtonColors(contentColor = EditorPalette.textSecondary)
                 ) {
-                    Text("Отмена")
+                    Text("Cancel")
                 }
             }
         )
@@ -931,7 +931,7 @@ private fun EditorHeaderRow(
         )
         EditorIconButton(
             icon = Icons.Outlined.Close,
-            description = "Закрыть",
+            description = "Close",
             onClick = onClose
         )
     }
@@ -994,7 +994,7 @@ private fun EditorFieldInput(
             if (removable && onRemove != null) {
                 EditorIconButton(
                     icon = Icons.Outlined.Close,
-                    description = "Удалить поле",
+                    description = "Remove field",
                     onClick = onRemove,
                     background = EditorPalette.controlBackground,
                     tint = EditorPalette.neon.copy(alpha = 0.8f),
@@ -1076,7 +1076,7 @@ private fun EditorPhotoCard(
             )
     ) {
         Text(
-            text = photo.displayName ?: "Фото",
+            text = photo.displayName ?: "Photo",
             color = EditorPalette.textPrimary,
             style = MaterialTheme.typography.titleMedium
         )
@@ -1086,7 +1086,7 @@ private fun EditorPhotoCard(
                 .data(photo.uri)
                 .crossfade(true)
                 .build(),
-            contentDescription = photo.displayName ?: "Фото",
+            contentDescription = photo.displayName ?: "Photo",
             modifier = Modifier
                 .fillMaxWidth()
                 .height(220.dp)
@@ -1097,7 +1097,7 @@ private fun EditorPhotoCard(
         )
         Spacer(Modifier.height(AppDimens.spaceLg))
         NeonOutlineButton(
-            text = "Удалить фото",
+            text = "Remove photo",
             onClick = onDelete,
             enabled = !isDeleting
         )
@@ -1160,7 +1160,7 @@ private fun EditorPdfCard(
                 onLoadPreview()
             }
             Text(
-                text = "Готовлю превью...",
+                text = "Preparing preview...",
                 color = EditorPalette.textSecondary,
                 style = MaterialTheme.typography.bodyMedium,
                 fontStyle = FontStyle.Italic
@@ -1169,12 +1169,12 @@ private fun EditorPdfCard(
         Spacer(Modifier.height(AppDimens.listSpacing))
         Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.listSpacing)) {
             NeonOutlineButton(
-                text = "Открыть",
+                text = "Open",
                 onClick = onOpen,
                 modifier = Modifier.weight(1f)
             )
             NeonOutlineButton(
-                text = "Удалить",
+                text = "Delete",
                 onClick = onDelete,
                 enabled = !isDeleting,
                 modifier = Modifier.weight(1f)
@@ -1378,7 +1378,7 @@ private fun MoveToFolderDialog(
     AlertDialog(
         onDismissRequest = onClose,
         containerColor = EditorPalette.section,
-        title = { Text("Переместить в папку", color = EditorPalette.textPrimary) },
+        title = { Text("Move to folder", color = EditorPalette.textPrimary) },
         text = {
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1390,7 +1390,7 @@ private fun MoveToFolderDialog(
                             unselectedColor = EditorPalette.textSecondary
                         )
                     )
-                    Text("Без папки", color = EditorPalette.textSecondary)
+                    Text("No folder", color = EditorPalette.textSecondary)
                 }
                 Spacer(Modifier.height(AppDimens.spaceSm))
                 folders.forEach { folder ->
@@ -1414,16 +1414,16 @@ private fun MoveToFolderDialog(
                     scope.launch {
                         try {
                             useCases.moveDocToFolder(docId, selected)
-                            ErrorHandler.showSuccess("Документ перемещен")
+                            ErrorHandler.showSuccess("Document moved")
                             onClose()
                         } catch (e: Exception) {
-                            ErrorHandler.showError("Не удалось переместить документ: ${e.message}")
+                            ErrorHandler.showError("Failed to move document: ${e.message}")
                         }
                     }
                 },
                 colors = ButtonDefaults.textButtonColors(contentColor = EditorPalette.neon)
             ) {
-                Text("Переместить")
+                Text("Move")
             }
         },
         dismissButton = {
@@ -1431,7 +1431,7 @@ private fun MoveToFolderDialog(
                 onClick = onClose,
                 colors = ButtonDefaults.textButtonColors(contentColor = EditorPalette.textSecondary)
             ) {
-                Text("Отмена")
+                Text("Cancel")
             }
         }
     )

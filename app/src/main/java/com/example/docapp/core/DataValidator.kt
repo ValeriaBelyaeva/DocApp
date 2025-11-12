@@ -16,11 +16,11 @@ object DataValidator {
         val trimmed = name.trim()
         
         if (trimmed.isEmpty()) {
-            return ValidationResult.Error("Название папки не может быть пустым")
+            return ValidationResult.Error("Folder name cannot be empty")
         }
         
         if (trimmed.length > 50) {
-            return ValidationResult.Error("Название папки не может быть длиннее 50 символов")
+            return ValidationResult.Error("Folder name cannot be longer than 50 characters")
         }
         
         val normalized = trimmed.uppercase()
@@ -37,11 +37,11 @@ object DataValidator {
         val trimmed = name.trim()
         
         if (trimmed.isEmpty()) {
-            return ValidationResult.Error("Название шаблона не может быть пустым")
+            return ValidationResult.Error("Template name cannot be empty")
         }
         
         if (trimmed.length > 50) {
-            return ValidationResult.Error("Название шаблона не может быть длиннее 50 символов")
+            return ValidationResult.Error("Template name cannot exceed 50 characters")
         }
         
         val normalized = trimmed.uppercase()
@@ -58,11 +58,11 @@ object DataValidator {
         val trimmed = name.trim()
         
         if (trimmed.isEmpty()) {
-            return ValidationResult.Error("Название поля не может быть пустым")
+            return ValidationResult.Error("Field name cannot be empty")
         }
         
         if (trimmed.length > 30) {
-            return ValidationResult.Error("Название поля не может быть длиннее 30 символов")
+            return ValidationResult.Error("Field name cannot exceed 30 characters")
         }
         
         val normalized = trimmed.uppercase()
@@ -79,11 +79,11 @@ object DataValidator {
         val trimmed = name.trim()
         
         if (trimmed.isEmpty()) {
-            return ValidationResult.Error("Название документа не может быть пустым")
+            return ValidationResult.Error("Document name cannot be empty")
         }
         
         if (trimmed.length > 100) {
-            return ValidationResult.Error("Название документа не может быть длиннее 100 символов")
+            return ValidationResult.Error("Document name cannot exceed 100 characters")
         }
         
         val normalized = trimmed.uppercase()
@@ -100,11 +100,11 @@ object DataValidator {
         val trimmed = value.trim()
         
         if (trimmed.isEmpty()) {
-            return ValidationResult.Error("Значение поля не может быть пустым")
+            return ValidationResult.Error("Field value cannot be empty")
         }
         
         if (trimmed.length > 200) {
-            return ValidationResult.Error("Значение поля не может быть длиннее 200 символов")
+            return ValidationResult.Error("Field value cannot exceed 200 characters")
         }
         
         val normalized = trimmed.uppercase()

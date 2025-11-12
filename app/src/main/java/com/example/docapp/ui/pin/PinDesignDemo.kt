@@ -31,7 +31,7 @@ fun PinDesignDemo() {
             )
             
             Text(
-                text = "Точный визуал по макету",
+                text = "Exact layout replica",
                 color = PinColors.Neon,
                 fontSize = 16.sp
             )

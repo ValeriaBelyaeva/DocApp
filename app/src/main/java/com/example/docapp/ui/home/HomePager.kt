@@ -91,11 +91,11 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
         initial = DocumentRepository.HomeList(emptyList(), emptyList())
     )
 
-    // Режим перестановки закреплённых
+    // pinned documents reorder state
     var reorderMode by remember { mutableStateOf(false) }
     var firstSelected by remember { mutableStateOf<String?>(null) }
 
-    // Диалог перемещения
+    // move dialog state
     var moveDocId by remember { mutableStateOf<String?>(null) }
 
     fun toast(s: String) = Toast.makeText(ctx, s, Toast.LENGTH_SHORT).show()
@@ -121,14 +121,12 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
             ) {
                 item {
                     HistorySectionCard(
-                        title = "Закрепленные",
+                        title = "Pinned",
                         icon = Icons.Default.Star,
                         isCollapsed = pinnedCollapsed,
                         onToggleCollapse = { pinnedCollapsed = !pinnedCollapsed }
                     ) {
-                        if (home.pinned.isEmpty()) {
-                            HistoryEmptyPlaceholder("Пока нет закрепленных документов")
-                        } else {
+                        if (home.pinned.isNotEmpty()) {
                             if (reorderMode) {
                                 Box(
                                     modifier = Modifier
@@ -148,13 +146,13 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
                                         )
                                         Spacer(Modifier.width(AppDimens.spaceMd))
                                         Text(
-                                            text = "Выбрали документ. Коснитесь другого закрепленного, чтобы поменять местами",
+                                            text = "Document selected. Tap another pinned document to swap",
                                             color = NeoPalette.textSecondary,
                                             style = MaterialTheme.typography.bodyMedium,
                                             modifier = Modifier.weight(1f)
                                         )
                                         TextButton(onClick = { reorderMode = false; firstSelected = null }) {
-                                            Text("Готово")
+                                            Text("Done")
                                         }
                                     }
                                 }
@@ -179,10 +177,10 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
                                                 scope.launch {
                                                     try {
                                                         uc.swapPinned(first, document.id)
-                                                        toast("Поменяли местами")
+                                                        toast("Documents swapped")
                                                         firstSelected = document.id
                                                     } catch (error: Exception) {
-                                                        toast("Не удалось переставить")
+                                                        toast("Swap failed")
                                                     }
                                                 }
                                             }
@@ -212,36 +210,32 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
 
                 item {
                     HistorySectionCard(
-                        title = "Последние",
+                        title = "Recent",
                         icon = Icons.Default.Description,
                         isCollapsed = recentCollapsed,
                         onToggleCollapse = { recentCollapsed = !recentCollapsed }
                     ) {
-                        if (home.recent.isEmpty()) {
-                            HistoryEmptyPlaceholder("Здесь появятся недавно открытые")
-                        } else {
-                            home.recent.forEachIndexed { index, document ->
-                                var menuOpen by remember(document.id) { mutableStateOf(false) }
-                                HistoryDocumentRow(
-                                    document = document,
-                                    isPinned = false,
-                                    isSelected = false,
-                                    onClick = { openDoc(document.id) },
-                                    onTogglePin = {
-                                        scope.launch { uc.pinDoc(document.id, true) }
-                                    },
-                                    menuExpanded = menuOpen,
-                                    onMenuOpen = { menuOpen = true },
-                                    onMenuDismiss = { menuOpen = false },
-                                    onMoveDocument = {
-                                        menuOpen = false
-                                        moveDocId = document.id
-                                    },
-                                    menuEnabled = true
-                                )
-                                if (index != home.recent.lastIndex) {
-                                    Spacer(Modifier.height(AppDimens.listSpacing))
-                                }
+                        home.recent.forEachIndexed { index, document ->
+                            var menuOpen by remember(document.id) { mutableStateOf(false) }
+                            HistoryDocumentRow(
+                                document = document,
+                                isPinned = false,
+                                isSelected = false,
+                                onClick = { openDoc(document.id) },
+                                onTogglePin = {
+                                    scope.launch { uc.pinDoc(document.id, true) }
+                                },
+                                menuExpanded = menuOpen,
+                                onMenuOpen = { menuOpen = true },
+                                onMenuDismiss = { menuOpen = false },
+                                onMoveDocument = {
+                                    menuOpen = false
+                                    moveDocId = document.id
+                                },
+                                menuEnabled = true
+                            )
+                            if (index != home.recent.lastIndex) {
+                                Spacer(Modifier.height(AppDimens.listSpacing))
                             }
                         }
                     }
@@ -259,7 +253,7 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
                         firstSelected = null
                     } else {
                         if (home.pinned.isEmpty()) {
-                            toast("Нечего переставлять")
+                             toast("Nothing to rearrange")
                         } else {
                             reorderMode = true
                             firstSelected = null
@@ -283,7 +277,6 @@ private fun HistorySectionCard(
     content: @Composable ColumnScope.() -> Unit
 ) {
     GlassCard(modifier = Modifier.fillMaxWidth(), shape = NeoShapes.section) {
-        val iconBackground = if (SurfaceTokens.current(ThemeConfig.surfaceStyle).useGradient) AppColors.level3Background() else Color.Transparent
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -298,11 +291,10 @@ private fun HistorySectionCard(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(AppShapes.iconButton())
-                        .background(iconBackground)
                 ) {
                     Icon(
                         imageVector = if (isCollapsed) Icons.Outlined.KeyboardArrowDown else Icons.Outlined.KeyboardArrowUp,
-                        contentDescription = if (isCollapsed) "Развернуть" else "Свернуть",
+                        contentDescription = if (isCollapsed) "Expand" else "Collapse",
                         tint = NeoPalette.neon
                     )
                 }
@@ -313,7 +305,6 @@ private fun HistorySectionCard(
                     tint = NeoPalette.neon,
                     modifier = Modifier
                         .size(32.dp)
-                        .padding(AppDimens.spaceXs)
                 )
                 Spacer(Modifier.width(AppDimens.iconRowSpacing))
                 Text(
@@ -329,36 +320,6 @@ private fun HistorySectionCard(
                 content()
             }
         }
-    }
-}
-
-@Composable
-private fun HistoryEmptyPlaceholder(text: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(NeoShapes.row)
-            .background(NeoPalette.item.copy(alpha = 0.6f))
-            .padding(
-                horizontal = AppDimens.panelPaddingHorizontal,
-                vertical = AppDimens.panelPaddingVertical
-            ),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Default.Description,
-            contentDescription = null,
-            tint = NeoPalette.textSecondary,
-            modifier = Modifier
-                .size(32.dp)
-                .padding(AppDimens.spaceXs)
-        )
-        Spacer(Modifier.width(AppDimens.spaceLg))
-        Text(
-            text = text,
-            color = NeoPalette.textSecondary,
-            style = MaterialTheme.typography.bodyMedium
-        )
     }
 }
 
@@ -382,7 +343,6 @@ private fun HistoryDocumentRow(
     val borderColor = if (isSelected) NeoPalette.neon.copy(alpha = 0.6f) else Color.Transparent
 
     Box(modifier = Modifier.fillMaxWidth()) {
-        val iconBackground = if (SurfaceTokens.current(ThemeConfig.surfaceStyle).useGradient) AppColors.level3Background() else Color.Transparent
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -405,19 +365,18 @@ private fun HistoryDocumentRow(
                 ),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(
-                onClick = onTogglePin,
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(AppShapes.iconButton())
-                    .background(iconBackground)
-            ) {
-                Icon(
-                    imageVector = if (isPinned) Icons.Default.Star else Icons.Outlined.StarOutline,
-                    contentDescription = if (isPinned) "Открепить" else "Закрепить",
-                    tint = NeoPalette.neon
-                )
-            }
+        IconButton(
+            onClick = onTogglePin,
+            modifier = Modifier
+                .size(40.dp)
+                .clip(AppShapes.iconButton())
+        ) {
+            Icon(
+                imageVector = if (isPinned) Icons.Default.Star else Icons.Outlined.StarOutline,
+                contentDescription = if (isPinned) "Unpin" else "Pin",
+                tint = NeoPalette.neon
+            )
+        }
             Spacer(Modifier.width(AppDimens.iconRowSpacing))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -440,18 +399,17 @@ private fun HistoryDocumentRow(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(AppShapes.iconButton())
-                    .background(iconBackground)
             ) {
                 Icon(
                     imageVector = if (descriptionMasked) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
-                    contentDescription = if (descriptionMasked) "Показать" else "Скрыть",
+                    contentDescription = if (descriptionMasked) "Show" else "Hide",
                     tint = NeoPalette.neon
                 )
             }
         }
         DropdownMenu(expanded = menuExpanded, onDismissRequest = onMenuDismiss) {
             DropdownMenuItem(
-                text = { Text("Переместить в папку") },
+                text = { Text("Move to folder") },
                 onClick = onMoveDocument
             )
         }
@@ -478,12 +436,12 @@ private fun HistoryBottomBar(
     ) {
         DockButton(
             icon = Icons.AutoMirrored.Outlined.NoteAdd,
-            description = "Новый документ",
+            description = "New document",
             onClick = onCreateDocument
         )
         DockButton(
             icon = if (reorderMode) Icons.Default.Check else Icons.Default.SwapVert,
-            description = if (reorderMode) "Завершить перестановку" else "Перестановка закрепленных",
+            description = if (reorderMode) "Finish reordering" else "Reorder pinned",
             onClick = onToggleReorder
         )
     }
@@ -617,12 +575,12 @@ private fun TreeScreen(
     if (showNewFolderDialog) {
         AlertDialog(
             onDismissRequest = { showNewFolderDialog = false },
-            title = { Text("Новая папка") },
+            title = { Text("New folder") },
             text = {
                 OutlinedTextField(
                     value = newFolderName,
                     onValueChange = { newFolderName = it },
-                    label = { Text("Название папки") },
+                    label = { Text("Folder name") },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = MaterialTheme.colorScheme.onBackground,
                         unfocusedTextColor = MaterialTheme.colorScheme.onBackground
@@ -641,10 +599,10 @@ private fun TreeScreen(
                     } else {
                         ErrorHandler.showError(validation.getError()!!)
                     }
-                }) { Text("Создать") }
+                }) { Text("Create") }
             },
             dismissButton = {
-                TextButton(onClick = { showNewFolderDialog = false }) { Text("Отмена") }
+                TextButton(onClick = { showNewFolderDialog = false }) { Text("Cancel") }
             }
         )
     }
@@ -691,7 +649,7 @@ private fun FolderSectionCard(
                         ) {
                             Icon(
                                 imageVector = if (isCollapsed) Icons.Outlined.KeyboardArrowDown else Icons.Outlined.KeyboardArrowUp,
-                                contentDescription = if (isCollapsed) "Развернуть" else "Свернуть",
+                                contentDescription = if (isCollapsed) "Expand" else "Collapse",
                                 tint = NeoPalette.neon
                             )
                         }
@@ -727,14 +685,14 @@ private fun FolderSectionCard(
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Tune,
-                                contentDescription = "Настройки папки",
+                                contentDescription = "Folder options",
                             tint = NeoPalette.neon
                             )
                         }
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                             if (onCreateInFolder != null) {
                                 DropdownMenuItem(
-                                    text = { Text("Создать документ") },
+                                    text = { Text("Create document") },
                                     onClick = {
                                         menuOpen = false
                                         onCreateInFolder()
@@ -743,7 +701,7 @@ private fun FolderSectionCard(
                             }
                             if (onDeleteFolder != null) {
                                 DropdownMenuItem(
-                                    text = { Text("Удалить папку") },
+                                    text = { Text("Delete folder") },
                                     onClick = {
                                         menuOpen = false
                                         onDeleteFolder()
@@ -755,26 +713,8 @@ private fun FolderSectionCard(
                 }
 
                 if (!isCollapsed || !collapsible) {
-                    Spacer(Modifier.height(AppDimens.listSpacing))
-                    if (documents.isEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(NeoShapes.row)
-                                .background(NeoPalette.controlBackground)
-                                .padding(
-                                    horizontal = AppDimens.panelPaddingHorizontal,
-                                    vertical = AppDimens.panelPaddingVertical
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Пусто",
-                                color = NeoPalette.textSecondary,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                    } else {
+                    if (documents.isNotEmpty()) {
+                        Spacer(Modifier.height(AppDimens.listSpacing))
                         documents.forEachIndexed { index, doc ->
                             DocumentRow(
                                 document = doc,
@@ -802,8 +742,6 @@ private fun DocumentRow(
     var menuOpen by remember { mutableStateOf(false) }
     var isMasked by remember(document.id) { mutableStateOf(true) }
 
-    val iconBackground = if (SurfaceTokens.current(ThemeConfig.surfaceStyle).useGradient) AppColors.level3Background() else Color.Transparent
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -825,9 +763,6 @@ private fun DocumentRow(
             tint = NeoPalette.neon,
             modifier = Modifier
                 .size(36.dp)
-                .clip(AppShapes.badge())
-                .background(NeoPalette.iconBackground)
-                .padding(AppDimens.spaceXs)
         )
         Spacer(Modifier.width(AppDimens.spaceLg))
         Column(modifier = Modifier.weight(1f)) {
@@ -851,17 +786,16 @@ private fun DocumentRow(
             modifier = Modifier
                 .size(40.dp)
                 .clip(AppShapes.iconButton())
-                .background(iconBackground)
         ) {
             Icon(
                 imageVector = if (isMasked) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
-                contentDescription = if (isMasked) "Показать описание" else "Скрыть описание",
+                contentDescription = if (isMasked) "Show description" else "Hide description",
                 tint = NeoPalette.neon
             )
         }
         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
             DropdownMenuItem(
-                text = { Text("Переместить в папку") },
+                text = { Text("Move to folder") },
                 onClick = {
                     menuOpen = false
                     onMoveDoc(document.id)
@@ -890,12 +824,12 @@ private fun FloatingDock(
     ) {
         DockButton(
             icon = Icons.AutoMirrored.Outlined.NoteAdd,
-            description = "Новый документ",
+            description = "New document",
             onClick = onCreateDoc
         )
         DockButton(
             icon = Icons.Outlined.CreateNewFolder,
-            description = "Новая папка",
+            description = "New folder",
             onClick = onCreateFolder
         )
     }
@@ -938,13 +872,13 @@ private fun MoveToFolderDialogIfNeeded(moveDocId: String?, onClose: () -> Unit) 
 
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text("Переместить в папку") },
+        title = { Text("Move to folder") },
         text = {
             Column {
-                // Опция "Без папки"
+                // "no folder" option
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(selected = selected == null, onClick = { selected = null })
-                    Text("Без папки")
+                    Text("No folder")
                 }
                 Spacer(Modifier.height(AppDimens.spaceSm))
                 folders.forEach { f ->
@@ -961,10 +895,10 @@ private fun MoveToFolderDialogIfNeeded(moveDocId: String?, onClose: () -> Unit) 
                     uc.moveDocToFolder(moveDocId, selected)
                     onClose()
                 }
-            }) { Text("Переместить") }
+            }) { Text("Move") }
         },
         dismissButton = {
-            TextButton(onClick = onClose) { Text("Отмена") }
+            TextButton(onClick = onClose) { Text("Cancel") }
         }
     )
 }
@@ -1008,15 +942,15 @@ private fun InfoScreen() {
             }
 
             item {
-                InformationSectionCard(title = "Тема приложения") {
+                InformationSectionCard(title = "App theme") {
                     Text(
-                        text = "Оформи внешний вид, чтобы он подходил под настроение.",
+                        text = "Tune the visuals to match your mood.",
                         color = NeoPalette.textSecondary,
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Spacer(Modifier.height(AppDimens.spaceLg))
                     Text(
-                        text = "Палитра",
+                        text = "Palette",
                         color = NeoPalette.textPrimary,
                         style = MaterialTheme.typography.titleSmall
                     )
@@ -1027,7 +961,7 @@ private fun InfoScreen() {
                     )
                     Spacer(Modifier.height(AppDimens.spaceLg))
                     Text(
-                        text = "Поверхность",
+                        text = "Surface style",
                         color = NeoPalette.textPrimary,
                         style = MaterialTheme.typography.titleSmall
                     )
@@ -1040,9 +974,9 @@ private fun InfoScreen() {
             }
 
             item {
-                InformationSectionCard(title = "Контакты и ссылки") {
+                InformationSectionCard(title = "Contacts & links") {
                     InformationLinkButton(
-                        text = "Открыть GitHub",
+                        text = "Open GitHub",
                         onClick = {
                             val intent = Intent(
                                 Intent.ACTION_VIEW,
@@ -1058,7 +992,7 @@ private fun InfoScreen() {
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        text = "Версия: 1.0.0",
+                        text = "Version: 1.0.0",
                         color = NeoPalette.textSecondary,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -1066,54 +1000,54 @@ private fun InfoScreen() {
             }
 
             item {
-                InformationSectionCard(title = "Пинкод") {
+                InformationSectionCard(title = "PIN") {
                     if (!changing) {
                         InformationPrimaryButton(
-                            text = "Сменить пинкод",
+                            text = "Change PIN",
                             onClick = { changing = true }
                         )
                     } else {
                         InformationTextField(
                             value = oldPin,
                             onValueChange = { oldPin = it },
-                            label = "Старый пинкод"
+                            label = "Current PIN"
                         )
                         Spacer(Modifier.height(AppDimens.spaceMd))
                         InformationTextField(
                             value = newPin,
                             onValueChange = { newPin = it },
-                            label = "Новый пинкод (4 цифры)"
+                            label = "New PIN (4 digits)"
                         )
                         Spacer(Modifier.height(AppDimens.spaceMd))
                         InformationTextField(
                             value = confirmPin,
                             onValueChange = { confirmPin = it },
-                            label = "Повтори пинкод"
+                            label = "Confirm PIN"
                         )
                         Spacer(Modifier.height(AppDimens.spaceLg))
                         InformationPrimaryButton(
-                            text = "Применить",
+                            text = "Apply",
                             onClick = {
                                 scope.launch {
                                     if (!isFourDigits(newPin)) {
-                                        toast("Пинкод должен состоять из четырех цифр")
+                                        toast("PIN must contain four digits")
                                         return@launch
                                     }
                                     if (newPin != confirmPin) {
-                                        toast("Подтверждение пинкода не совпадает")
+                                        toast("PIN confirmation does not match")
                                         return@launch
                                     }
                                     if (oldPin == newPin) {
-                                        toast("Новый пинкод не должен совпадать со старым")
+                                        toast("New PIN must differ from the current one")
                                         return@launch
                                     }
                                     val ok = useCases.verifyPin(oldPin)
                                     if (!ok) {
-                                        toast("Старый пинкод неверный")
+                                        toast("Current PIN is incorrect")
                                         return@launch
                                     }
                                     useCases.setNewPin(newPin)
-                                    toast("Пинкод обновлен")
+                                    toast("PIN updated")
                                     oldPin = ""
                                     newPin = ""
                                     confirmPin = ""
@@ -1123,7 +1057,7 @@ private fun InfoScreen() {
                         )
                         Spacer(Modifier.height(AppDimens.spaceMd))
                         InformationGhostButton(
-                            text = "Отмена",
+                            text = "Cancel",
                             onClick = {
                                 oldPin = ""
                                 newPin = ""
@@ -1136,70 +1070,70 @@ private fun InfoScreen() {
             }
 
             item {
-                InformationSectionCard(title = "Подсказки для пользователя") {
+                InformationSectionCard(title = "User tips") {
                     InformationHintBlock(
-                        title = "Навигация",
+                        title = "Navigation",
                         hints = listOf(
-                            "Свайпай между экранами, чтобы быстро найти нужный раздел.",
-                            "Влево — экран «Дерево» с папками и документами.",
-                            "Середина — «Главная» со списком закрепленных и последних документов.",
-                            "Вправо — экран «Info», где лежат подсказки и ссылки."
+                            "Swipe between screens to jump to each section.",
+                            "Left screen \"Tree\" holds folders and documents.",
+                            "Center screen \"Home\" shows pinned and recent documents.",
+                            "Right screen \"Info\" keeps tips and helpful links."
                         )
                     )
                     Spacer(Modifier.height(AppDimens.spaceLg))
                     InformationHintBlock(
-                        title = "Главная",
+                        title = "Home",
                         hints = listOf(
-                            "Кнопка «плюс» сверху создает документ без папки.",
-                            "Закрепленные документы отмечаются звездой.",
-                            "Долгий тап включает режим перестановки закрепленных; потом тап по другой карточке меняет их местами.",
-                            "Меню на карточке помогает переместить документ в папку.",
-                            "Раздел «Последние» сортируется по времени последнего открытия."
+                            "The top plus button creates a document without a folder.",
+                            "Pinned documents are marked with a star.",
+                            "Long press starts reorder mode; tap another card to swap.",
+                            "Use the card menu to move a document into a folder.",
+                            "Recently opened documents are sorted by last access time."
                         )
                     )
                     Spacer(Modifier.height(AppDimens.spaceLg))
                     InformationHintBlock(
-                        title = "Папки",
+                        title = "Folders",
                         hints = listOf(
-                            "Внутри папки лежит список ее документов и кнопка создания нового документа прямо внутри.",
-                            "Раздел «Без папки» собирает все документы без привязки; их тоже можно перенести в нужную папку."
+                            "Each folder lists its documents plus a shortcut to add new ones.",
+                            "The \"No folder\" section stores loose documents until you move them."
                         )
                     )
                     Spacer(Modifier.height(AppDimens.spaceLg))
                     InformationHintBlock(
-                        title = "Документ",
+                        title = "Document",
                         hints = listOf(
-                            "Тапни по карточке, чтобы открыть документ.",
-                            "Описание скрывается звездочками; иконка глаза временно показывает текст.",
-                            "Иконка копии переносит значение поля в буфер обмена.",
-                            "Карандаш в шапке переводит в режим редактирования.",
-                            "Плюс рядом с названием поля добавляет новое поле.",
-                            "Документы поддерживают вложения: фото и PDF.",
-                            "Корзины позволяют удалять документы и отдельные поля."
+                            "Tap a card to open the document.",
+                            "Descriptions are masked; tap the eye icon to reveal text.",
+                            "Copy icons send field values to the clipboard.",
+                            "The pencil toggles edit mode.",
+                            "The plus near the field name adds a new field.",
+                            "You can attach photos and PDFs to any document.",
+                            "Trash icons remove documents or individual fields."
                         )
                     )
                     Spacer(Modifier.height(AppDimens.spaceLg))
                     InformationHintBlock(
-                        title = "Шаблоны",
+                        title = "Templates",
                         hints = listOf(
-                            "При создании документа можно выбрать готовый шаблон или начать с пустого листа.",
-                            "Свои шаблоны создаются на экране настройки шаблонов."
+                            "When creating a document, pick a template or start blank.",
+                            "Manage your templates on the template screen."
                         )
                     )
                     Spacer(Modifier.height(AppDimens.spaceLg))
                     InformationHintBlock(
-                        title = "Закрепления",
+                        title = "Pinned items",
                         hints = listOf(
-                            "Звезда закрепляет документ и поднимает его в верх списка.",
-                            "Порядок закрепленных меняется в режиме перестановки через долгий тап."
+                            "Stars pin a document and move it to the top.",
+                            "Reorder pinned docs in reorder mode via long press."
                         )
                     )
                     Spacer(Modifier.height(AppDimens.spaceLg))
                     InformationHintBlock(
-                        title = "Безопасность",
+                        title = "Security",
                         hints = listOf(
-                            "Сейчас выключить пинкод нельзя.",
-                            "Расширенные настройки и скрытие содержимого появятся в следующих версиях."
+                            "Disabling the PIN is not available yet.",
+                            "Advanced privacy options will arrive in future updates."
                         )
                     )
                 }
@@ -1361,13 +1295,13 @@ private fun ThemePaletteToggle(isDark: Boolean, onSelect: (Boolean) -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceSm)
     ) {
         ThemePaletteOptionButton(
-            title = "Темная",
+            title = "Dark",
             isActive = isDark,
             onClick = { onSelect(true) },
             modifier = Modifier.weight(1f)
         )
         ThemePaletteOptionButton(
-            title = "Светлая",
+            title = "Light",
             isActive = !isDark,
             onClick = { onSelect(false) },
             modifier = Modifier.weight(1f)
@@ -1403,14 +1337,14 @@ private fun SurfaceStyleToggle(current: SurfaceStyle, onSelect: (SurfaceStyle) -
         horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceSm)
     ) {
         SurfaceStyleOptionButton(
-            title = "Стекло",
+            title = "Glass",
             target = SurfaceStyle.Glass,
             current = current,
             onSelect = onSelect,
             modifier = Modifier.weight(1f)
         )
         SurfaceStyleOptionButton(
-            title = "Матовый",
+            title = "Matte",
             target = SurfaceStyle.Matte,
             current = current,
             onSelect = onSelect,
@@ -1461,28 +1395,28 @@ private fun DeleteFolderDialogIfNeeded(deleteFolderId: String?, onClose: () -> U
     
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text("Удалить папку") },
+        title = { Text("Delete folder") },
         text = {
             Column {
-                Text("Папка содержит ${documentsInFolder.size} документов.")
+                Text("Folder contains ${documentsInFolder.size} documents.")
                 VSpace(AppDimens.spaceSm)
-                Text("Что делать с документами?")
+                Text("What should happen to them?")
                 VSpace(AppDimens.spaceSm)
-                
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = !deleteDocuments,
                         onClick = { deleteDocuments = false }
                     )
-                    Text("Переместить в \"Без папки\"", modifier = Modifier.padding(start = AppDimens.spaceSm))
+                    Text("Move to \"No folder\"", modifier = Modifier.padding(start = AppDimens.spaceSm))
                 }
-                
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = deleteDocuments,
                         onClick = { deleteDocuments = true }
                     )
-                    Text("Удалить вместе с папкой", modifier = Modifier.padding(start = AppDimens.spaceSm))
+                    Text("Delete with the folder", modifier = Modifier.padding(start = AppDimens.spaceSm))
                 }
             }
         },
@@ -1492,19 +1426,19 @@ private fun DeleteFolderDialogIfNeeded(deleteFolderId: String?, onClose: () -> U
                     scope.launch {
                         try {
                             uc.deleteFolder(deleteFolderId, deleteDocuments)
-                            toast(if (deleteDocuments) "Папка и документы удалены" else "Папка удалена, документы перемещены")
+                            toast(if (deleteDocuments) "Folder and documents removed" else "Folder deleted, documents moved")
                             onClose()
                         } catch (e: Exception) {
-                            toast("Ошибка: ${e.message}")
+                            toast("Error: ${e.message}")
                         }
                     }
                 }
             ) {
-                Text("Удалить")
+                Text("Delete")
             }
         },
         dismissButton = {
-            TextButton(onClick = onClose) { Text("Отмена") }
+            TextButton(onClick = onClose) { Text("Cancel") }
         }
     )
 }

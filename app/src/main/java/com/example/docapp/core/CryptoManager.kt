@@ -25,16 +25,16 @@ class CryptoManager(val context: Context) {
         private const val DB_KEY_PREF = "db_key_b64"
         private const val DB_SALT_PREF = "db_salt_b64"
         private const val PBKDF2_ITERATIONS = 150_000
-        private const val KEY_LENGTH = 256 // бит
-        private const val SALT_LENGTH = 32 // байт
+        private const val KEY_LENGTH = 256 // bits
+        private const val SALT_LENGTH = 32 // bytes
     }
 
     private val masterKey: MasterKey by lazy {
         try {
             AppLogger.log("CryptoManager", "Creating MasterKey...")
-            ErrorHandler.showInfo("CryptoManager: Создаем MasterKey...")
+            ErrorHandler.showInfo("CryptoManager: Creating MasterKey...")
             
-            // Проверяем доступность Android Keystore
+            // Ensure Android Keystore is available
             val keyStore = KeyStore.getInstance("AndroidKeyStore")
             keyStore.load(null)
             
@@ -42,11 +42,11 @@ class CryptoManager(val context: Context) {
                 .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
                 .build()
                 
-            ErrorHandler.showSuccess("CryptoManager: MasterKey создан успешно")
+            ErrorHandler.showSuccess("CryptoManager: MasterKey created successfully")
             masterKey
         } catch (e: Exception) {
             AppLogger.log("CryptoManager", "ERROR: Failed to create MasterKey: ${e.message}")
-            ErrorHandler.showCriticalError("Не удалось создать мастер-ключ: ${e.message}", e)
+            ErrorHandler.showCriticalError("Failed to create master key: ${e.message}", e)
             throw e
         }
     }
@@ -67,10 +67,10 @@ class CryptoManager(val context: Context) {
             AppLogger.log("CryptoManager", "ERROR: Stack trace: ${e.stackTraceToString()}")
             
             val errorMessage = when (e) {
-                is RuntimeException -> "Критическая ошибка создания зашифрованных настроек: ${e.message}"
-                is SecurityException -> "Ошибка безопасности при создании настроек: ${e.message}"
-                is IllegalStateException -> "Ошибка состояния системы: ${e.message}"
-                else -> "Не удалось создать зашифрованные настройки: ${e.message}"
+                is RuntimeException -> "Critical error while creating encrypted preferences: ${e.message}"
+                is SecurityException -> "Security error while creating preferences: ${e.message}"
+                is IllegalStateException -> "System state error while creating preferences: ${e.message}"
+                else -> "Failed to create encrypted preferences: ${e.message}"
             }
             
             ErrorHandler.showCriticalError(errorMessage, e)
@@ -80,7 +80,7 @@ class CryptoManager(val context: Context) {
 
     fun initializeSQLCipher() {
         try {
-            // SQLCipher loadLibs больше не нужен для стандартной SQLite
+        // SQLCipher loadLibs is no longer required for standard SQLite
             android.util.Log.d("CryptoManager", "SQLite database ready")
         } catch (e: Exception) {
             android.util.Log.e("CryptoManager", "Failed to initialize database: ${e.message}")
@@ -147,21 +147,21 @@ class CryptoManager(val context: Context) {
     }
 
     fun verifyPin(pin: String): Boolean {
-        ErrorHandler.showInfo("CryptoManager: Проверяем PIN...")
+        ErrorHandler.showInfo("CryptoManager: Verifying PIN...")
         val storedHash = encryptedPrefs.getString("pin_hash", null)?.decodeFromString()
         val isValid = if (storedHash != null) {
-            ErrorHandler.showInfo("CryptoManager: Хеш PIN найден, сравниваем...")
+            ErrorHandler.showInfo("CryptoManager: Stored PIN hash found, comparing...")
             verifyPin(pin, storedHash)
         } else {
             AppLogger.log("CryptoManager", "verifyPin() - no stored hash found")
-            ErrorHandler.showWarning("CryptoManager: Хеш PIN не найден")
+            ErrorHandler.showWarning("CryptoManager: Stored PIN hash not found")
             false
         }
         AppLogger.log("CryptoManager", "verifyPin() = $isValid")
         if (isValid) {
-            ErrorHandler.showSuccess("CryptoManager: PIN проверен успешно")
+            ErrorHandler.showSuccess("CryptoManager: PIN verified successfully")
         } else {
-            ErrorHandler.showWarning("CryptoManager: PIN неверный")
+            ErrorHandler.showWarning("CryptoManager: PIN is incorrect")
         }
         return isValid
     }
@@ -171,14 +171,14 @@ class CryptoManager(val context: Context) {
         val storedHash = encryptedPrefs.getString("pin_hash", null)?.decodeFromString()
         
         if (storedHash == null || !currentHash.contentEquals(storedHash)) {
-            throw SecurityException("Неверный текущий PIN")
+            throw SecurityException("Incorrect current PIN")
         }
 
-        // Сохраняем существующий ключ БД, а не создаем новый
+        // Preserve the existing DB key instead of generating a new one
         val newHash = sha256Pin(newPin)
         encryptedPrefs.edit()
             .putString("pin_hash", newHash.encodeToString())
-            .putString(DB_KEY_PREF, currentKey.encodeToString()) // Сохраняем существующий ключ БД
+            .putString(DB_KEY_PREF, currentKey.encodeToString())
             .apply()
             
         AppLogger.log("CryptoManager", "PIN changed but DB key preserved")
@@ -187,49 +187,49 @@ class CryptoManager(val context: Context) {
 
     fun setInitialPin(pin: String): ByteArray {
         AppLogger.log("CryptoManager", "setInitialPin() - setting up new PIN...")
-        ErrorHandler.showInfo("CryptoManager: Устанавливаем новый PIN...")
+        ErrorHandler.showInfo("CryptoManager: Setting a new PIN...")
         
-        // Если PIN уже установлен, логируем это как предупреждение
+        // If a PIN already exists, log a warning
         if (isPinSet()) {
             AppLogger.log("CryptoManager", "WARNING: setInitialPin() called but PIN already exists. Overwriting...")
-            ErrorHandler.showWarning("CryptoManager: PIN уже существует, перезаписываем...")
+            ErrorHandler.showWarning("CryptoManager: PIN already exists, overwriting...")
         }
         
-        ErrorHandler.showInfo("CryptoManager: Создаем хеш PIN...")
+        ErrorHandler.showInfo("CryptoManager: Generating PIN hash...")
         val hash = sha256Pin(pin)
         
         try {
-            ErrorHandler.showInfo("CryptoManager: Сохраняем PIN...")
+            ErrorHandler.showInfo("CryptoManager: Saving PIN data...")
             val editor = encryptedPrefs.edit()
             editor.putString("pin_hash", hash.encodeToString())
             
-            // Проверяем, есть ли уже ключ БД
+            // Reuse existing DB key if present
             val existingKey = getExistingDbKey()
             if (existingKey != null) {
-                // Если ключ БД уже есть, сохраняем его (не перезаписываем)
+                // Existing DB key found, preserve it
                 AppLogger.log("CryptoManager", "Existing DB key found, preserving it...")
-                ErrorHandler.showInfo("CryptoManager: Сохраняем существующий ключ БД...")
+                ErrorHandler.showInfo("CryptoManager: Preserving existing DB key...")
                 saveDbKey(existingKey, editor)
             } else {
-                // Если ключа БД нет, создаем новый
+                // No stored DB key, derive a new one
                 AppLogger.log("CryptoManager", "No existing DB key, creating new one...")
-                ErrorHandler.showInfo("CryptoManager: Создаем новый ключ БД...")
+                ErrorHandler.showInfo("CryptoManager: Creating new DB key...")
                 val newKey = deriveKeyFromPin(pin)
                 saveDbKey(newKey, editor)
             }
             
-            // Применяем все изменения атомарно
+        // Commit all changes atomically
             if (!editor.commit()) {
                 throw RuntimeException("Failed to save PIN and database key")
             }
             
             val finalKey = getExistingDbKey() ?: throw IllegalStateException("Failed to save DB key")
             AppLogger.log("CryptoManager", "PIN hash and database key saved atomically")
-            ErrorHandler.showSuccess("CryptoManager: PIN сохранен, ключ БД сохранен")
+            ErrorHandler.showSuccess("CryptoManager: PIN saved, DB key stored")
             return finalKey
         } catch (e: Exception) {
             AppLogger.log("CryptoManager", "ERROR: Failed to set initial PIN: ${e.message}")
-            ErrorHandler.showError("CryptoManager: Ошибка установки PIN: ${e.message}", e)
+            ErrorHandler.showError("CryptoManager: Failed to set up PIN: ${e.message}", e)
             throw e
         }
     }
@@ -242,19 +242,19 @@ class CryptoManager(val context: Context) {
     
     fun reKey(db: AppDb, newKey: ByteArray) {
         try {
-            // Сначала сохраняем ключ в настройках
+            // Store the key in preferences first
             saveDbKey(newKey)
             
-            // Затем меняем ключ базы данных
+            // Then update the database key
             val dbInstance = db.encryptedWritableDatabase
             val hexKey = newKey.toHex()
-            // Используем параметризованный запрос для безопасности
+            // Use a parameterized query for safety
             dbInstance.execSQL("PRAGMA rekey = ?", arrayOf(hexKey))
             
             AppLogger.log("CryptoManager", "Database rekeyed successfully")
         } catch (e: Exception) {
             AppLogger.log("CryptoManager", "ERROR: Failed to rekey database: ${e.message}")
-            // Если что-то пошло не так, пытаемся восстановить старый ключ
+            // Attempt to restore the previous key if something goes wrong
             val oldKey = getExistingDbKey()
             if (oldKey != null) {
                 try {
@@ -288,8 +288,6 @@ class CryptoManager(val context: Context) {
 
     @Suppress("UNUSED_PARAMETER")
     fun deriveRuntimeKeysFromPin(pin: String) {
-        // Эта функция может использоваться для получения временных ключей
-        // на основе PIN для дополнительных операций шифрования
-        // Пока не реализована, так как основная функциональность уже есть
+        // Placeholder: derive temporary keys from PIN for future crypto tasks if needed
     }
 }

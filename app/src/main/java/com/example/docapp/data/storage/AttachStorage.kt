@@ -67,7 +67,7 @@ class AttachStorageImpl(private val context: Context) : AttachStorage {
             )
             
             AppLogger.log("AttachStorage", "File imported successfully: $fileName")
-            ErrorHandler.showSuccess("Файл импортирован: $displayName")
+            ErrorHandler.showSuccess("File imported: $displayName")
             
             return AttachStorage.Imported(
                 name = displayName,
@@ -80,7 +80,7 @@ class AttachStorageImpl(private val context: Context) : AttachStorage {
             
         } catch (e: Exception) {
             AppLogger.log("AttachStorage", "ERROR: Failed to import file: ${e.message}")
-            ErrorHandler.showError("Не удалось импортировать файл: ${e.message}")
+            ErrorHandler.showError("Failed to import file: ${e.message}")
             throw e
         }
     }

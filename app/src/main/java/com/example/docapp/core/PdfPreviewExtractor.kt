@@ -21,7 +21,7 @@ object PdfPreviewExtractor {
             ""
         } catch (e: Exception) {
             AppLogger.log("PdfPreviewExtractor", "ERROR: Failed to extract PDF preview: ${e.message}")
-            "Ошибка чтения PDF"
+            "Failed to read PDF"
         }
     }
 }

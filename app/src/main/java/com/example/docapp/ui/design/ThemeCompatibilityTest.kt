@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import com.example.docapp.ui.theme.DocTheme
 
 /**
- * Тест совместимости новой дизайн-системы с существующей темой DocTheme
+ * Compatibility test between the new design system and the legacy DocTheme.
  */
 @Composable
 fun ThemeCompatibilityTest() {
@@ -25,17 +25,17 @@ fun ThemeCompatibilityTest() {
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text("Тест совместимости тем", style = DMText.H1)
+                Text("Theme compatibility test", style = DMText.H1)
                 
-                // Сравнение цветов
-                SectionCard(title = "Сравнение цветовых схем") {
+                // Compare colors
+                SectionCard(title = "Color scheme comparison") {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Row(
                             Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column {
-                                Text("Новая дизайн-система", style = DMText.Title)
+                                Text("New design system", style = DMText.Title)
                                 Box(
                                     Modifier
                                         .size(60.dp)
@@ -45,7 +45,7 @@ fun ThemeCompatibilityTest() {
                                 Text("Bg", style = DMText.Body)
                             }
                             Column {
-                                Text("Существующая тема", style = DMText.Title)
+                                Text("Legacy theme", style = DMText.Title)
                                 Box(
                                     Modifier
                                         .size(60.dp)
@@ -104,21 +104,21 @@ fun ThemeCompatibilityTest() {
                     }
                 }
                 
-                // Тест компонентов с существующей темой
-                SectionCard(title = "Компоненты с существующей темой") {
+                // Components with legacy theme
+                SectionCard(title = "Components with legacy theme") {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        // Стандартная кнопка Material3
+                        // Standard Material3 button
                         Button(
                             onClick = { },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Стандартная кнопка Material3")
+                            Text("Standard Material3 button")
                         }
                         
-                        // Наша неоновая кнопка
-                        NeonPrimaryButton("Неоновая кнопка")
+                        // Neon button
+                        NeonPrimaryButton("Neon button")
                         
-                        // Смешанное использование
+                        // Mixed usage
                         Row(
                             Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -131,14 +131,14 @@ fun ThemeCompatibilityTest() {
                     }
                 }
                 
-                // Тест типографики
-                SectionCard(title = "Сравнение типографики") {
+                // Typography comparison
+                SectionCard(title = "Typography comparison") {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Material3 Typography", style = MaterialTheme.typography.headlineMedium)
-                        Text("Наша типографика", style = DMText.H1)
+                        Text("Our typography", style = DMText.H1)
                         
                         Text("Material3 Body", style = MaterialTheme.typography.bodyMedium)
-                        Text("Наш Body", style = DMText.Body)
+                        Text("Our Body", style = DMText.Body)
                     }
                 }
             }

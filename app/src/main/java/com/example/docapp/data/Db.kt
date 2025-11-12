@@ -44,48 +44,47 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
         
         try {
             AppLogger.log("AppDb", "Opening encrypted database...")
-            ErrorHandler.showInfo("AppDb: Открываем зашифрованную базу данных...")
+            ErrorHandler.showInfo("AppDb: Opening encrypted database...")
             val dbPath = ctx.getDatabasePath("docapp.db").absolutePath
             val dbFile = File(dbPath)
             
-            // Проверяем, существует ли файл базы данных
+            // Check if the database file already exists
             if (dbFile.exists()) {
-                ErrorHandler.showInfo("AppDb: Файл БД существует, проверяем...")
+                ErrorHandler.showInfo("AppDb: Database file exists, validating integrity...")
                 try {
-                    // Пытаемся открыть существующую базу
+                    // Try opening the existing database
                     val testDb = SQLCipherDatabase.openDatabase(dbPath, null, SQLCipherDatabase.OPEN_READONLY)
                     testDb.close()
-                    ErrorHandler.showInfo("AppDb: Существующая БД корректна")
+                    ErrorHandler.showInfo("AppDb: Existing database looks valid")
                 } catch (e: Exception) {
                     AppLogger.log("AppDb", "WARNING: Existing database file is corrupted or not encrypted: ${e.message}")
-                    ErrorHandler.showWarning("AppDb: Файл БД поврежден, удаляем и создаем заново...")
-                    // Удаляем поврежденный файл
+                    ErrorHandler.showWarning("AppDb: Database file is corrupted, recreating...")
+                    // Remove corrupted files
                     dbFile.delete()
-                    // Также удаляем связанные файлы
                     File("$dbPath-wal").delete()
                     File("$dbPath-shm").delete()
                 }
             }
             
-            // Создаем или открываем зашифрованную базу
-            ErrorHandler.showInfo("AppDb: Создаем/открываем БД с ключом...")
+            // Create or open the encrypted database
+            ErrorHandler.showInfo("AppDb: Creating or opening encrypted database...")
             val db = SQLCipherDatabase.openOrCreateDatabase(dbPath, null)
             AppLogger.log("AppDb", "Database opened/created successfully")
-            ErrorHandler.showSuccess("AppDb: База данных открыта/создана успешно")
+            ErrorHandler.showSuccess("AppDb: Database opened or created successfully")
             
-            // Создаем схему базы данных если она не существует
-            ErrorHandler.showInfo("AppDb: Создаем таблицы если необходимо...")
+            // Ensure schema exists
+            ErrorHandler.showInfo("AppDb: Ensuring tables exist...")
             createTablesIfNeeded(db)
             
-            // Выполняем миграции
-            ErrorHandler.showInfo("AppDb: Выполняем миграции...")
+            // Run pending migrations
+            ErrorHandler.showInfo("AppDb: Running migrations...")
             runMigrations(db)
             
             _encryptedDb = db
             return db
         } catch (e: Exception) {
             AppLogger.log("AppDb", "ERROR: Failed to open encrypted database: ${e.message}")
-            ErrorHandler.showCriticalError("Не удалось открыть зашифрованную базу данных", e)
+            ErrorHandler.showCriticalError("Failed to open encrypted database", e)
             _initializationError = e
             throw RuntimeException("Cannot open encrypted database", e)
         }
@@ -99,7 +98,7 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
 
     private fun runMigrations(db: SQLCipherDatabase) {
         try {
-            // Миграция: добавляем поле display_name в таблицу attachments
+            // Migration: add display_name to attachments
             val columns = db.rawQuery("PRAGMA table_info(attachments)", null).use { cursor ->
                 generateSequence {
                     if (cursor.moveToNext()) cursor.getString(cursor.getColumnIndexOrThrow("name")) else null
@@ -108,11 +107,11 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
             
             if (!columns.contains("display_name")) {
                 AppLogger.log("AppDb", "Adding display_name column to attachments table")
-                ErrorHandler.showInfo("AppDb: Добавляем поле display_name в таблицу attachments")
+                ErrorHandler.showInfo("AppDb: Adding display_name column to attachments table")
                 db.execSQL("ALTER TABLE attachments ADD COLUMN display_name TEXT")
             }
             
-            // Миграция Mx_AddAttachments: создаем новую таблицу для современных вложений
+            // Migration Mx_AddAttachments: create a new table for modern attachments
             val newAttachmentsExists = db.rawQuery(
                 "SELECT name FROM sqlite_master WHERE type='table' AND name='attachments_new'",
                 null
@@ -120,7 +119,7 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
             
             if (!newAttachmentsExists) {
                 AppLogger.log("AppDb", "Creating new attachments table for modern attachment system")
-                ErrorHandler.showInfo("AppDb: Создаем новую таблицу attachments_new для современной системы вложений")
+                ErrorHandler.showInfo("AppDb: Creating attachments_new table for modern attachment system")
                 db.execSQL("""
                     CREATE TABLE attachments_new(
                         id TEXT PRIMARY KEY,
@@ -142,20 +141,20 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
             AppLogger.log("AppDb", "Migrations completed successfully")
         } catch (e: Exception) {
             AppLogger.log("AppDb", "ERROR: Failed to run migrations: ${e.message}")
-            ErrorHandler.showWarning("Не удалось выполнить миграции: ${e.message}")
+            ErrorHandler.showWarning("Failed to run migrations: ${e.message}")
         }
     }
 
     private fun createTablesIfNeeded(db: SQLCipherDatabase) {
         try {
-            // Проверяем, существует ли таблица templates
+            // Check whether the templates table exists
             val tableExists = db.rawQuery(
                 "SELECT name FROM sqlite_master WHERE type='table' AND name='templates'",
                 null
             ).use { it.count > 0 }
             
             if (!tableExists) {
-                ErrorHandler.showInfo("AppDb: Создаем таблицы БД...")
+                ErrorHandler.showInfo("AppDb: Creating database tables...")
                 db.execSQL("""CREATE TABLE templates(
                     id TEXT PRIMARY KEY, name TEXT NOT NULL,
                     is_pinned INTEGER NOT NULL, pinned_order INTEGER,
@@ -192,26 +191,26 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
                     pin_hash BLOB NOT NULL, pin_salt BLOB NOT NULL, db_key_salt BLOB NOT NULL, version TEXT NOT NULL
                 )""")
                 db.execSQL("PRAGMA foreign_keys=ON")
-                // строка настроек по умолчанию
+                // Default settings row
                 db.execSQL("INSERT INTO settings(id,pin_hash,pin_salt,db_key_salt,version) VALUES(1, x'', x'', x'', '1.0.0')")
                 
-                // Проверяем, есть ли уже базовые данные
+                // Check whether seed data already exists
                 val templatesCount = db.rawQuery("SELECT COUNT(*) FROM templates", null).use {
                     it.moveToFirst()
                     it.getInt(0)
                 }
                 
                 if (templatesCount == 0) {
-                    ErrorHandler.showInfo("AppDb: Заполняем БД базовыми данными...")
+                    ErrorHandler.showInfo("AppDb: Seeding default data...")
                     seedBasics(db)
-            } else {
-                ErrorHandler.showInfo("AppDb: Базовые данные уже существуют, пропускаем заполнение")
-                ErrorHandler.showInfo("AppDb: Найдено шаблонов: $templatesCount")
-            }
+                } else {
+                    ErrorHandler.showInfo("AppDb: Seed data already present, skipping")
+                    ErrorHandler.showInfo("AppDb: Existing templates: $templatesCount")
+                }
                 
                 AppLogger.log("AppDb", "Database tables created successfully")
             } else {
-                // Миграция: добавляем колонку description к существующим таблицам documents
+                // Migration: add description column to documents if needed
                 try {
                     val descriptionColumnExists = db.rawQuery("PRAGMA table_info(documents)", null).use { tableInfoCursor ->
                         var exists = false
@@ -226,25 +225,25 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
                     }
                     
                     if (!descriptionColumnExists) {
-                        ErrorHandler.showInfo("AppDb: Добавляем колонку description к таблице documents...")
+                        ErrorHandler.showInfo("AppDb: Adding description column to documents...")
                         db.execSQL("ALTER TABLE documents ADD COLUMN description TEXT")
-                        ErrorHandler.showInfo("AppDb: Колонка description добавлена успешно")
+                        ErrorHandler.showInfo("AppDb: Description column added successfully")
                     }
                 } catch (e: Exception) {
-                    ErrorHandler.showInfo("AppDb: Ошибка при миграции: ${e.message}")
-                    // Не прерываем выполнение, так как это не критично
+                    ErrorHandler.showInfo("AppDb: Migration warning: ${e.message}")
+                    // Continue; non-critical
                 }
             }
         } catch (e: Exception) {
             AppLogger.log("AppDb", "ERROR: Error creating tables: ${e.message}")
-            ErrorHandler.showCriticalError("Не удалось создать таблицы базы данных", e)
+            ErrorHandler.showCriticalError("Failed to create database tables", e)
             throw e
         }
     }
 
     
     /**
-     * Безопасно шифрует значение поля документа
+     * Securely encrypt document field values.
      */
     fun encryptFieldValue(value: String): ByteArray {
         return if (value.isNotEmpty()) {
@@ -255,7 +254,7 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
     }
     
     /**
-     * Безопасно расшифровывает значение поля документа
+     * Securely decrypt document field values.
      */
     fun decryptFieldValue(encryptedValue: ByteArray): String {
         return if (encryptedValue.isNotEmpty()) {
@@ -267,7 +266,7 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
     }
     
     /**
-     * Безопасно шифрует название документа
+     * Securely encrypt document names.
      */
     fun encryptDocumentName(name: String): String {
         return if (name.isNotEmpty()) {
@@ -278,7 +277,7 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
     }
     
     /**
-     * Безопасно расшифровывает название документа
+     * Securely decrypt document names.
      */
     fun decryptDocumentName(encryptedName: String): String {
         return if (encryptedName.isNotEmpty()) {
@@ -304,15 +303,15 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
             }
             return tplId
         }
-        insTpl("Паспорт", listOf("Серия", "Номер", "Кем выдан", "Дата выдачи", "Код подразделения"))
-        insTpl("Карточка", listOf("Номер", "Годен до", "CVC"))
+        insTpl("Passport", listOf("Series", "Number", "Issued by", "Issue date", "Department code"))
+        insTpl("Card", listOf("Number", "Valid until", "CVC"))
 
         val p1 = newId()
         db.execSQL("INSERT INTO folders(id,parent_id,name,ord) VALUES(?,?,?,?)",
-            arrayOf<Any?>(p1, null, "ЛИЧНЫЕ ДАННЫЕ", 0))
+            arrayOf<Any?>(p1, null, "PERSONAL DATA", 0))
         val p2 = newId()
         db.execSQL("INSERT INTO folders(id,parent_id,name,ord) VALUES(?,?,?,?)",
-            arrayOf<Any?>(p2, null, "КАРТОЧКИ", 1))
+            arrayOf<Any?>(p2, null, "CARDS", 1))
     }
 
 }
@@ -357,7 +356,7 @@ interface DocumentDao {
 
     suspend fun move(id: String, folderId: String?)
     suspend fun swapPinned(aId: String, bId: String)
-    suspend fun getAllDocumentIds(): List<String> // Для миграции
+    suspend fun getAllDocumentIds(): List<String> // Used during migrations
     suspend fun getDocumentsInFolder(folderId: String): List<Document>
 }
 
@@ -457,9 +456,9 @@ class TemplateDaoSql(private val db: AppDb) : TemplateDao {
     override suspend fun delete(id: String) = withContext(Dispatchers.IO) {
         db.encryptedWritableDatabase.beginTransaction()
         try {
-            // Удаляем поля шаблона
+            // Remove template fields
             db.encryptedWritableDatabase.execSQL("DELETE FROM template_fields WHERE template_id=?", arrayOf(id))
-            // Удаляем сам шаблон
+            // Remove the template itself
             db.encryptedWritableDatabase.execSQL("DELETE FROM templates WHERE id=?", arrayOf(id))
             db.encryptedWritableDatabase.setTransactionSuccessful()
         } finally {
@@ -630,14 +629,14 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
                 )
             }
             photoFiles.forEachIndexed { index, (uri, displayName) ->
-                ErrorHandler.showInfo("DocumentDao: Сохраняем фото $index: $displayName")
+                ErrorHandler.showInfo("DocumentDao: Saving photo $index: $displayName")
                 db.encryptedWritableDatabase.execSQL(
                     "INSERT INTO attachments(id,document_id,kind,file_name,display_name,uri,created_at) VALUES(?,?,?,?,?,?,?)",
                     arrayOf<Any?>(newId(), id, "photo", null, displayName, uri, ts)
                 )
             }
             pdfFiles.forEachIndexed { index, (uri, displayName) ->
-                ErrorHandler.showInfo("DocumentDao: Сохраняем PDF $index: $displayName")
+                ErrorHandler.showInfo("DocumentDao: Saving PDF $index: $displayName")
                 db.encryptedWritableDatabase.execSQL(
                     "INSERT INTO attachments(id,document_id,kind,file_name,display_name,uri,created_at) VALUES(?,?,?,?,?,?,?)",
                     arrayOf<Any?>(newId(), id, "pdfs", "document.pdfs", displayName, uri, ts)
@@ -693,19 +692,19 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
             "SELECT * FROM attachments_new WHERE docId=?",
             arrayOf(id)
         ).use { c ->
-            ErrorHandler.showInfo("DocumentDao: Загружаем вложения для документа: $id")
+            ErrorHandler.showInfo("DocumentDao: Loading attachments for document: $id")
             while (c.moveToNext()) {
                 val mime = c.getString(c.getColumnIndexOrThrow("mime"))
                 val uriString = c.getString(c.getColumnIndexOrThrow("uri"))
                 val name = c.getString(c.getColumnIndexOrThrow("name"))
                 
-                ErrorHandler.showInfo("DocumentDao: Найдено вложение: $mime, имя: $name")
+                ErrorHandler.showInfo("DocumentDao: Found attachment: $mime, name: $name")
                 
-                // Определяем тип файла по MIME типу
+                // Determine file type by MIME
                 val kind = when {
                     mime.startsWith("image/") -> AttachmentKind.photo
                     mime == "application/pdf" -> AttachmentKind.pdf
-                    else -> AttachmentKind.photo // По умолчанию фото
+                    else -> AttachmentKind.photo // Default to photo
                 }
                 
                 val a = Attachment(
@@ -725,7 +724,7 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
                 when (a.kind) {
                     AttachmentKind.photo -> photos.add(a)
                     AttachmentKind.pdfs -> pdfs.add(a)
-                    AttachmentKind.pdf -> pdfs.add(a) // для совместимости со старыми данными
+                    AttachmentKind.pdf -> pdfs.add(a) // keep compatibility with legacy data
                 }
             }
         }
@@ -917,7 +916,7 @@ class SettingsDaoSql(private val db: AppDb) : SettingsDao {
                 )
             }
         }
-        // вместо error(...) — создаём строку и возвращаем дефолт
+        // Instead of error(...) — return a default row
         val w = db.encryptedWritableDatabase
         w.execSQL("INSERT OR IGNORE INTO settings(id,pin_hash,pin_salt,db_key_salt,version) VALUES(1, x'', x'', x'', '1.0.0')")
         Settings(version = "1.0.0", pinHash = ByteArray(0), pinSalt = ByteArray(0), dbKeySalt = ByteArray(0))
@@ -937,7 +936,7 @@ class SettingsDaoSql(private val db: AppDb) : SettingsDao {
     override suspend fun clearPin() = withContext(Dispatchers.IO) {
         db.encryptedWritableDatabase.beginTransaction()
         try {
-            val cv = ContentValues().apply { put("pin_hash", ByteArray(0)) } // пустой BLOB, НЕ null
+            val cv = ContentValues().apply { put("pin_hash", ByteArray(0)) } // empty BLOB, not null
             db.encryptedWritableDatabase.update("settings", cv, "id=1", null)
             db.encryptedWritableDatabase.setTransactionSuccessful()
         } finally {

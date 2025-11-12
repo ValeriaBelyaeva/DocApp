@@ -389,7 +389,7 @@ fun DocumentScreenDesign() {
             }
 
             item { FieldTile("Passport number", "4006 45869721") { Icon(Icons.Outlined.Visibility, null, tint = DMColors.Accent) } }
-            item { FieldTile("Issued", "ГУ МВД России по г. Санкт-Петербургу и Ленинградской области. Выдан 24.03.2023") { Icon(Icons.Outlined.VisibilityOff, null, tint = DMColors.Accent) } }
+            item { FieldTile("Issued", "Main Directorate of the Ministry of Internal Affairs, Saint Petersburg region. Issued 24.03.2023") { Icon(Icons.Outlined.VisibilityOff, null, tint = DMColors.Accent) } }
             item { FieldTile("Department code", "780-020") { Icon(Icons.Outlined.Visibility, null, tint = DMColors.Accent) } }
 
             // Фото
