@@ -118,7 +118,7 @@ private fun RoundKey(
 private fun LogoBlock() {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Icon(
-            painter = painterResource(id = R.drawable.ic_dm_logo),
+            painter = painterResource(id = R.drawable.logo),
             contentDescription = null,
             tint = PinColors.Neon, // логотип в акценте
             modifier = Modifier.size(AppDimens.Pin.avatarSize)
@@ -301,7 +301,7 @@ fun PinScreenNew(onSuccess: () -> Unit) {
             // Логотип с заголовком
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_dm_logo),
+                    painter = painterResource(id = R.drawable.logo),
                     contentDescription = null,
                     tint = PinColors.Neon,
                     modifier = Modifier.size(AppDimens.Pin.avatarSize)
