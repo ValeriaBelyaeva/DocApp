@@ -2,10 +2,7 @@ package com.example.docapp.core
 
 import android.content.Context
 import android.net.Uri
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
-import android.widget.Toast
 import com.example.docapp.BuildConfig
 import java.io.File
 import java.io.FileWriter
@@ -52,14 +49,6 @@ object AppLogger {
         } catch (e: Exception) {
             Log.e("AppLogger", "Failed to write to log file: ${e.message}")
         }
-        
-        // Показываем Toast только для критических ошибок с упрощенным форматом
-        if (message.contains("ERROR") || message.contains("FAILED") || message.contains("CRITICAL")) {
-            context?.let { ctx ->
-                val toastMessage = message.replace("ERROR: ", "").replace("FAILED: ", "").replace("CRITICAL: ", "")
-                Toast.makeText(ctx, toastMessage, Toast.LENGTH_LONG).show()
-            }
-        }
     }
     
     fun getLogFile(): File? = logFile
@@ -73,14 +62,8 @@ object AppLogger {
  */
 object ErrorHandler {
     
-    // Режим отладки - показывает всплывающие сообщения только в debug режиме
-    private const val DEBUG_MODE = false
-    
-    private var context: Context? = null
-    private val handler = Handler(Looper.getMainLooper())
-    
+    @Suppress("UNUSED_PARAMETER")
     fun init(ctx: Context) {
-        context = ctx
         setupUncaughtExceptionHandler()
     }
     
@@ -96,10 +79,6 @@ object ErrorHandler {
             AppLogger.log("ErrorHandler", "Stack trace: ${getStackTrace(throwable)}")
         }
         
-        // Показываем Toast с упрощенным форматом только в debug режиме
-        if (DEBUG_MODE) {
-            showToast(errorMessage, Toast.LENGTH_LONG)
-        }
     }
     
     /**
@@ -114,10 +93,6 @@ object ErrorHandler {
             AppLogger.log("ErrorHandler", "Stack trace: ${getStackTrace(throwable)}")
         }
         
-        // Показываем Toast с упрощенным форматом только в debug режиме
-        if (DEBUG_MODE) {
-            showToast(errorMessage, Toast.LENGTH_LONG)
-        }
     }
     
     /**
@@ -125,7 +100,6 @@ object ErrorHandler {
      */
     fun showWarning(message: String) {
         AppLogger.log("ErrorHandler", "WARNING: $message")
-        // Не показываем Toast для предупреждений
     }
     
     /**
@@ -133,9 +107,6 @@ object ErrorHandler {
      */
     fun showSuccess(message: String) {
         AppLogger.log("ErrorHandler", "SUCCESS: $message")
-        if (DEBUG_MODE) {
-            showToast(message, Toast.LENGTH_SHORT)
-        }
     }
     
     /**
@@ -143,7 +114,6 @@ object ErrorHandler {
      */
     fun showInfo(message: String) {
         AppLogger.log("ErrorHandler", "INFO: $message")
-        // Не показываем Toast для информационных сообщений
     }
     
     /**
@@ -168,17 +138,6 @@ object ErrorHandler {
     }
     
     /**
-     * Показывает Toast сообщение
-     */
-    private fun showToast(message: String, duration: Int) {
-        context?.let { ctx ->
-            handler.post {
-                Toast.makeText(ctx, message, duration).show()
-            }
-        }
-    }
-    
-    /**
      * Устанавливает глобальный обработчик необработанных исключений
      */
     private fun setupUncaughtExceptionHandler() {
@@ -188,16 +147,6 @@ object ErrorHandler {
                 
                 // Логируем стек-трейс
                 AppLogger.log("ErrorHandler", "Stack trace: ${getStackTrace(throwable)}")
-                
-                // Показываем Toast с упрощенным форматом только в debug режиме
-                if (DEBUG_MODE) {
-                    context?.let { ctx ->
-                        handler.post {
-                            val errorMessage = throwable.message ?: "An error occurred while executing the operation"
-                            Toast.makeText(ctx, errorMessage, Toast.LENGTH_LONG).show()
-                        }
-                    }
-                }
                 
                 // Можно добавить отправку отчета об ошибке на сервер
                 // Crashlytics.recordException(throwable)
@@ -244,11 +193,9 @@ object ErrorHandler {
  */
 object UriDebugger {
     
-    private var context: Context? = null
     private var isDebugEnabled = false
     
     fun init(ctx: Context) {
-        context = ctx
         // Включаем дебаг только в debug сборке
         isDebugEnabled = BuildConfig.DEBUG
     }
@@ -256,37 +203,23 @@ object UriDebugger {
     fun showUriDebug(message: String, uri: Uri? = null) {
         if (!isDebugEnabled) return
         
-        context?.let { ctx ->
-            Toast.makeText(ctx, "🔍 $message", Toast.LENGTH_SHORT).show()
-            if (uri != null) {
-                Toast.makeText(ctx, "📁 $uri", Toast.LENGTH_SHORT).show()
-            }
-        }
+        val uriSuffix = uri?.let { " URI: $it" } ?: ""
+        AppLogger.log("UriDebugger", "DEBUG: $message$uriSuffix")
     }
     
     fun showUriError(message: String, uri: Uri? = null, throwable: Throwable? = null) {
         if (!isDebugEnabled) return
         
-        context?.let { ctx ->
-            Toast.makeText(ctx, "❌ $message", Toast.LENGTH_SHORT).show()
-            if (uri != null) {
-                Toast.makeText(ctx, "📁 $uri", Toast.LENGTH_SHORT).show()
-            }
-            if (throwable != null) {
-                Toast.makeText(ctx, "💥 ${throwable.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
+        val uriSuffix = uri?.let { " URI: $it" } ?: ""
+        val errorSuffix = throwable?.let { " Throwable: ${it.message}" } ?: ""
+        AppLogger.log("UriDebugger", "ERROR: $message$uriSuffix$errorSuffix")
     }
     
     fun showUriSuccess(message: String, uri: Uri? = null) {
         if (!isDebugEnabled) return
         
-        context?.let { ctx ->
-            Toast.makeText(ctx, "✅ $message", Toast.LENGTH_SHORT).show()
-            if (uri != null) {
-                Toast.makeText(ctx, "📁 $uri", Toast.LENGTH_SHORT).show()
-            }
-        }
+        val uriSuffix = uri?.let { " URI: $it" } ?: ""
+        AppLogger.log("UriDebugger", "SUCCESS: $message$uriSuffix")
     }
     
     fun enableDebug() {

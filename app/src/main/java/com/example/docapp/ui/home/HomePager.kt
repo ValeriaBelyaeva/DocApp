@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import com.example.docapp.core.DataValidator
 import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.ServiceLocator
+import com.example.docapp.core.FolderStateStore
 import com.example.docapp.core.ThemeManager
 import com.example.docapp.domain.Document
 import com.example.docapp.domain.DocumentRepository
@@ -63,6 +64,7 @@ import com.example.docapp.ui.theme.SurfaceStyleTokens
 import com.example.docapp.ui.theme.SurfaceTokens
 import androidx.compose.foundation.shape.CircleShape
 
+private const val NO_FOLDER_SECTION_ID = "__NO_FOLDER_SECTION__"
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -511,7 +513,19 @@ private fun TreeScreen(
     var moveDocId by remember { mutableStateOf<String?>(null) }
     var deleteFolderId by remember { mutableStateOf<String?>(null) }
 
-    var collapsedFolders by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var collapsedFolders by remember { mutableStateOf(FolderStateStore.getCollapsedFolders()) }
+
+    LaunchedEffect(folders, docsNoFolder.isNotEmpty()) {
+        val validIds = folders.map { it.id }.toMutableSet()
+        if (docsNoFolder.isNotEmpty()) {
+            validIds += NO_FOLDER_SECTION_ID
+        }
+        val filtered = collapsedFolders.intersect(validIds)
+        if (filtered.size != collapsedFolders.size) {
+            collapsedFolders = filtered
+            FolderStateStore.saveCollapsedFolders(filtered)
+        }
+    }
 
     val density = LocalDensity.current
     val bottomInset = WindowInsets.navigationBars.getBottom(density) / density.density
@@ -542,6 +556,7 @@ private fun TreeScreen(
                             } else {
                                 collapsedFolders + folder.id
                             }
+                            FolderStateStore.saveCollapsedFolders(collapsedFolders)
                         },
                         onCreateInFolder = { createInFolder(folder.id) },
                         onDeleteFolder = { deleteFolderId = folder.id },
@@ -551,17 +566,25 @@ private fun TreeScreen(
                 }
 
                 if (docsNoFolder.isNotEmpty()) {
+                    val noFolderCollapsed = collapsedFolders.contains(NO_FOLDER_SECTION_ID)
                     item {
                         FolderSectionCard(
                             title = "Without a folder",
                             documents = docsNoFolder,
-                            isCollapsed = false,
-                            onToggleCollapse = {},
+                            isCollapsed = noFolderCollapsed,
+                            onToggleCollapse = {
+                                collapsedFolders = if (noFolderCollapsed) {
+                                    collapsedFolders - NO_FOLDER_SECTION_ID
+                                } else {
+                                    collapsedFolders + NO_FOLDER_SECTION_ID
+                                }
+                                FolderStateStore.saveCollapsedFolders(collapsedFolders)
+                            },
                             onCreateInFolder = null,
                             onDeleteFolder = null,
                             openDoc = openDoc,
                             onMoveDoc = { moveDocId = it },
-                            collapsible = false
+                            collapsible = true
                         )
                     }
                 }
@@ -662,16 +685,6 @@ private fun FolderSectionCard(
                         Spacer(Modifier.width(AppDimens.spaceMd))
                     } else {
                         Spacer(Modifier.width(AppDimens.spaceXxs))
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.NoteAdd,
-                            contentDescription = null,
-                            tint = NeoPalette.neon,
-                            modifier = Modifier
-                                .size(AppDimens.Home.folderGlyphIcon)
-                                .background(NeoPalette.controlBackground, NeoShapes.dockButton)
-                                .padding(AppDimens.spaceXs)
-                        )
-                        Spacer(Modifier.width(AppDimens.spaceMd))
                     }
 
                     Text(

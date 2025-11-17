@@ -116,7 +116,10 @@ private fun RoundKey(
 
 @Composable
 private fun LogoBlock() {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Icon(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = null,
@@ -297,9 +300,11 @@ fun PinScreenNew(onSuccess: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(AppDimens.spaceXl))
-            
             // Логотип с заголовком
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Icon(
                     painter = painterResource(id = R.drawable.logo),
                     contentDescription = null,

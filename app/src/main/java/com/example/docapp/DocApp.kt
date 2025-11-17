@@ -5,6 +5,7 @@ import com.example.docapp.core.ServiceLocator
 import com.example.docapp.core.AppLogger
 import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.ThemeManager
+import com.example.docapp.core.FolderStateStore
 
 class DocApp : Application() {
     override fun onCreate() {
@@ -20,6 +21,7 @@ class DocApp : Application() {
         
         // Initialize theme manager
         ThemeManager.initialize(this)
+        FolderStateStore.init(this)
         
         try {
             ServiceLocator.init(this)
