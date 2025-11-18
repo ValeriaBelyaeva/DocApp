@@ -95,27 +95,56 @@ class DataTransferManager(
         tempJsonFile.writeText(payload.toString(2), Charsets.UTF_8)
         
         // Создаем защищенный ZIP с помощью Zip4j
-        val zipFile = Zip4jFile(backupFile)
         val isEncrypted = password != null && password.isNotEmpty()
+        val passwordChars = if (isEncrypted) password!!.toCharArray() else null
         
-        if (isEncrypted) {
-            zipFile.setPassword(password!!.toCharArray())
+        AppLogger.log("DataTransfer", "Creating ZIP file with encryption: $isEncrypted, password length: ${passwordChars?.size ?: 0}")
+        
+        // В Zip4j пароль устанавливается через конструктор ZipFile при создании
+        // Все файлы с EncryptionMethod.AES будут зашифрованы этим паролем
+        val zipFile = if (isEncrypted && passwordChars != null) {
+            AppLogger.log("DataTransfer", "Creating encrypted ZIP with password (length: ${passwordChars.size})")
+            Zip4jFile(backupFile, passwordChars)
+        } else {
+            AppLogger.log("DataTransfer", "Creating unencrypted ZIP")
+            Zip4jFile(backupFile)
         }
         
         // Добавляем JSON файл
         val jsonParams = ZipParameters().apply {
-            encryptionMethod = if (isEncrypted) EncryptionMethod.AES else EncryptionMethod.NONE
+            // Указываем имя файла в архиве
+            fileNameInZip = "backup.json"
+            // ВАЖНО: нужно явно включить шифрование и указать метод
+            if (isEncrypted) {
+                AppLogger.log("DataTransfer", "Setting AES encryption for backup.json")
+                setEncryptFiles(true)
+                encryptionMethod = EncryptionMethod.AES
+            } else {
+                setEncryptFiles(false)
+                encryptionMethod = EncryptionMethod.NONE
+            }
         }
         zipFile.addFile(tempJsonFile, jsonParams)
+        AppLogger.log("DataTransfer", "Added backup.json to ZIP with encryption: ${jsonParams.encryptionMethod}, encryptFiles: ${jsonParams.isEncryptFiles}")
         
         // Добавляем все вложения
+        var attachmentCount = 0
         snapshots.flatMap { it.attachments }.forEach { snap ->
             val fileParams = ZipParameters().apply {
                 fileNameInZip = snap.entryName
-                encryptionMethod = if (isEncrypted) EncryptionMethod.AES else EncryptionMethod.NONE
+                // ВАЖНО: нужно явно включить шифрование и указать метод для каждого файла
+                if (isEncrypted) {
+                    setEncryptFiles(true)
+                    encryptionMethod = EncryptionMethod.AES
+                } else {
+                    setEncryptFiles(false)
+                    encryptionMethod = EncryptionMethod.NONE
+                }
             }
             zipFile.addFile(snap.sourceFile, fileParams)
+            attachmentCount++
         }
+        AppLogger.log("DataTransfer", "Added $attachmentCount attachment files to ZIP")
         
         // Удаляем временный JSON файл
         tempJsonFile.delete()
