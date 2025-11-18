@@ -5,7 +5,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -56,20 +60,37 @@ fun App() {
         }
 
         AppLogger.log("App", "Navigation controller created")
+        // Модификатор для отслеживания всех взаимодействий пользователя
         val interactionModifier = Modifier
-            .pointerInteropFilter {
-                updateInteraction()
-                false
+            .pointerInput(Unit) {
+                // Отслеживаем касания и жесты
+                detectTapGestures(
+                    onTap = { updateInteraction() },
+                    onPress = { updateInteraction() },
+                    onDoubleTap = { updateInteraction() },
+                    onLongPress = { updateInteraction() }
+                )
+            }
+            .pointerInput(Unit) {
+                // Отслеживаем прокрутку и перетаскивание
+                detectDragGestures(
+                    onDragStart = { updateInteraction() },
+                    onDrag = { _, _ -> updateInteraction() },
+                    onDragEnd = { updateInteraction() }
+                )
             }
             .onKeyEvent {
                 updateInteraction()
                 false
             }
-        NavHost(
-            navController = nav,
-            startDestination = AppDestination.Pin.route,
-            modifier = interactionModifier
-        ) {
+        
+        // Оборачиваем весь NavHost в Box с модификатором отслеживания
+        Box(modifier = interactionModifier.fillMaxSize()) {
+            NavHost(
+                navController = nav,
+                startDestination = AppDestination.Pin.route,
+                modifier = Modifier.fillMaxSize()
+            ) {
             composable(AppDestination.Pin.route) {
                 PinScreenNew(onSuccess = {
                     updateInteraction()
@@ -165,6 +186,7 @@ fun App() {
                     }
                 )
             }
+        }
         }
     }
 }
