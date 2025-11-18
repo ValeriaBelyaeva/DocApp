@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase
 import com.example.docapp.data.AppDb
 import com.example.docapp.data.RepositoriesImpl
 import com.example.docapp.data.SqlDaoFactory
+import com.example.docapp.data.transfer.DataTransferManager
 import com.example.docapp.domain.Repositories
 import com.example.docapp.domain.interactors.DomainInteractors
 import com.example.docapp.domain.usecases.UseCases
@@ -23,6 +24,8 @@ object ServiceLocator {
     lateinit var useCases: UseCases
         private set
     lateinit var dao: SqlDaoFactory
+        private set
+    lateinit var dataTransfer: DataTransferManager
         private set
     
     private lateinit var appContext: Context
@@ -151,6 +154,7 @@ object ServiceLocator {
                 repos = RepositoriesImpl(dao, crypto, files, appContext)
                 domain = DomainInteractors(repos, files, dao.documents)
                 useCases = UseCases(repos, files, dao.documents)
+                dataTransfer = DataTransferManager(appContext, db, dao)
                 AppLogger.log("ServiceLocator", "Database and components initialized successfully")
                 ErrorHandler.showSuccess("ServiceLocator: Database and components initialized")
             } else {

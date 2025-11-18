@@ -3,6 +3,8 @@ package com.example.docapp.ui.home
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -933,13 +935,55 @@ private fun InfoScreen() {
     val context = LocalContext.current
     val domainInteractors = ServiceLocator.domain
     val settingsInteractors = domainInteractors.settings
+    val dataTransfer = ServiceLocator.dataTransfer
     var changing by remember { mutableStateOf(false) }
     var oldPin by remember { mutableStateOf("") }
     var newPin by remember { mutableStateOf("") }
     var confirmPin by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
-
+    var transferMessage by remember { mutableStateOf<String?>(null) }
+    var transferInProgress by remember { mutableStateOf(false) }
+    var lastBackupFile by remember { mutableStateOf<java.io.File?>(null) }
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                transferInProgress = true
+                transferMessage = "Importing backup..."
+                try {
+                    val result = dataTransfer.importBackup(uri)
+                    transferMessage = "Imported ${result.documents} docs / ${result.attachments} files"
+                } catch (e: Exception) {
+                    transferMessage = "Import failed: ${e.message}"
+                } finally {
+                    transferInProgress = false
+                }
+            }
+        }
+    }
+    
     fun toast(message: String) = Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    
+    fun shareBackup(file: java.io.File) {
+        try {
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "application/zip"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_SUBJECT, "DocApp Backup")
+                putExtra(Intent.EXTRA_TEXT, "DocApp backup file: ${file.name}")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(Intent.createChooser(shareIntent, "Share backup"))
+        } catch (e: Exception) {
+            toast("Failed to share backup: ${e.message}")
+        }
+    }
     fun isFourDigits(value: String) = value.matches(Regex("^\\d{4}$"))
 
     val density = LocalDensity.current
@@ -1088,6 +1132,58 @@ private fun InfoScreen() {
                                 confirmPin = ""
                                 changing = false
                             }
+                        )
+                    }
+                }
+            }
+
+            item {
+                InformationSectionCard(title = "Data transfer") {
+                    Text(
+                        text = "Export all documents with media into a zip file and restore it on another phone.",
+                        color = NeoPalette.textSecondary,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(Modifier.height(AppDimens.spaceLg))
+                    InformationPrimaryButton(
+                        text = if (transferInProgress) "Working..." else "Export backup"
+                    ) {
+                        if (!transferInProgress) {
+                            scope.launch {
+                                transferInProgress = true
+                                transferMessage = "Exporting backup..."
+                                try {
+                                    val result = dataTransfer.exportBackup()
+                                    lastBackupFile = result.file
+                                    transferMessage = "Backup saved: ${result.file.name} (${result.documents} docs)"
+                                } catch (e: Exception) {
+                                    transferMessage = "Export failed: ${e.message}"
+                                } finally {
+                                    transferInProgress = false
+                                }
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(AppDimens.spaceSm))
+                    if (lastBackupFile != null) {
+                        InformationGhostButton(text = "Share backup") {
+                            if (!transferInProgress && lastBackupFile != null) {
+                                shareBackup(lastBackupFile!!)
+                            }
+                        }
+                        Spacer(Modifier.height(AppDimens.spaceSm))
+                    }
+                    InformationGhostButton(text = "Import backup") {
+                        if (!transferInProgress) {
+                            importLauncher.launch(arrayOf("application/zip", "application/octet-stream"))
+                        }
+                    }
+                    transferMessage?.let { message ->
+                        Spacer(Modifier.height(AppDimens.spaceSm))
+                        Text(
+                            text = message,
+                            color = NeoPalette.textSecondary,
+                            style = MaterialTheme.typography.bodySmall
                         )
                     }
                 }
