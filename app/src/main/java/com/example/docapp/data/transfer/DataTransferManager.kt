@@ -25,10 +25,10 @@ import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
-import java.util.zip.ZipOutputStream
 import android.database.sqlite.SQLiteDatabase
+import net.lingala.zip4j.ZipFile as Zip4jFile
+import net.lingala.zip4j.model.ZipParameters
+import net.lingala.zip4j.model.enums.EncryptionMethod
 
 class DataTransferManager(
     private val context: Context,
@@ -54,7 +54,7 @@ class DataTransferManager(
     private val attachmentsDir: File
         get() = File(context.filesDir, "attachments").also { if (!it.exists()) it.mkdirs() }
 
-    suspend fun exportBackup(): ExportResult = withContext(Dispatchers.IO) {
+    suspend fun exportBackup(password: String?): ExportResult = withContext(Dispatchers.IO) {
         AppLogger.log("DataTransfer", "Starting export...")
         val folders = dao.folders.list()
         val documentIds = dao.documents.getAllDocumentIds()
@@ -89,20 +89,36 @@ class DataTransferManager(
             ?: context.filesDir
         val fileName = "docapp-backup-${timestamp()}.zip"
         val backupFile = File(exportDir, fileName)
-        ZipOutputStream(BufferedOutputStream(FileOutputStream(backupFile))).use { zip ->
-            zip.putNextEntry(ZipEntry("backup.json"))
-            val jsonBytes = payload.toString(2).toByteArray(Charsets.UTF_8)
-            zip.write(jsonBytes)
-            zip.closeEntry()
-
-            snapshots.flatMap { it.attachments }.forEach { snap ->
-                zip.putNextEntry(ZipEntry(snap.entryName))
-                snap.sourceFile.inputStream().use { input ->
-                    input.copyTo(zip)
-                }
-                zip.closeEntry()
-            }
+        
+        // Создаем временный файл для JSON
+        val tempJsonFile = File(context.cacheDir, "backup-${System.currentTimeMillis()}.json")
+        tempJsonFile.writeText(payload.toString(2), Charsets.UTF_8)
+        
+        // Создаем защищенный ZIP с помощью Zip4j
+        val zipFile = Zip4jFile(backupFile)
+        val isEncrypted = password != null && password.isNotEmpty()
+        
+        if (isEncrypted) {
+            zipFile.setPassword(password!!.toCharArray())
         }
+        
+        // Добавляем JSON файл
+        val jsonParams = ZipParameters().apply {
+            encryptionMethod = if (isEncrypted) EncryptionMethod.AES else EncryptionMethod.NONE
+        }
+        zipFile.addFile(tempJsonFile, jsonParams)
+        
+        // Добавляем все вложения
+        snapshots.flatMap { it.attachments }.forEach { snap ->
+            val fileParams = ZipParameters().apply {
+                fileNameInZip = snap.entryName
+                encryptionMethod = if (isEncrypted) EncryptionMethod.AES else EncryptionMethod.NONE
+            }
+            zipFile.addFile(snap.sourceFile, fileParams)
+        }
+        
+        // Удаляем временный JSON файл
+        tempJsonFile.delete()
 
         AppLogger.log(
             "DataTransfer",
@@ -112,60 +128,75 @@ class DataTransferManager(
         ExportResult(backupFile, snapshots.size, totalAttachments)
     }
 
-    suspend fun importBackup(sourceUri: Uri): ImportResult = withContext(Dispatchers.IO) {
+    suspend fun importBackup(sourceUri: Uri, password: String?): ImportResult = withContext(Dispatchers.IO) {
         AppLogger.log("DataTransfer", "Importing backup from $sourceUri")
         val tempZip = File(context.cacheDir, "import-${System.currentTimeMillis()}.zip")
         context.contentResolver.openInputStream(sourceUri)?.use { input ->
             FileOutputStream(tempZip).use { output -> input.copyTo(output) }
         } ?: throw IllegalArgumentException("Cannot read backup file")
 
-        ZipFile(tempZip).use { zip ->
-            val payloadEntry = zip.getEntry("backup.json")
-                ?: throw IllegalStateException("Invalid backup: missing backup.json")
-            val payload = zip.getInputStream(payloadEntry).bufferedReader().use { it.readText() }
-            val json = JSONObject(payload)
-            validateVersion(json)
-            val folders = json.getJSONArray("folders")
-            val documents = json.getJSONArray("documents")
+        val zipFile = Zip4jFile(tempZip)
+        if (password != null && password.isNotEmpty()) {
+            zipFile.setPassword(password.toCharArray())
+        }
 
-            clearExistingData()
-            importFolders(folders)
+        val fileHeaders = zipFile.fileHeaders
+        val payloadHeader = fileHeaders.find { it.fileName == "backup.json" }
+            ?: throw IllegalStateException("Invalid backup: missing backup.json")
+        
+        // Проверяем, защищен ли файл
+        val isEncrypted = payloadHeader.isEncrypted
+        if (isEncrypted && (password == null || password.isEmpty())) {
+            throw SecurityException("Backup file is password protected")
+        }
+        
+        val tempJsonFile = File(context.cacheDir, "backup-${System.currentTimeMillis()}.json")
+        zipFile.extractFile(payloadHeader, context.cacheDir.absolutePath, tempJsonFile.name)
+        val payload = tempJsonFile.readText(Charsets.UTF_8)
+        tempJsonFile.delete()
+        
+        val json = JSONObject(payload)
+        validateVersion(json)
+        val folders = json.getJSONArray("folders")
+        val documents = json.getJSONArray("documents")
 
-            var docCount = 0
-            var attachmentCount = 0
-            val sqlDb = db.encryptedWritableDatabase
-            sqlDb.beginTransaction()
-            try {
-                for (i in 0 until documents.length()) {
-                    val docJson = documents.getJSONObject(i)
-                    val docId = docJson.getString("id")
-                    insertDocument(sqlDb, docJson)
+        clearExistingData()
+        importFolders(folders)
 
-                    val fields = docJson.getJSONArray("fields")
-                    for (fi in 0 until fields.length()) {
-                        insertField(sqlDb, docId, fields.getJSONObject(fi))
-                    }
+        var docCount = 0
+        var attachmentCount = 0
+        val sqlDb = db.encryptedWritableDatabase
+        sqlDb.beginTransaction()
+        try {
+            for (i in 0 until documents.length()) {
+                val docJson = documents.getJSONObject(i)
+                val docId = docJson.getString("id")
+                insertDocument(sqlDb, docJson)
+
+                val fields = docJson.getJSONArray("fields")
+                for (fi in 0 until fields.length()) {
+                    insertField(sqlDb, docId, fields.getJSONObject(fi))
+                }
 
                     val attachments = docJson.getJSONArray("attachments")
                     for (ai in 0 until attachments.length()) {
                         val attachmentJson = attachments.getJSONObject(ai)
-                        val prepared = extractAttachment(zip, attachmentJson)
+                        val prepared = extractAttachment(zipFile, attachmentJson)
                         insertAttachment(sqlDb, docId, prepared)
                         attachmentCount++
                     }
 
-                    docCount++
-                }
-                sqlDb.setTransactionSuccessful()
-            } finally {
-                sqlDb.endTransaction()
+                docCount++
             }
-
-            dao.documents.emitHome()
-            dao.folders.emitTree()
-            ErrorHandler.showSuccess("Backup imported: $docCount docs, $attachmentCount files")
-            ImportResult(docCount, attachmentCount)
+            sqlDb.setTransactionSuccessful()
+        } finally {
+            sqlDb.endTransaction()
         }
+
+        dao.documents.emitHome()
+        dao.folders.emitTree()
+        ErrorHandler.showSuccess("Backup imported: $docCount docs, $attachmentCount files")
+        ImportResult(docCount, attachmentCount)
     }
 
     private fun validateVersion(json: JSONObject) {
@@ -347,16 +378,16 @@ class DataTransferManager(
         val createdAt: Long
     )
 
-    private fun extractAttachment(zip: ZipFile, attachment: JSONObject): PreparedAttachment {
+    private fun extractAttachment(zip: Zip4jFile, attachment: JSONObject): PreparedAttachment {
         val entryName = attachment.getString("file")
-        val entry = zip.getEntry(entryName) ?: throw IllegalStateException("Missing attachment file $entryName")
+        val fileHeader = zip.fileHeaders.find { it.fileName == entryName }
+            ?: throw IllegalStateException("Missing attachment file $entryName")
         val targetName = sanitizeFileName("${attachment.getString("id")}_${attachment.getString("name")}")
         val targetFile = File(attachmentsDir, targetName)
-        zip.getInputStream(entry).use { input ->
-            FileOutputStream(targetFile).use { output ->
-                input.copyTo(output)
-            }
-        }
+        
+        // Извлекаем файл из архива
+        zip.extractFile(fileHeader, attachmentsDir.absolutePath, targetName)
+        
         val sha = computeSha256(targetFile)
         val expectedSha = attachment.getString("sha256")
         if (!expectedSha.equals(sha, ignoreCase = true)) {

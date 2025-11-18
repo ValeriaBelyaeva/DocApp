@@ -97,6 +97,9 @@ dependencies {
     
     // Временно используем стандартную SQLite
     implementation 'androidx.sqlite:sqlite:2.3.0'
+    
+    // Zip4j для защищенных ZIP-архивов
+    implementation 'net.lingala.zip4j:zip4j:2.11.5'
 
     // Для Clipboard и т.д. — в составе AndroidX
     

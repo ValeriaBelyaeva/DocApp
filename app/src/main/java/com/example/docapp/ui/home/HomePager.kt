@@ -944,22 +944,18 @@ private fun InfoScreen() {
     var transferMessage by remember { mutableStateOf<String?>(null) }
     var transferInProgress by remember { mutableStateOf(false) }
     var lastBackupFile by remember { mutableStateOf<java.io.File?>(null) }
+    var showExportPasswordDialog by remember { mutableStateOf(false) }
+    var exportPassword by remember { mutableStateOf("") }
+    var showImportPasswordDialog by remember { mutableStateOf(false) }
+    var importPassword by remember { mutableStateOf("") }
+    var pendingImportUri by remember { mutableStateOf<Uri?>(null) }
+    
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri != null) {
-            scope.launch {
-                transferInProgress = true
-                transferMessage = "Importing backup..."
-                try {
-                    val result = dataTransfer.importBackup(uri)
-                    transferMessage = "Imported ${result.documents} docs / ${result.attachments} files"
-                } catch (e: Exception) {
-                    transferMessage = "Import failed: ${e.message}"
-                } finally {
-                    transferInProgress = false
-                }
-            }
+            pendingImportUri = uri
+            showImportPasswordDialog = true
         }
     }
     
@@ -1149,19 +1145,8 @@ private fun InfoScreen() {
                         text = if (transferInProgress) "Working..." else "Export backup"
                     ) {
                         if (!transferInProgress) {
-                            scope.launch {
-                                transferInProgress = true
-                                transferMessage = "Exporting backup..."
-                                try {
-                                    val result = dataTransfer.exportBackup()
-                                    lastBackupFile = result.file
-                                    transferMessage = "Backup saved: ${result.file.name} (${result.documents} docs)"
-                                } catch (e: Exception) {
-                                    transferMessage = "Export failed: ${e.message}"
-                                } finally {
-                                    transferInProgress = false
-                                }
-                            }
+                            exportPassword = ""
+                            showExportPasswordDialog = true
                         }
                     }
                     Spacer(Modifier.height(AppDimens.spaceSm))
@@ -1188,76 +1173,112 @@ private fun InfoScreen() {
                     }
                 }
             }
-
-            item {
-                InformationSectionCard(title = "User tips") {
-                    InformationHintBlock(
-                        title = "Navigation",
-                        hints = listOf(
-                            "Swipe between screens to jump to each section.",
-                            "Left screen \"Tree\" holds folders and documents.",
-                            "Center screen \"Home\" shows pinned and recent documents.",
-                            "Right screen \"Info\" keeps tips and helpful links."
+        }
+        
+        // Диалог ввода пароля для экспорта
+        if (showExportPasswordDialog) {
+            AlertDialog(
+                onDismissRequest = { showExportPasswordDialog = false },
+                title = { Text("Export backup") },
+                text = {
+                    Column {
+                        Text(
+                            text = "Enter password to protect backup (leave empty for no password):",
+                            color = NeoPalette.textSecondary,
+                            style = MaterialTheme.typography.bodyMedium
                         )
-                    )
-                    Spacer(Modifier.height(AppDimens.spaceLg))
-                    InformationHintBlock(
-                        title = "Home",
-                        hints = listOf(
-                            "The top plus button creates a document without a folder.",
-                            "Pinned documents are marked with a star.",
-                            "Long press starts reorder mode; tap another card to swap.",
-                            "Use the card menu to move a document into a folder.",
-                            "Recently opened documents are sorted by last access time."
+                        Spacer(Modifier.height(AppDimens.spaceMd))
+                        InformationTextField(
+                            value = exportPassword,
+                            onValueChange = { exportPassword = it },
+                            label = "Password (optional)"
                         )
-                    )
-                    Spacer(Modifier.height(AppDimens.spaceLg))
-                    InformationHintBlock(
-                        title = "Folders",
-                        hints = listOf(
-                            "Each folder lists its documents plus a shortcut to add new ones.",
-                            "The \"No folder\" section stores loose documents until you move them."
-                        )
-                    )
-                    Spacer(Modifier.height(AppDimens.spaceLg))
-                    InformationHintBlock(
-                        title = "Document",
-                        hints = listOf(
-                            "Tap a card to open the document.",
-                            "Descriptions are masked; tap the eye icon to reveal text.",
-                            "Copy icons send field values to the clipboard.",
-                            "The pencil toggles edit mode.",
-                            "The plus near the field name adds a new field.",
-                            "You can attach photos and PDFs to any document.",
-                            "Trash icons remove documents or individual fields."
-                        )
-                    )
-                    Spacer(Modifier.height(AppDimens.spaceLg))
-                    InformationHintBlock(
-                        title = "Templates",
-                        hints = listOf(
-                            "When creating a document, pick a template or start blank.",
-                            "Manage your templates on the template screen."
-                        )
-                    )
-                    Spacer(Modifier.height(AppDimens.spaceLg))
-                    InformationHintBlock(
-                        title = "Pinned items",
-                        hints = listOf(
-                            "Stars pin a document and move it to the top.",
-                            "Reorder pinned docs in reorder mode via long press."
-                        )
-                    )
-                    Spacer(Modifier.height(AppDimens.spaceLg))
-                    InformationHintBlock(
-                        title = "Security",
-                        hints = listOf(
-                            "Disabling the PIN is not available yet.",
-                            "Advanced privacy options will arrive in future updates."
-                        )
-                    )
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showExportPasswordDialog = false
+                        scope.launch {
+                            transferInProgress = true
+                            transferMessage = "Exporting backup..."
+                            try {
+                                val password = exportPassword.takeIf { it.isNotEmpty() }
+                                val result = dataTransfer.exportBackup(password)
+                                lastBackupFile = result.file
+                                transferMessage = "Backup saved: ${result.file.name} (${result.documents} docs)"
+                                exportPassword = ""
+                            } catch (e: Exception) {
+                                transferMessage = "Export failed: ${e.message}"
+                            } finally {
+                                transferInProgress = false
+                            }
+                        }
+                    }) { Text("Export") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { 
+                        showExportPasswordDialog = false
+                        exportPassword = ""
+                    }) { Text("Cancel") }
                 }
-            }
+            )
+        }
+        
+        // Диалог ввода пароля для импорта
+        if (showImportPasswordDialog && pendingImportUri != null) {
+            AlertDialog(
+                onDismissRequest = { 
+                    showImportPasswordDialog = false
+                    pendingImportUri = null
+                    importPassword = ""
+                },
+                title = { Text("Import backup") },
+                text = {
+                    Column {
+                        Text(
+                            text = "Enter password for backup file (leave empty if not protected):",
+                            color = NeoPalette.textSecondary,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(Modifier.height(AppDimens.spaceMd))
+                        InformationTextField(
+                            value = importPassword,
+                            onValueChange = { importPassword = it },
+                            label = "Password (optional)"
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        val uri = pendingImportUri
+                        showImportPasswordDialog = false
+                        pendingImportUri = null
+                        if (uri != null) {
+                            scope.launch {
+                                transferInProgress = true
+                                transferMessage = "Importing backup..."
+                                try {
+                                    val password = importPassword.takeIf { it.isNotEmpty() }
+                                    val result = dataTransfer.importBackup(uri, password)
+                                    transferMessage = "Imported ${result.documents} docs / ${result.attachments} files"
+                                    importPassword = ""
+                                } catch (e: Exception) {
+                                    transferMessage = "Import failed: ${e.message}"
+                                } finally {
+                                    transferInProgress = false
+                                }
+                            }
+                        }
+                    }) { Text("Import") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { 
+                        showImportPasswordDialog = false
+                        pendingImportUri = null
+                        importPassword = ""
+                    }) { Text("Cancel") }
+                }
+            )
         }
     }
 }
