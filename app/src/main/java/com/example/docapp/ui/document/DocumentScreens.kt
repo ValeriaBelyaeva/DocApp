@@ -1,5 +1,4 @@
 package com.example.docapp.ui.document
-
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -81,11 +80,6 @@ import com.example.docapp.ui.theme.AppShapes
 import com.example.docapp.ui.theme.AppColors
 import com.example.docapp.ui.theme.GlassCard
 import kotlinx.coroutines.launch
-
-/**
- * Экраны документов с интеграцией новой системы вложений
- */
-
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DocumentViewScreen(
@@ -97,7 +91,6 @@ fun DocumentViewScreen(
     BackHandler(enabled = true) {
         navigator.safePopBack()
     }
-    
     val useCases = ServiceLocator.useCases
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -105,7 +98,6 @@ fun DocumentViewScreen(
     var fullDoc by remember { mutableStateOf<com.example.docapp.domain.DocumentRepository.FullDocument?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showMoveDialog by remember { mutableStateOf(false) }
-
     LaunchedEffect(docId) {
         try {
             val doc = useCases.getDoc(docId)
@@ -115,7 +107,6 @@ fun DocumentViewScreen(
             ErrorHandler.showError("Failed to load document: ${e.message}")
         }
     }
-
     val doc = fullDoc
     if (doc == null) {
         Box(
@@ -126,8 +117,6 @@ fun DocumentViewScreen(
         }
         return
     }
-
-    // Функция для открытия PDF
     val openPdf = { pdfUri: String ->
         try {
             val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
@@ -138,8 +127,6 @@ fun DocumentViewScreen(
             ErrorHandler.showError("Failed to open PDF: ${e.message}")
         }
     }
-
-    // Функция для открытия фотографий
     val openPhoto = { photoUri: String ->
         try {
             val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
@@ -150,9 +137,7 @@ fun DocumentViewScreen(
             ErrorHandler.showError("Failed to open photo: ${e.message}")
         }
     }
-
     val scrollState = rememberScrollState()
-
     val viewFields = remember(doc) {
         buildList {
             if (doc.doc.description.isNotBlank()) {
@@ -163,7 +148,6 @@ fun DocumentViewScreen(
             }
         }
     }
-
     val handleCopyAll = {
         if (viewFields.isNotEmpty()) {
             val allFieldsText = viewFields.joinToString("\n") { (title, value) ->
@@ -173,7 +157,6 @@ fun DocumentViewScreen(
             ErrorHandler.showSuccess("All fields copied to clipboard")
         }
     }
-
     Surface(
         color = MaterialTheme.colorScheme.background,
         modifier = Modifier.fillMaxSize()
@@ -210,9 +193,7 @@ fun DocumentViewScreen(
                     )
                 }
             }
-
             Spacer(modifier = Modifier.height(AppDimens.spaceXl))
-
             viewFields.forEach { (label, value) ->
                 ViewFieldCard(
                     label = label,
@@ -224,7 +205,6 @@ fun DocumentViewScreen(
                 )
                 Spacer(modifier = Modifier.height(AppDimens.spaceLg))
             }
-
             if (doc.photos.isNotEmpty()) {
                 SectionTitle("Photos")
                 Spacer(modifier = Modifier.height(AppDimens.spaceMd))
@@ -249,7 +229,6 @@ fun DocumentViewScreen(
                     Spacer(modifier = Modifier.height(AppDimens.spaceLg))
                 }
             }
-
             if (doc.pdfs.isNotEmpty()) {
                 SectionTitle("Attached files")
                 Spacer(modifier = Modifier.height(AppDimens.spaceMd))
@@ -276,9 +255,7 @@ fun DocumentViewScreen(
                     }
                 }
             }
-
             Spacer(modifier = Modifier.height(AppDimens.spaceLg))
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(AppDimens.listSpacing)
@@ -296,7 +273,6 @@ fun DocumentViewScreen(
             }
         }
     }
-
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -327,8 +303,6 @@ fun DocumentViewScreen(
             }
         )
     }
-
-    // Диалог перемещения документа в папку
     if (showMoveDialog) {
         MoveToFolderDialog(
             docId = docId,
@@ -337,7 +311,6 @@ fun DocumentViewScreen(
         )
     }
 }
-
 private object EditorPalette {
     val background: Color
         @Composable get() = MaterialTheme.colorScheme.background
@@ -362,7 +335,6 @@ private object EditorPalette {
     val danger: Color
         @Composable get() = MaterialTheme.colorScheme.error
 }
-
 private object EditorShapes {
     val section
         @Composable get() = AppShapes.panelLarge()
@@ -373,7 +345,6 @@ private object EditorShapes {
     val icon
         @Composable get() = AppShapes.iconButton()
 }
-
 @Composable
 fun DocumentEditScreen(
     existingDocId: String?,
@@ -399,14 +370,11 @@ fun DocumentEditScreen(
     var currentPhotos by remember { mutableStateOf<List<Attachment>>(emptyList()) }
     var currentPdfs by remember { mutableStateOf<List<Attachment>>(emptyList()) }
     var pdfPreviews by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
-    
-    // Функции для работы с прикрепленными файлами
     val deletePhoto: (String) -> Unit = { photoId: String ->
         scope.launch {
             try {
                 useCases.deleteAttachment(photoId)
                 currentPhotos = currentPhotos.filter { it.id != photoId }
-                // Также удаляем из списка импортированных файлов для новых документов
                 if (existingDocId == null) {
                     importedAttachments = importedAttachments.filter { it != photoId }
                 }
@@ -416,13 +384,11 @@ fun DocumentEditScreen(
             }
         }
     }
-    
     val deletePdf: (String) -> Unit = { pdfId: String ->
         scope.launch {
             try {
                 useCases.deleteAttachment(pdfId)
                 currentPdfs = currentPdfs.filter { it.id != pdfId }
-                // Также удаляем из списка импортированных файлов для новых документов
                 if (existingDocId == null) {
                     importedAttachments = importedAttachments.filter { it != pdfId }
                 }
@@ -432,7 +398,6 @@ fun DocumentEditScreen(
             }
         }
     }
-    
     val openPdf = { pdfUri: String ->
         try {
             val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
@@ -443,7 +408,6 @@ fun DocumentEditScreen(
             ErrorHandler.showError("Failed to open PDF: ${e.message}")
         }
     }
-    
     val openPhoto = { photoUri: String ->
         try {
             val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
@@ -454,8 +418,6 @@ fun DocumentEditScreen(
             ErrorHandler.showError("Failed to open photo: ${e.message}")
         }
     }
-    
-    // Функция для загрузки превью PDF
     val loadPdfPreview = { pdf: Attachment ->
         scope.launch {
             try {
@@ -466,7 +428,6 @@ fun DocumentEditScreen(
             }
         }
     }
-
     LaunchedEffect(existingDocId, templateId) {
         if (existingDocId != null) {
             try {
@@ -477,14 +438,12 @@ fun DocumentEditScreen(
                 doc?.fields?.forEach { field ->
                     fields.add(field.name to (field.valueCipher?.decodeToString() ?: ""))
                 }
-                // Загружаем прикрепленные файлы
                 currentPhotos = doc?.photos ?: emptyList()
                 currentPdfs = doc?.pdfs ?: emptyList()
             } catch (e: Exception) {
                 ErrorHandler.showError("Failed to load document: ${e.message}")
             }
         } else {
-            // Для новых документов инициализируем пустые списки
             name = ""
             description = ""
             fields.clear()
@@ -493,12 +452,10 @@ fun DocumentEditScreen(
             importedAttachments = emptyList()
         }
     }
-
     var showAttachmentMenu by remember { mutableStateOf(false) }
     var isImporting by remember { mutableStateOf(false) }
     var importProgress by remember { mutableStateOf(0f) }
     var showImportDialog by remember { mutableStateOf(false) }
-
     suspend fun handleImportedAttachments(attachmentIds: List<String>) {
         if (existingDocId == null) {
             importedAttachments = importedAttachments + attachmentIds
@@ -547,7 +504,6 @@ fun DocumentEditScreen(
         }
         ErrorHandler.showSuccess("Files imported successfully")
     }
-
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
     ) { uris ->
@@ -569,7 +525,6 @@ fun DocumentEditScreen(
             }
         }
     }
-
     val documentPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments()
     ) { uris ->
@@ -591,11 +546,9 @@ fun DocumentEditScreen(
             }
         }
     }
-
     val density = LocalDensity.current
     val bottomInset = WindowInsets.navigationBars.getBottom(density) / density.density
     val topInset = WindowInsets.statusBars.getTop(density) / density.density
-
     Surface(color = EditorPalette.background, modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -619,7 +572,6 @@ fun DocumentEditScreen(
                     }
                 )
             }
-
             item {
                 EditorSectionCard(title = "Main information") {
                     EditorFieldInput(
@@ -638,7 +590,6 @@ fun DocumentEditScreen(
                     )
                 }
             }
-
             item {
                 EditorSectionCard(title = "Document fields") {
                     if (fields.isEmpty()) {
@@ -669,7 +620,6 @@ fun DocumentEditScreen(
                     )
                 }
             }
-
             item {
                 EditorSectionCard(title = "Attachments") {
                     Box {
@@ -702,7 +652,6 @@ fun DocumentEditScreen(
                             )
                         }
                     }
-
                     if (currentPhotos.isEmpty() && currentPdfs.isEmpty()) {
                         Spacer(Modifier.height(AppDimens.spaceLg))
                         EditorEmptyPlaceholder("Photos and documents will appear here after import.")
@@ -740,7 +689,6 @@ fun DocumentEditScreen(
                     }
                 }
             }
-
             item {
                 NeonPrimaryButton(
                     text = when {
@@ -788,7 +736,6 @@ fun DocumentEditScreen(
                                             photos = emptyList(),
                                             pdfUris = emptyList()
                                         )
-
                                         if (importedAttachments.isNotEmpty()) {
                                             useCases.bindAttachmentsToDoc(importedAttachments, newDocId)
                                         }
@@ -811,7 +758,6 @@ fun DocumentEditScreen(
             }
         }
     }
-
     if (showImportDialog) {
         AlertDialog(
             onDismissRequest = { },
@@ -838,8 +784,6 @@ fun DocumentEditScreen(
             }
         )
     }
-
-    // Диалог добавления поля
     if (showAddFieldDialog) {
         AlertDialog(
             onDismissRequest = { showAddFieldDialog = false },
@@ -890,9 +834,7 @@ fun DocumentEditScreen(
             }
         )
     }
-
 }
-
 @Composable
 private fun NeonCircleButton(
     icon: ImageVector,
@@ -916,7 +858,6 @@ private fun NeonCircleButton(
         )
     }
 }
-
 @Composable
 private fun SectionTitle(text: String) {
     Text(
@@ -925,7 +866,6 @@ private fun SectionTitle(text: String) {
         color = EditorPalette.textPrimary
     )
 }
-
 @Composable
 private fun EditorHeaderRow(
     title: String,
@@ -948,7 +888,6 @@ private fun EditorHeaderRow(
         )
     }
 }
-
 @Composable
 private fun EditorSectionCard(
     title: String? = null,
@@ -975,7 +914,6 @@ private fun EditorSectionCard(
         }
     }
 }
-
 @Composable
 private fun EditorFieldInput(
     label: String,
@@ -1041,7 +979,6 @@ private fun EditorFieldInput(
         )
     }
 }
-
 @Composable
 private fun EditorEmptyPlaceholder(text: String) {
     Row(
@@ -1061,7 +998,6 @@ private fun EditorEmptyPlaceholder(text: String) {
         )
     }
 }
-
 @Composable
 private fun EditorSubsectionTitle(text: String) {
     Text(
@@ -1070,7 +1006,6 @@ private fun EditorSubsectionTitle(text: String) {
         style = MaterialTheme.typography.titleSmall
     )
 }
-
 @Composable
 private fun EditorPhotoCard(
     photo: Attachment,
@@ -1116,7 +1051,6 @@ private fun EditorPhotoCard(
         )
     }
 }
-
 @Composable
 private fun EditorPdfCard(
     pdf: Attachment,
@@ -1195,7 +1129,6 @@ private fun EditorPdfCard(
         }
     }
 }
-
 @Composable
 private fun EditorIconButton(
     icon: ImageVector,
@@ -1221,7 +1154,6 @@ private fun EditorIconButton(
         )
     }
 }
-
 @Composable
 private fun ViewFieldCard(
     label: String,
@@ -1253,9 +1185,7 @@ private fun ViewFieldCard(
                 modifier = Modifier.size(AppDimens.Document.actionChipIcon)
             )
         }
-
         Spacer(modifier = Modifier.width(AppDimens.iconRowSpacing))
-
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = label,
@@ -1269,7 +1199,6 @@ private fun ViewFieldCard(
                 color = EditorPalette.textPrimary
             )
         }
-
         Spacer(modifier = Modifier.width(AppDimens.iconRowSpacing))
         NeonCircleButton(
             icon = Icons.Default.ContentCopy,
@@ -1278,7 +1207,6 @@ private fun ViewFieldCard(
         )
     }
 }
-
 @Composable
 private fun AttachmentChip(
     name: String,
@@ -1323,7 +1251,6 @@ private fun AttachmentChip(
         }
     }
 }
-
 @Composable
 private fun NeonOutlineButton(
     text: String,
@@ -1348,7 +1275,6 @@ private fun NeonOutlineButton(
         Text(text)
     }
 }
-
 @Composable
 private fun NeonPrimaryButton(
     text: String,
@@ -1372,8 +1298,6 @@ private fun NeonPrimaryButton(
         Text(text)
     }
 }
-
-/* ===== Диалог перемещения документа в папку ===== */
 @Composable
 private fun MoveToFolderDialog(
     docId: String,
@@ -1384,11 +1308,9 @@ private fun MoveToFolderDialog(
     val scope = rememberCoroutineScope()
     var folders by remember { mutableStateOf<List<com.example.docapp.domain.Folder>>(emptyList()) }
     var selected by remember { mutableStateOf<String?>(currentFolderId) }
-
     LaunchedEffect(Unit) {
         folders = useCases.listFolders()
     }
-
     AlertDialog(
         onDismissRequest = onClose,
         containerColor = EditorPalette.section,
@@ -1450,5 +1372,3 @@ private fun MoveToFolderDialog(
         }
     )
 }
-
-

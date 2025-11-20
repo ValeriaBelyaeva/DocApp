@@ -1,5 +1,4 @@
 package com.example.docapp.ui.design
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -13,10 +12,6 @@ import androidx.compose.ui.unit.dp
 import com.example.docapp.ui.theme.AppBorderWidths
 import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.ui.theme.DocTheme
-
-/**
- * Compatibility test between the new design system and the legacy DocTheme.
- */
 @Composable
 fun ThemeCompatibilityTest() {
     DocTheme {
@@ -28,8 +23,6 @@ fun ThemeCompatibilityTest() {
                 verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingMedium)
             ) {
                 Text("Theme compatibility test", style = DMText.H1)
-                
-                // Compare colors
                 SectionCard(title = "Color scheme comparison") {
                     Column(verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.arrangeSpacingSmall)) {
                         Row(
@@ -57,7 +50,6 @@ fun ThemeCompatibilityTest() {
                                 Text("Background", style = DMText.Body)
                             }
                         }
-                        
                         Row(
                             Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -81,7 +73,6 @@ fun ThemeCompatibilityTest() {
                                 Text("Surface", style = DMText.Body)
                             }
                         }
-                        
                         Row(
                             Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -105,22 +96,15 @@ fun ThemeCompatibilityTest() {
                         }
                     }
                 }
-                
-                // Components with legacy theme
                 SectionCard(title = "Components with legacy theme") {
                     Column(verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.arrangeSpacingSmall)) {
-                        // Standard Material3 button
                         Button(
                             onClick = { },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text("Standard Material3 button")
                         }
-                        
-                        // Neon button
                         NeonPrimaryButton("Neon button")
-                        
-                        // Mixed usage
                         Row(
                             Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -132,13 +116,10 @@ fun ThemeCompatibilityTest() {
                         }
                     }
                 }
-                
-                // Typography comparison
                 SectionCard(title = "Typography comparison") {
                     Column(verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingSmall)) {
                         Text("Material3 Typography", style = MaterialTheme.typography.headlineMedium)
                         Text("Our typography", style = DMText.H1)
-                        
                         Text("Material3 Body", style = MaterialTheme.typography.bodyMedium)
                         Text("Our Body", style = DMText.Body)
                     }

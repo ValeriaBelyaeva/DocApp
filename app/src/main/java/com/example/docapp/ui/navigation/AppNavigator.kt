@@ -1,9 +1,7 @@
 package com.example.docapp.ui.navigation
-
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
-
 sealed class AppDestination(val route: String) {
     data object Pin : AppDestination("pin")
     data object Showcase : AppDestination("showcase")
@@ -23,33 +21,25 @@ sealed class AppDestination(val route: String) {
             "doc/edit?docId=${docId.asNavArg()}&templateId=${templateId.asNavArg()}&folderId=${folderId.asNavArg()}"
     }
 }
-
 class AppNavigator(private val navController: NavHostController) {
-
     fun openHome(popUpTo: AppDestination? = null, inclusive: Boolean = false) {
         navigate(AppDestination.Home.route, popUpTo, inclusive)
     }
-
     fun openPin(popUpTo: AppDestination? = null, inclusive: Boolean = false) {
         navigate(AppDestination.Pin.route, popUpTo, inclusive)
     }
-
     fun openShowcase() {
         navController.navigate(AppDestination.Showcase.route)
     }
-
     fun openTemplateSelector(folderId: String?) {
         navController.navigate(AppDestination.TemplateSelector.build(folderId))
     }
-
     fun openTemplateFill(templateId: String, folderId: String?) {
         navController.navigate(AppDestination.TemplateFill.build(templateId, folderId))
     }
-
     fun openDocView(docId: String, popUpTo: AppDestination? = null, inclusive: Boolean = false) {
         navigate(AppDestination.DocView.build(docId), popUpTo, inclusive)
     }
-
     fun openDocEditor(
         docId: String? = null,
         templateId: String? = null,
@@ -59,11 +49,9 @@ class AppNavigator(private val navController: NavHostController) {
     ) {
         navigate(AppDestination.DocEdit.build(docId, templateId, folderId), popUpTo, inclusive)
     }
-
     fun popBack() {
         val backStackEntry = navController.previousBackStackEntry
         val previousRoute = backStackEntry?.destination?.route
-        
         if (previousRoute == AppDestination.Pin.route) {
             navController.navigate(AppDestination.Home.route) {
                 popUpTo(AppDestination.Home.route) {
@@ -75,19 +63,16 @@ class AppNavigator(private val navController: NavHostController) {
             navController.popBackStack()
         }
     }
-    
     fun canPopBack(): Boolean {
         val backStackEntry = navController.previousBackStackEntry
         val previousRoute = backStackEntry?.destination?.route
         return previousRoute != null && previousRoute != AppDestination.Pin.route
     }
-    
     fun safePopBack() {
         if (canPopBack()) {
             navController.popBackStack()
         }
     }
-
     private fun navigate(route: String, popUpTo: AppDestination?, inclusive: Boolean) {
         navController.navigate(route) {
             popUpTo?.let { destination ->
@@ -99,10 +84,8 @@ class AppNavigator(private val navController: NavHostController) {
         }
     }
 }
-
 @Composable
 fun rememberAppNavigator(navController: NavHostController): AppNavigator = remember(navController) {
     AppNavigator(navController)
 }
-
 private fun String?.asNavArg(): String = this ?: ""

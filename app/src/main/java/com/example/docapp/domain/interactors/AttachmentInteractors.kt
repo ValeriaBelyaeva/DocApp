@@ -1,5 +1,4 @@
 package com.example.docapp.domain.interactors
-
 import android.content.Context
 import android.net.Uri
 import com.example.docapp.core.AppLogger
@@ -9,7 +8,6 @@ import com.example.docapp.core.UriDebugger
 import com.example.docapp.data.db.entities.AttachmentEntity
 import com.example.docapp.data.storage.FileGc
 import com.example.docapp.domain.repo.AttachmentRepository
-
 class AttachmentInteractors(
     private val repository: AttachmentRepository,
     private val attachmentStore: AttachmentStore
@@ -19,7 +17,6 @@ class AttachmentInteractors(
         val failed: Int,
         val attachments: List<AttachmentEntity>
     )
-
     suspend fun import(
         context: Context,
         documentId: String?,
@@ -28,9 +25,7 @@ class AttachmentInteractors(
         return try {
             AppLogger.log("AttachmentInteractors", "Importing ${uris.size} attachments for doc: $documentId")
             ErrorHandler.showInfo("Importing ${uris.size} files...")
-
             val imported = repository.importAttachments(context, uris)
-
             if (documentId != null && imported.isNotEmpty()) {
                 val attachmentIds = imported.map { it.id }
                 repository.bindAttachmentsToDoc(attachmentIds, documentId)
@@ -39,21 +34,17 @@ class AttachmentInteractors(
                     "Bound ${attachmentIds.size} attachments to document: $documentId"
                 )
             }
-
             val result = ImportResult(
                 successful = imported.size,
                 failed = uris.size - imported.size,
                 attachments = imported
             )
-
             AppLogger.log("AttachmentInteractors", "Import completed: $result")
-
             if (result.failed == 0) {
                 ErrorHandler.showSuccess("All files imported successfully")
             } else {
                 ErrorHandler.showWarning("Import finished: ${result.successful} succeeded, ${result.failed} failed")
             }
-
             result
         } catch (e: Exception) {
             AppLogger.log("AttachmentInteractors", "ERROR: Import failed: ${e.message}")
@@ -61,13 +52,10 @@ class AttachmentInteractors(
             throw e
         }
     }
-
     suspend fun delete(attachmentId: String): Boolean {
         return try {
             AppLogger.log("AttachmentInteractors", "Deleting attachment: $attachmentId")
-
             val result = repository.deleteAttachment(attachmentId)
-
             if (result) {
                 AppLogger.log("AttachmentInteractors", "Attachment deleted successfully: $attachmentId")
                 ErrorHandler.showSuccess("File deleted")
@@ -75,7 +63,6 @@ class AttachmentInteractors(
                 AppLogger.log("AttachmentInteractors", "Failed to delete attachment: $attachmentId")
                 ErrorHandler.showWarning("Unable to delete file")
             }
-
             result
         } catch (e: Exception) {
             AppLogger.log("AttachmentInteractors", "ERROR: Failed to delete attachment: ${e.message}")
@@ -83,16 +70,12 @@ class AttachmentInteractors(
             false
         }
     }
-
     suspend fun cleanupOrphans(): FileGc.CleanupResult {
         return try {
             AppLogger.log("AttachmentInteractors", "Starting orphan cleanup...")
             ErrorHandler.showInfo("Cleaning up unused files...")
-
             val result = repository.cleanupOrphans()
-
             AppLogger.log("AttachmentInteractors", "Cleanup completed: $result")
-
             when {
                 result.errors == 0 && result.deletedFiles > 0 -> {
                     ErrorHandler.showSuccess("Cleanup complete: ${result.deletedFiles} files removed")
@@ -106,7 +89,6 @@ class AttachmentInteractors(
                     )
                 }
             }
-
             result
         } catch (e: Exception) {
             AppLogger.log("AttachmentInteractors", "ERROR: Cleanup failed: ${e.message}")
@@ -114,7 +96,6 @@ class AttachmentInteractors(
             throw e
         }
     }
-
     suspend fun migrate(
         context: Context,
         uris: List<Uri>,
@@ -122,36 +103,27 @@ class AttachmentInteractors(
         type: String
     ): Int {
         var migratedCount = 0
-
         uris.forEach { uri ->
             try {
                 AppLogger.log("AttachmentInteractors", "Migrating $type: $uri")
-
                 val attachment = repository.importAttachment(context, uri)
-
                 repository.bindAttachmentsToDoc(listOf(attachment.id), documentId)
-
                 migratedCount++
             } catch (e: Exception) {
                 AppLogger.log("AttachmentInteractors", "ERROR: Failed to migrate $type $uri: ${e.message}")
                 ErrorHandler.showWarning("Failed to migrate file $uri: ${e.message}")
             }
         }
-
         return migratedCount
     }
-
     suspend fun listByDocument(documentId: String): List<AttachmentEntity> =
         repository.getAttachmentsByDoc(documentId)
-
     suspend fun bindToDocument(attachmentIds: List<String>, documentId: String) =
         repository.bindAttachmentsToDoc(attachmentIds, documentId)
-
     suspend fun prepareForUpdate(attachments: List<com.example.docapp.domain.Attachment>): List<com.example.docapp.domain.Attachment> {
         return buildList {
             addAll(attachments.map { attachment ->
                 UriDebugger.showUriDebug("ATTACHMENT: ${attachment.displayName}", attachment.uri)
-
                 if (attachment.requiresPersist) {
                     UriDebugger.showUriDebug("SAVE: ${attachment.displayName}", attachment.uri)
                     val persistedUri = attachmentStore.persist(attachment.uri)
@@ -169,4 +141,3 @@ class AttachmentInteractors(
         }
     }
 }
-

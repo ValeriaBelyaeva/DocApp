@@ -1,5 +1,4 @@
 package com.example.docapp.ui.design
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -16,11 +15,6 @@ import androidx.compose.ui.unit.dp
 import com.example.docapp.ui.theme.AppBorderWidths
 import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.ui.theme.DocTheme
-
-/**
- * Test screen to verify integration of the new design system
- * with the existing application theme.
- */
 @Composable
 fun DesignSystemIntegrationTest() {
     DocTheme {
@@ -33,31 +27,25 @@ fun DesignSystemIntegrationTest() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text("Design system integration", style = DMText.H1)
-                
-                // Component showcase
                 SectionCard(title = "Component test") {
                     Column(verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.arrangeSpacingSmall)) {
                         NeonPrimaryButton("Primary button")
                         NeonSecondaryButton("Secondary button")
-                        
                         Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingSmall)) {
-                            NeonIconButton { 
-                                Icon(Icons.Outlined.Star, null, tint = DMColors.Accent) 
+                            NeonIconButton {
+                                Icon(Icons.Outlined.Star, null, tint = DMColors.Accent)
                             }
-                            NeonIconButton { 
-                                Icon(Icons.Outlined.Favorite, null, tint = DMColors.Accent) 
+                            NeonIconButton {
+                                Icon(Icons.Outlined.Favorite, null, tint = DMColors.Accent)
                             }
                         }
-                        
                         DocRow("Sample document", "123456789") {
-                            NeonIconButton { 
-                                Icon(Icons.Outlined.Visibility, null, tint = DMColors.Accent) 
+                            NeonIconButton {
+                                Icon(Icons.Outlined.Visibility, null, tint = DMColors.Accent)
                             }
                         }
                     }
                 }
-                
-                // Color showcase
                 SectionCard(title = "Color test") {
                     Column(verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingSmall)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingSmall)) {
@@ -88,8 +76,6 @@ fun DesignSystemIntegrationTest() {
                         }
                     }
                 }
-                
-                // Typography showcase
                 SectionCard(title = "Typography test") {
                     Column(verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingSmall)) {
                         Text("Heading H1", style = DMText.H1)

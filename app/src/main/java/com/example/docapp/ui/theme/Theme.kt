@@ -1,5 +1,4 @@
 package com.example.docapp.ui.theme
-
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -12,7 +11,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import com.example.docapp.core.ThemeManager
 import com.example.docapp.core.setSystemBarColors
-
 @Composable
 fun DocTheme(content: @Composable () -> Unit) {
     val isDarkTheme = ThemeManager.isDarkTheme
@@ -27,7 +25,6 @@ fun DocTheme(content: @Composable () -> Unit) {
             SurfaceStyle.Matte -> ThemePalette.matteGlassTokens(colorScheme)
         }
     }
-
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
@@ -38,7 +35,6 @@ fun DocTheme(content: @Composable () -> Unit) {
             )
         }
     }
-    
     CompositionLocalProvider(LocalGlassColors provides glassTokens) {
         MaterialTheme(
             colorScheme = colorScheme,

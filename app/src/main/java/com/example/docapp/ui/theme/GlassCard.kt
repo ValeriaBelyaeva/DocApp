@@ -1,5 +1,4 @@
 package com.example.docapp.ui.theme
-
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -27,13 +26,11 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import com.example.docapp.ui.theme.AppShapes
 import com.example.docapp.ui.theme.AppDimens
-
 private const val GLASS_FALLBACK_RADIUS_FRACTION = 0.12f
 private const val GLASS_HIGHLIGHT_DIAGONAL_FACTOR = 1.4f
 private const val RIPPLE_ALPHA = 0.18f
 private const val FALLBACK_HIGHLIGHT_ALPHA_DARK = 0.12f
 private const val FALLBACK_HIGHLIGHT_ALPHA_LIGHT = 0.08f
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun GlassCard(
@@ -67,7 +64,6 @@ fun GlassCard(
     } else {
         Modifier
     }
-
     val borderStroke = if (surfaceTokens.borderWidth > 0.dp &&
         (glassColors.borderBright.alpha > 0f || glassColors.borderShadow.alpha > 0f)
     ) {
@@ -78,9 +74,7 @@ fun GlassCard(
             )
         )
     } else null
-
     val shadowElevation = if (glassColors.shadowColor.alpha > 0f) AppDimens.Glass.shadowHigh else AppDimens.Glass.shadowLow
-
     Surface(
         modifier = modifier.shadow(
             elevation = shadowElevation,
@@ -115,7 +109,6 @@ fun GlassCard(
                         }
                         else -> CornerRadius(fallbackRadius, fallbackRadius)
                     }
-
                     if (surfaceTokens.useGradient && glassColors.highlight.alpha > 0f) {
                         val highlightBrush = Brush.linearGradient(
                             colors = listOf(glassColors.highlight, Color.Transparent),
@@ -127,7 +120,6 @@ fun GlassCard(
                             cornerRadius = cornerRadius
                         )
                     } else if (surfaceTokens.useInnerGlow) {
-                        // Matte or fallback surfaces rely on a subtle neutral inner glow to avoid flat fills.
                         val glowCore = if (glassColors.highlight.alpha > 0f) glassColors.highlight else fallbackGlow
                         val glowBrush = Brush.radialGradient(
                             colors = listOf(glowCore, Color.Transparent),

@@ -1,5 +1,4 @@
 package com.example.docapp.ui.document
-
 import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -19,7 +18,6 @@ import com.example.docapp.core.ServiceLocator
 import com.example.docapp.ui.theme.GlassCard
 import com.example.docapp.ui.theme.AppDimens
 import kotlinx.coroutines.launch
-
 @Composable
 fun ImportAttachmentsButton(
     docId: String?,
@@ -28,12 +26,9 @@ fun ImportAttachmentsButton(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val useCases = ServiceLocator.useCases
-    
     var isImporting by remember { mutableStateOf(false) }
     var importProgress by remember { mutableStateOf(0f) }
     var showProgressDialog by remember { mutableStateOf(false) }
-    
-    // Пикер для множественных изображений
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
     ) { uris ->
@@ -43,22 +38,16 @@ fun ImportAttachmentsButton(
                     isImporting = true
                     showProgressDialog = true
                     importProgress = 0f
-                    
                     AppLogger.log("ImportAttachments", "Importing ${uris.size} photos")
                     ErrorHandler.showInfo("Importing ${uris.size} photos...")
-                    
                     val result = useCases.importAttachments(context, docId, uris)
-                    
                     importProgress = 1f
-                    
                     if (result.failed == 0) {
                         ErrorHandler.showSuccess("All photos imported successfully")
                     } else {
                         ErrorHandler.showWarning("Import finished: ${result.successful} succeeded, ${result.failed} failed")
                     }
-                    
                     onImportComplete(result.attachments.map { it.id })
-                    
                 } catch (e: Exception) {
                     AppLogger.log("ImportAttachments", "ERROR: Photo import failed: ${e.message}")
                     ErrorHandler.showError("Photo import failed: ${e.message}")
@@ -69,8 +58,6 @@ fun ImportAttachmentsButton(
             }
         }
     }
-    
-    // Пикер для множественных документов (PDF)
     val documentPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments()
     ) { uris ->
@@ -80,22 +67,16 @@ fun ImportAttachmentsButton(
                     isImporting = true
                     showProgressDialog = true
                     importProgress = 0f
-                    
                     AppLogger.log("ImportAttachments", "Importing ${uris.size} documents")
                     ErrorHandler.showInfo("Importing ${uris.size} documents...")
-                    
                     val result = useCases.importAttachments(context, docId, uris)
-                    
                     importProgress = 1f
-                    
                     if (result.failed == 0) {
                         ErrorHandler.showSuccess("All documents imported successfully")
                     } else {
                         ErrorHandler.showWarning("Import finished: ${result.successful} succeeded, ${result.failed} failed")
                     }
-                    
                     onImportComplete(result.attachments.map { it.id })
-                    
                 } catch (e: Exception) {
                     AppLogger.log("ImportAttachments", "ERROR: Document import failed: ${e.message}")
                     ErrorHandler.showError("Document import failed: ${e.message}")
@@ -106,12 +87,10 @@ fun ImportAttachmentsButton(
             }
         }
     }
-    
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceSm)
     ) {
-        // Кнопка импорта фотографий
         OutlinedButton(
             onClick = {
                 if (!isImporting) {
@@ -125,8 +104,6 @@ fun ImportAttachmentsButton(
             Spacer(modifier = Modifier.width(AppDimens.spaceSm))
             Text("Add photo")
         }
-        
-        // Кнопка импорта PDF
         OutlinedButton(
             onClick = {
                 if (!isImporting) {
@@ -141,11 +118,9 @@ fun ImportAttachmentsButton(
             Text("Add PDF")
         }
     }
-    
-    // Диалог прогресса импорта
     if (showProgressDialog) {
         AlertDialog(
-            onDismissRequest = { /* cannot cancel */ },
+            onDismissRequest = {  },
             title = { Text("Importing files") },
             text = {
                 Column {
@@ -159,7 +134,7 @@ fun ImportAttachmentsButton(
             },
             confirmButton = {
                 TextButton(
-                    onClick = { /* cannot cancel */ },
+                    onClick = {  },
                     enabled = false
                 ) {
                     Text("Cancel")
@@ -168,7 +143,6 @@ fun ImportAttachmentsButton(
         )
     }
 }
-
 @Composable
 fun ImportAttachmentsForNewDocument(
     onImportComplete: (photos: List<Uri>, pdfs: List<Uri>) -> Unit
@@ -176,12 +150,9 @@ fun ImportAttachmentsForNewDocument(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val useCases = ServiceLocator.useCases
-    
     var importedPhotos by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var importedPdfs by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var isImporting by remember { mutableStateOf(false) }
-    
-    // Пикер для множественных изображений
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
     ) { uris ->
@@ -190,13 +161,9 @@ fun ImportAttachmentsForNewDocument(
                 try {
                     isImporting = true
                     AppLogger.log("ImportAttachments", "Importing ${uris.size} photos for new document")
-                    
-                    // Импортируем фото без привязки к документу
                     val result = useCases.importAttachments(context, null, uris)
                     importedPhotos = uris
-                    
                     ErrorHandler.showSuccess("Imported ${result.successful} photos")
-                    
                 } catch (e: Exception) {
                     AppLogger.log("ImportAttachments", "ERROR: Photo import failed: ${e.message}")
                     ErrorHandler.showError("Photo import failed: ${e.message}")
@@ -206,8 +173,6 @@ fun ImportAttachmentsForNewDocument(
             }
         }
     }
-    
-    // Пикер для множественных документов (PDF)
     val documentPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments()
     ) { uris ->
@@ -216,13 +181,9 @@ fun ImportAttachmentsForNewDocument(
                 try {
                     isImporting = true
                     AppLogger.log("ImportAttachments", "Importing ${uris.size} documents for new document")
-                    
-                    // Импортируем PDF без привязки к документу
                     val result = useCases.importAttachments(context, null, uris)
                     importedPdfs = uris
-                    
                     ErrorHandler.showSuccess("Imported ${result.successful} documents")
-                    
                 } catch (e: Exception) {
                     AppLogger.log("ImportAttachments", "ERROR: Document import failed: ${e.message}")
                     ErrorHandler.showError("Document import failed: ${e.message}")
@@ -232,7 +193,6 @@ fun ImportAttachmentsForNewDocument(
             }
         }
     }
-    
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -240,14 +200,11 @@ fun ImportAttachmentsForNewDocument(
             text = "Import files for a new document",
             style = MaterialTheme.typography.titleMedium
         )
-        
         Spacer(modifier = Modifier.height(AppDimens.spaceSm))
-        
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceSm)
         ) {
-            // Кнопка импорта фотографий
             OutlinedButton(
                 onClick = {
                     if (!isImporting) {
@@ -261,8 +218,6 @@ fun ImportAttachmentsForNewDocument(
                 Spacer(modifier = Modifier.width(AppDimens.spaceSm))
                 Text("Photos")
             }
-            
-            // Кнопка импорта PDF
             OutlinedButton(
                 onClick = {
                     if (!isImporting) {
@@ -277,11 +232,8 @@ fun ImportAttachmentsForNewDocument(
                 Text("PDF")
             }
         }
-        
-        // Показать импортированные файлы
         if (importedPhotos.isNotEmpty() || importedPdfs.isNotEmpty()) {
             Spacer(modifier = Modifier.height(AppDimens.spaceLg))
-            
             GlassCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -292,17 +244,13 @@ fun ImportAttachmentsForNewDocument(
                         text = "Imported files:",
                         style = MaterialTheme.typography.titleSmall
                     )
-                    
                     if (importedPhotos.isNotEmpty()) {
                         Text("Photos: ${importedPhotos.size}")
                     }
-                    
                     if (importedPdfs.isNotEmpty()) {
                         Text("PDFs: ${importedPdfs.size}")
                     }
-                    
                     Spacer(modifier = Modifier.height(AppDimens.spaceSm))
-                    
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceSm)
@@ -315,7 +263,6 @@ fun ImportAttachmentsForNewDocument(
                         ) {
                             Text("Use")
                         }
-                        
                         OutlinedButton(
                             onClick = {
                                 importedPhotos = emptyList()

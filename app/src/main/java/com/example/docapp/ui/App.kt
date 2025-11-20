@@ -1,5 +1,4 @@
 package com.example.docapp.ui
-
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -28,12 +27,10 @@ import com.example.docapp.ui.navigation.AppDestination
 import com.example.docapp.ui.navigation.rememberAppNavigator
 import com.example.docapp.ui.theme.AppDurations
 import kotlinx.coroutines.delay
-
 @Composable
 fun AppRoot(content: @Composable () -> Unit) {
     content()
 }
-
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun App() {
@@ -58,12 +55,9 @@ fun App() {
                 }
             }
         }
-
         AppLogger.log("App", "Navigation controller created")
-        // Модификатор для отслеживания всех взаимодействий пользователя
         val interactionModifier = Modifier
             .pointerInput(Unit) {
-                // Отслеживаем касания и жесты
                 detectTapGestures(
                     onTap = { updateInteraction() },
                     onPress = { updateInteraction() },
@@ -72,7 +66,6 @@ fun App() {
                 )
             }
             .pointerInput(Unit) {
-                // Отслеживаем прокрутку и перетаскивание
                 detectDragGestures(
                     onDragStart = { updateInteraction() },
                     onDrag = { _, _ -> updateInteraction() },
@@ -83,8 +76,6 @@ fun App() {
                 updateInteraction()
                 false
             }
-        
-        // Оборачиваем весь NavHost в Box с модификатором отслеживания
         Box(modifier = interactionModifier.fillMaxSize()) {
             NavHost(
                 navController = nav,

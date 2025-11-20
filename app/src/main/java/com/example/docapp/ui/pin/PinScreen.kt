@@ -1,5 +1,4 @@
 package com.example.docapp.ui.pin
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,23 +16,18 @@ import kotlinx.coroutines.launch
 import kotlin.UninitializedPropertyAccessException
 import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.ui.theme.AppLayout
-
 @Composable
 fun PinScreen(onSuccess: () -> Unit) {
-    // useCases are not initialized until the PIN is entered; access crypto directly
     var stage by remember { mutableStateOf(PinStage.Loading) }
     var pin by remember { mutableStateOf("") }
     var firstNew by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var isProcessing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-
     LaunchedEffect(Unit) {
         AppLogger.log("PinScreen", "PinScreen initialized")
         try {
-            // Ensure ServiceLocator has been initialized
             try {
-                // Accessing crypto verifies initialization
                 ServiceLocator.crypto.isPinSet()
             } catch (e: UninitializedPropertyAccessException) {
                 AppLogger.log("PinScreen", "ERROR: ServiceLocator.crypto is not initialized")
@@ -41,11 +35,7 @@ fun PinScreen(onSuccess: () -> Unit) {
                 stage = PinStage.Loading
                 return@LaunchedEffect
             }
-            
-            // Debug info
             ErrorHandler.showInfo("Checking PIN status...")
-            
-            // Query PIN state directly via CryptoManager
             stage = if (ServiceLocator.crypto.isPinSet()) {
                 AppLogger.log("PinScreen", "PIN is set, showing enter existing PIN screen")
                 ErrorHandler.showInfo("PIN detected. Please enter the current PIN.")
@@ -58,14 +48,12 @@ fun PinScreen(onSuccess: () -> Unit) {
         } catch (e: Exception) {
             AppLogger.log("PinScreen", "ERROR: Failed to check PIN status: ${e.message}")
             ErrorHandler.showCriticalError("Application initialization error", e)
-            // Stay on loading screen
             stage = PinStage.Loading
         }
     }
-
     Column(
         modifier = AppLayout.appScreenInsets(Modifier.fillMaxSize())
-            .padding(AppDimens.spaceXl), 
+            .padding(AppDimens.spaceXl),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(Modifier.height(AppDimens.space2Xl))
@@ -81,13 +69,11 @@ fun PinScreen(onSuccess: () -> Unit) {
         )
         Spacer(Modifier.height(AppDimens.spaceSm))
         Text(
-            text = "•".repeat(pin.length),
+            text = "�".repeat(pin.length),
             color = if (error != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground,
             style = MaterialTheme.typography.headlineMedium
         )
         Spacer(Modifier.height(AppDimens.spaceXl))
-        
-        // Confirm button
         if (pin.isNotEmpty()) {
             Button(
                 onClick = {
@@ -171,23 +157,20 @@ fun PinScreen(onSuccess: () -> Unit) {
             }
             Spacer(Modifier.height(AppDimens.spaceMd))
         }
-        
         Numpad(
             onDigit = { pin += it },
             onDelete = { if (pin.isNotEmpty()) pin = pin.dropLast(1) }
         )
     }
 }
-
 enum class PinStage { Loading, EnterExisting, EnterNew, ConfirmNew }
-
 @Composable
 private fun Numpad(onDigit: (String) -> Unit, onDelete: () -> Unit) {
     Column(
-        modifier = Modifier.fillMaxSize(),            // Fill to allow proper centering
-        verticalArrangement = Arrangement.Center,     // Center vertically
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally) {
-        val rows = listOf(listOf("1","2","3"), listOf("4","5","6"), listOf("7","8","9"), listOf("","0","⌫"))
+        val rows = listOf(listOf("1","2","3"), listOf("4","5","6"), listOf("7","8","9"), listOf("","0","?"))
         rows.forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 row.forEach { label ->
@@ -196,7 +179,7 @@ private fun Numpad(onDigit: (String) -> Unit, onDelete: () -> Unit) {
                         onClick = {
                             when (label) {
                                 "" -> {}
-                                "⌫" -> onDelete()
+                                "?" -> onDelete()
                                 else -> onDigit(label)
                             }
                         },
@@ -208,4 +191,3 @@ private fun Numpad(onDigit: (String) -> Unit, onDelete: () -> Unit) {
         }
     }
 }
-

@@ -1,5 +1,4 @@
 package com.example.docapp.data.storage
-
 import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
@@ -11,37 +10,28 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.security.KeyStore
 import javax.crypto.Cipher
-
 class AttachmentCrypto(private val context: Context) {
-    
     companion object {
         private const val KEY_ALIAS = "attachment_master_key"
         private const val ANDROID_KEYSTORE = "AndroidKeyStore"
         private const val ENCRYPTION_ALGORITHM = KeyProperties.KEY_ALGORITHM_AES
         private const val ENCRYPTION_BLOCK_MODE = KeyProperties.BLOCK_MODE_GCM
         private const val ENCRYPTION_PADDING = KeyProperties.ENCRYPTION_PADDING_NONE
-        
-        // Flag to enable encryption (can be toggled via settings)
         var encryptionEnabled: Boolean = false
             private set
     }
-    
     private var masterKey: MasterKey? = null
-    
     init {
         initializeMasterKey()
     }
-    
     fun enableEncryption() {
         encryptionEnabled = true
         AppLogger.log("AttachmentCrypto", "Encryption enabled")
     }
-    
     fun disableEncryption() {
         encryptionEnabled = false
         AppLogger.log("AttachmentCrypto", "Encryption disabled")
     }
-    
     private fun initializeMasterKey() {
         try {
             if (encryptionEnabled) {
@@ -54,11 +44,9 @@ class AttachmentCrypto(private val context: Context) {
                     .setUserAuthenticationRequired(false)
                     .setRandomizedEncryptionRequired(true)
                     .build()
-                
                 masterKey = MasterKey.Builder(context)
                     .setKeyGenParameterSpec(keyGenParameterSpec)
                     .build()
-                
                 AppLogger.log("AttachmentCrypto", "Master key initialized")
             }
         } catch (e: Exception) {
@@ -66,13 +54,11 @@ class AttachmentCrypto(private val context: Context) {
             throw RuntimeException("Cannot initialize encryption", e)
         }
     }
-    
     fun createEncryptedFile(file: File): EncryptedFile? {
         return try {
             if (!encryptionEnabled || masterKey == null) {
                 return null
             }
-            
             EncryptedFile.Builder(
                 context,
                 file,
@@ -84,7 +70,6 @@ class AttachmentCrypto(private val context: Context) {
             null
         }
     }
-    
     fun writeToEncryptedFile(encryptedFile: EncryptedFile, inputStream: InputStream): Boolean {
         return try {
             encryptedFile.openFileOutput().use { outputStream ->
@@ -100,7 +85,6 @@ class AttachmentCrypto(private val context: Context) {
             false
         }
     }
-    
     fun readFromEncryptedFile(encryptedFile: EncryptedFile): InputStream? {
         return try {
             encryptedFile.openFileInput()
@@ -109,12 +93,9 @@ class AttachmentCrypto(private val context: Context) {
             null
         }
     }
-    
     fun isEncrypted(@Suppress("UNUSED_PARAMETER") file: File): Boolean {
         return try {
             if (!encryptionEnabled) return false
-            
-            // Check whether the file is encrypted
             val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE)
             keyStore.load(null)
             keyStore.containsAlias(KEY_ALIAS)
@@ -123,7 +104,6 @@ class AttachmentCrypto(private val context: Context) {
             false
         }
     }
-    
     fun deleteMasterKey() {
         try {
             val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE)
@@ -135,16 +115,13 @@ class AttachmentCrypto(private val context: Context) {
             AppLogger.log("AttachmentCrypto", "ERROR: Failed to delete master key: ${e.message}")
         }
     }
-    
     fun getEncryptionStatus(): EncryptionStatus {
         return try {
             if (!encryptionEnabled) {
                 return EncryptionStatus.DISABLED
             }
-            
             val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE)
             keyStore.load(null)
-            
             if (keyStore.containsAlias(KEY_ALIAS)) {
                 EncryptionStatus.ENABLED_AND_READY
             } else {
@@ -155,7 +132,6 @@ class AttachmentCrypto(private val context: Context) {
             EncryptionStatus.ERROR
         }
     }
-    
     enum class EncryptionStatus {
         DISABLED,
         ENABLED_AND_READY,

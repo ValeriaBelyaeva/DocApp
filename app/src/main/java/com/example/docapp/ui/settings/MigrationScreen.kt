@@ -1,5 +1,4 @@
 package com.example.docapp.ui.settings
-
 import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -21,23 +20,18 @@ import kotlinx.coroutines.launch
 import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.ui.theme.AppBorderWidths
 import com.example.docapp.ui.theme.AppAlphas
-
 private const val MIGRATION_PROGRESS_STEP = 0.3f
-
 @Composable
 fun MigrationScreen() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val useCases = ServiceLocator.useCases
-    
     var isMigrating by remember { mutableStateOf(false) }
     var migrationProgress by remember { mutableStateOf(0f) }
     var showMigrationDialog by remember { mutableStateOf(false) }
     var migrationResult by remember { mutableStateOf<String?>(null) }
-    
     var isCleaningUp by remember { mutableStateOf(false) }
     var cleanupResult by remember { mutableStateOf<FileGc.CleanupResult?>(null) }
-    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -49,8 +43,6 @@ fun MigrationScreen() {
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
-        
-        // Карточка миграции
         GlassCard(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -75,17 +67,13 @@ fun MigrationScreen() {
                         fontWeight = FontWeight.Medium
                     )
                 }
-                
                 Spacer(modifier = Modifier.height(AppDimens.spaceSm))
-                
                 Text(
                     text = "Moves external URIs into local app storage to keep attachments accessible.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
                 Spacer(modifier = Modifier.height(AppDimens.spaceLg))
-                
                 Button(
                     onClick = {
                         if (!isMigrating) {
@@ -93,25 +81,18 @@ fun MigrationScreen() {
                                 isMigrating = true
                                 showMigrationDialog = true
                                 migrationProgress = 0f
-                                
                                 try {
                                     AppLogger.log("MigrationScreen", "Starting migration...")
                                     ErrorHandler.showInfo("Starting legacy URI migration...")
-                                    
-                                    // Симуляция прогресса
                                     migrationProgress = MIGRATION_PROGRESS_STEP
-                                    
                                     val result = useCases.migrateExternalUris(context)
-                                    
                                     migrationProgress = 1f
                                     migrationResult = "Migration finished: ${result.migratedDocuments} documents, ${result.migratedAttachments} attachments"
-                                    
                                     if (result.errors == 0) {
                                         ErrorHandler.showSuccess("Migration completed successfully")
                                     } else {
                                         ErrorHandler.showWarning("Migration completed with ${result.errors} errors")
                                     }
-                                    
                                 } catch (e: Exception) {
                                     AppLogger.log("MigrationScreen", "ERROR: Migration failed: ${e.message}")
                                     ErrorHandler.showError("Migration failed: ${e.message}")
@@ -140,7 +121,6 @@ fun MigrationScreen() {
                     }
                     Text(if (isMigrating) "Migrating..." else "Start migration")
                 }
-                
                 migrationResult?.let { result ->
                     Spacer(modifier = Modifier.height(AppDimens.spaceSm))
                     Text(
@@ -151,8 +131,6 @@ fun MigrationScreen() {
                 }
             }
         }
-        
-        // Карточка очистки
         GlassCard(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -177,30 +155,23 @@ fun MigrationScreen() {
                         fontWeight = FontWeight.Medium
                     )
                 }
-                
                 Spacer(modifier = Modifier.height(AppDimens.spaceSm))
-                
                 Text(
                     text = "Deletes files that are no longer linked to any document.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
                 Spacer(modifier = Modifier.height(AppDimens.spaceLg))
-                
                 Button(
                     onClick = {
                         if (!isCleaningUp) {
                             scope.launch {
                                 isCleaningUp = true
-                                
                                 try {
                                     AppLogger.log("MigrationScreen", "Starting cleanup...")
                                     ErrorHandler.showInfo("Starting orphan cleanup...")
-                                    
                                     val result = useCases.cleanupOrphans()
                                     cleanupResult = result
-                                    
                                     if (result.errors == 0 && result.deletedFiles > 0) {
                                         ErrorHandler.showSuccess("Cleanup complete: deleted ${result.deletedFiles} files")
                                     } else if (result.errors == 0 && result.deletedFiles == 0) {
@@ -208,7 +179,6 @@ fun MigrationScreen() {
                                     } else {
                                         ErrorHandler.showWarning("Cleanup finished with ${result.errors} errors")
                                     }
-                                    
                                 } catch (e: Exception) {
                                     AppLogger.log("MigrationScreen", "ERROR: Cleanup failed: ${e.message}")
                                     ErrorHandler.showError("Cleanup failed: ${e.message}")
@@ -236,7 +206,6 @@ fun MigrationScreen() {
                     }
                     Text(if (isCleaningUp) "Cleaning..." else "Start cleanup")
                 }
-                
                 cleanupResult?.let { result ->
                     Spacer(modifier = Modifier.height(AppDimens.spaceSm))
                     Text(
@@ -247,8 +216,6 @@ fun MigrationScreen() {
                 }
             }
         }
-        
-        // Информационная карточка
         GlassCard(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -273,24 +240,20 @@ fun MigrationScreen() {
                         fontWeight = FontWeight.Medium
                     )
                 }
-                
                 Spacer(modifier = Modifier.height(AppDimens.spaceSm))
-                
                 Text(
-                    text = "• Migration runs once after updating the app.\n" +
-                            "• Cleanup can run multiple times to free storage.\n" +
-                            "• Operations are safe and do not affect existing documents.",
+                    text = "� Migration runs once after updating the app.\n" +
+                            "� Cleanup can run multiple times to free storage.\n" +
+                            "� Operations are safe and do not affect existing documents.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
     }
-    
-    // Диалог прогресса миграции
     if (showMigrationDialog) {
         AlertDialog(
-            onDismissRequest = { /* cannot cancel */ },
+            onDismissRequest = {  },
             title = { Text("URI migration") },
             text = {
                 Column {
@@ -309,7 +272,7 @@ fun MigrationScreen() {
             },
             confirmButton = {
                 TextButton(
-                    onClick = { 
+                    onClick = {
                         if (!isMigrating) {
                             showMigrationDialog = false
                         }

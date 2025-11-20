@@ -1,5 +1,4 @@
 package com.example.docapp.data
-
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
@@ -17,69 +16,50 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
-
-
 class AppDb(private val ctx: Context, val passphrase: ByteArray) {
-    
     val dbEncryption = DatabaseEncryption(ctx)
-    
     private fun ByteArray.toHex(): String {
         return joinToString(separator = "") { byte -> "%02x".format(byte) }
     }
-    
     @Volatile
     private var _encryptedDb: SQLCipherDatabase? = null
     @Volatile
     private var _initializationError: Exception? = null
-    
     @Synchronized
     private fun getEncryptedDb(): SQLCipherDatabase {
         if (_encryptedDb != null) {
             return _encryptedDb ?: throw IllegalStateException("Database is null")
         }
-        
         if (_initializationError != null) {
             throw RuntimeException("Database initialization failed", _initializationError)
         }
-        
         try {
             AppLogger.log("AppDb", "Opening encrypted database...")
             ErrorHandler.showInfo("AppDb: Opening encrypted database...")
             val dbPath = ctx.getDatabasePath("docapp.db").absolutePath
             val dbFile = File(dbPath)
-            
-            // Check if the database file already exists
             if (dbFile.exists()) {
                 ErrorHandler.showInfo("AppDb: Database file exists, validating integrity...")
                 try {
-                    // Try opening the existing database
                     val testDb = SQLCipherDatabase.openDatabase(dbPath, null, SQLCipherDatabase.OPEN_READONLY)
                     testDb.close()
                     ErrorHandler.showInfo("AppDb: Existing database looks valid")
                 } catch (e: Exception) {
                     AppLogger.log("AppDb", "WARNING: Existing database file is corrupted or not encrypted: ${e.message}")
                     ErrorHandler.showWarning("AppDb: Database file is corrupted, recreating...")
-                    // Remove corrupted files
                     dbFile.delete()
                     File("$dbPath-wal").delete()
                     File("$dbPath-shm").delete()
                 }
             }
-            
-            // Create or open the encrypted database
             ErrorHandler.showInfo("AppDb: Creating or opening encrypted database...")
             val db = SQLCipherDatabase.openOrCreateDatabase(dbPath, null)
             AppLogger.log("AppDb", "Database opened/created successfully")
             ErrorHandler.showSuccess("AppDb: Database opened or created successfully")
-            
-            // Ensure schema exists
             ErrorHandler.showInfo("AppDb: Ensuring tables exist...")
             createTablesIfNeeded(db)
-            
-            // Run pending migrations
             ErrorHandler.showInfo("AppDb: Running migrations...")
             runMigrations(db)
-            
             _encryptedDb = db
             return db
         } catch (e: Exception) {
@@ -89,34 +69,26 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
             throw RuntimeException("Cannot open encrypted database", e)
         }
     }
-    
     val encryptedWritableDatabase: SQLCipherDatabase
         get() = getEncryptedDb()
-    
     val encryptedReadableDatabase: SQLCipherDatabase
         get() = getEncryptedDb()
-
     private fun runMigrations(db: SQLCipherDatabase) {
         try {
-            // Migration: add display_name to attachments
             val columns = db.rawQuery("PRAGMA table_info(attachments)", null).use { cursor ->
                 generateSequence {
                     if (cursor.moveToNext()) cursor.getString(cursor.getColumnIndexOrThrow("name")) else null
                 }.toList()
             }
-            
             if (!columns.contains("display_name")) {
                 AppLogger.log("AppDb", "Adding display_name column to attachments table")
                 ErrorHandler.showInfo("AppDb: Adding display_name column to attachments table")
                 db.execSQL("ALTER TABLE attachments ADD COLUMN display_name TEXT")
             }
-            
-            // Migration Mx_AddAttachments: create a new table for modern attachments
             val newAttachmentsExists = db.rawQuery(
                 "SELECT name FROM sqlite_master WHERE type='table' AND name='attachments_new'",
                 null
             ).use { it.count > 0 }
-            
             if (!newAttachmentsExists) {
                 AppLogger.log("AppDb", "Creating new attachments table for modern attachment system")
                 ErrorHandler.showInfo("AppDb: Creating attachments_new table for modern attachment system")
@@ -137,22 +109,18 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
                 db.execSQL("CREATE INDEX idx_attachments_new_docId ON attachments_new(docId)")
                 db.execSQL("CREATE INDEX idx_attachments_new_sha256 ON attachments_new(sha256)")
             }
-            
             AppLogger.log("AppDb", "Migrations completed successfully")
         } catch (e: Exception) {
             AppLogger.log("AppDb", "ERROR: Failed to run migrations: ${e.message}")
             ErrorHandler.showWarning("Failed to run migrations: ${e.message}")
         }
     }
-
     private fun createTablesIfNeeded(db: SQLCipherDatabase) {
         try {
-            // Check whether the templates table exists
             val tableExists = db.rawQuery(
                 "SELECT name FROM sqlite_master WHERE type='table' AND name='templates'",
                 null
             ).use { it.count > 0 }
-            
             if (!tableExists) {
                 ErrorHandler.showInfo("AppDb: Creating database tables...")
                 db.execSQL("""CREATE TABLE templates(
@@ -191,15 +159,11 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
                     pin_hash BLOB NOT NULL, pin_salt BLOB NOT NULL, db_key_salt BLOB NOT NULL, version TEXT NOT NULL
                 )""")
                 db.execSQL("PRAGMA foreign_keys=ON")
-                // Default settings row
                 db.execSQL("INSERT INTO settings(id,pin_hash,pin_salt,db_key_salt,version) VALUES(1, x'', x'', x'', '1.0.0')")
-                
-                // Check whether seed data already exists
                 val templatesCount = db.rawQuery("SELECT COUNT(*) FROM templates", null).use {
                     it.moveToFirst()
                     it.getInt(0)
                 }
-                
                 if (templatesCount == 0) {
                     ErrorHandler.showInfo("AppDb: Seeding default data...")
                     seedBasics(db)
@@ -207,10 +171,8 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
                     ErrorHandler.showInfo("AppDb: Seed data already present, skipping")
                     ErrorHandler.showInfo("AppDb: Existing templates: $templatesCount")
                 }
-                
                 AppLogger.log("AppDb", "Database tables created successfully")
             } else {
-                // Migration: add description column to documents if needed
                 try {
                     val descriptionColumnExists = db.rawQuery("PRAGMA table_info(documents)", null).use { tableInfoCursor ->
                         var exists = false
@@ -223,7 +185,6 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
                         }
                         exists
                     }
-                    
                     if (!descriptionColumnExists) {
                         ErrorHandler.showInfo("AppDb: Adding description column to documents...")
                         db.execSQL("ALTER TABLE documents ADD COLUMN description TEXT")
@@ -231,7 +192,6 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
                     }
                 } catch (e: Exception) {
                     ErrorHandler.showInfo("AppDb: Migration warning: ${e.message}")
-                    // Continue; non-critical
                 }
             }
         } catch (e: Exception) {
@@ -240,11 +200,6 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
             throw e
         }
     }
-
-    
-    /**
-     * Securely encrypt document field values.
-     */
     fun encryptFieldValue(value: String): ByteArray {
         return if (value.isNotEmpty()) {
             dbEncryption.encryptBytes(value.toByteArray(Charsets.UTF_8))
@@ -252,10 +207,6 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
             ByteArray(0)
         }
     }
-    
-    /**
-     * Securely decrypt document field values.
-     */
     fun decryptFieldValue(encryptedValue: ByteArray): String {
         return if (encryptedValue.isNotEmpty()) {
             val decryptedBytes = dbEncryption.decryptBytes(encryptedValue)
@@ -264,10 +215,6 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
             ""
         }
     }
-    
-    /**
-     * Securely encrypt document names.
-     */
     fun encryptDocumentName(name: String): String {
         return if (name.isNotEmpty()) {
             dbEncryption.encryptString(name)
@@ -275,10 +222,6 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
             name
         }
     }
-    
-    /**
-     * Securely decrypt document names.
-     */
     fun decryptDocumentName(encryptedName: String): String {
         return if (encryptedName.isNotEmpty()) {
             dbEncryption.decryptString(encryptedName)
@@ -286,7 +229,6 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
             encryptedName
         }
     }
-
     private fun seedBasics(db: SQLCipherDatabase) {
         val ts = now()
         fun insTpl(name: String, fields: List<String>): String {
@@ -305,7 +247,6 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
         }
         insTpl("Passport", listOf("Series", "Number", "Issued by", "Issue date", "Department code"))
         insTpl("Card", listOf("Number", "Valid until", "CVC"))
-
         val p1 = newId()
         db.execSQL("INSERT INTO folders(id,parent_id,name,ord) VALUES(?,?,?,?)",
             arrayOf<Any?>(p1, null, "PERSONAL DATA", 0))
@@ -313,11 +254,7 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
         db.execSQL("INSERT INTO folders(id,parent_id,name,ord) VALUES(?,?,?,?)",
             arrayOf<Any?>(p2, null, "CARDS", 1))
     }
-
 }
-
-/* ==================== DAO interfaces ==================== */
-
 interface TemplateDao {
     suspend fun list(): List<Template>
     suspend fun get(id: String): Template?
@@ -325,7 +262,6 @@ interface TemplateDao {
     suspend fun add(name: String, fields: List<String>): String
     suspend fun delete(id: String)
 }
-
 interface FolderDao {
     fun observeTree(): Flow<List<Folder>>
     fun list(): List<Folder>
@@ -333,47 +269,35 @@ interface FolderDao {
     suspend fun delete(id: String)
     fun emitTree()
 }
-
 interface DocumentDao {
     fun observeHome(): Flow<DocumentRepository.HomeList>
     fun emitHome()
-
     suspend fun create(
         templateId: String?, folderId: String?, name: String, description: String,
         fields: List<Pair<String, String>>, photoUris: List<String>, pdfUris: List<String>
     ): String
-
     suspend fun createWithNames(
         templateId: String?, folderId: String?, name: String, description: String,
         fields: List<Pair<String, String>>, photoFiles: List<Pair<String, String>>, pdfFiles: List<Pair<String, String>>
     ): String
-
     suspend fun getFull(id: String): DocumentRepository.FullDocument?
     suspend fun update(doc: Document, fields: List<DocumentField>, attachments: List<Attachment>)
     suspend fun delete(id: String)
     suspend fun pin(id: String, pinned: Boolean)
     suspend fun touch(id: String)
-
     suspend fun move(id: String, folderId: String?)
     suspend fun swapPinned(aId: String, bId: String)
-    suspend fun getAllDocumentIds(): List<String> // Used during migrations
+    suspend fun getAllDocumentIds(): List<String>
     suspend fun getDocumentsInFolder(folderId: String): List<Document>
 }
-
 interface SettingsDao {
     suspend fun isPinSet(): Boolean
     suspend fun get(): Settings
     suspend fun updatePin(hash: ByteArray)
     suspend fun clearPin()
 }
-
-/* ==================== Helpers ==================== */
-
 private fun Cursor.getStringOrNull(column: String): String? =
     getColumnIndex(column).takeIf { it >= 0 }?.let { if (isNull(it)) null else getString(it) }
-
-/* ==================== Templates ==================== */
-
 class TemplateDaoSql(private val db: AppDb) : TemplateDao {
     override suspend fun list(): List<Template> = withContext(Dispatchers.IO) {
         val res = mutableListOf<Template>()
@@ -393,7 +317,6 @@ class TemplateDaoSql(private val db: AppDb) : TemplateDao {
         }
         res
     }
-
     override suspend fun get(id: String): Template? = withContext(Dispatchers.IO) {
         db.encryptedReadableDatabase.rawQuery("SELECT * FROM templates WHERE id=?", arrayOf(id)).use { c ->
             if (c.moveToFirst()) {
@@ -409,7 +332,6 @@ class TemplateDaoSql(private val db: AppDb) : TemplateDao {
         }
         null
     }
-
     override suspend fun listFields(templateId: String): List<TemplateField> = withContext(Dispatchers.IO) {
         val res = mutableListOf<TemplateField>()
         db.encryptedReadableDatabase.rawQuery(
@@ -430,7 +352,6 @@ class TemplateDaoSql(private val db: AppDb) : TemplateDao {
         }
         res
     }
-
     override suspend fun add(name: String, fields: List<String>): String = withContext(Dispatchers.IO) {
         val ts = now()
         val tplId = newId()
@@ -452,13 +373,10 @@ class TemplateDaoSql(private val db: AppDb) : TemplateDao {
         }
         tplId
     }
-
     override suspend fun delete(id: String) = withContext(Dispatchers.IO) {
         db.encryptedWritableDatabase.beginTransaction()
         try {
-            // Remove template fields
             db.encryptedWritableDatabase.execSQL("DELETE FROM template_fields WHERE template_id=?", arrayOf(id))
-            // Remove the template itself
             db.encryptedWritableDatabase.execSQL("DELETE FROM templates WHERE id=?", arrayOf(id))
             db.encryptedWritableDatabase.setTransactionSuccessful()
         } finally {
@@ -466,13 +384,9 @@ class TemplateDaoSql(private val db: AppDb) : TemplateDao {
         }
     }
 }
-
-/* ==================== Folders ==================== */
-
 class FolderDaoSql(private val db: AppDb) : FolderDao {
     private val tree = MutableStateFlow<List<Folder>>(emptyList())
     override fun observeTree(): Flow<List<Folder>> = tree.asStateFlow()
-
     override fun list(): List<Folder> {
         val res = mutableListOf<Folder>()
         db.encryptedReadableDatabase.rawQuery("SELECT * FROM folders ORDER BY ord", null).use { c ->
@@ -489,7 +403,6 @@ class FolderDaoSql(private val db: AppDb) : FolderDao {
         }
         return res
     }
-
     override suspend fun add(name: String, parentId: String?): String = withContext(Dispatchers.IO) {
         val id = newId()
         val ord = (list().maxOfOrNull { it.ord } ?: -1) + 1
@@ -500,23 +413,17 @@ class FolderDaoSql(private val db: AppDb) : FolderDao {
         emitTree()
         id
     }
-
     override suspend fun delete(id: String) = withContext(Dispatchers.IO) {
         db.encryptedWritableDatabase.execSQL("DELETE FROM folders WHERE id=?", arrayOf(id))
         emitTree()
     }
-
     override fun emitTree() {
         tree.value = runCatching { list() }.getOrDefault(emptyList())
     }
 }
-
-/* ==================== Documents ==================== */
-
 class DocumentDaoSql(private val db: AppDb) : DocumentDao {
     private val home = MutableStateFlow(DocumentRepository.HomeList(emptyList(), emptyList()))
     override fun observeHome(): Flow<DocumentRepository.HomeList> = home.asStateFlow()
-
     override fun emitHome() {
         val pinned = mutableListOf<Document>()
         val recent = mutableListOf<Document>()
@@ -528,18 +435,15 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         ).use { c -> while (c.moveToNext()) recent.add(c.toDoc()) }
         home.value = DocumentRepository.HomeList(pinned, recent)
     }
-
     private fun Cursor.toDoc(): Document {
         val encryptedName = getString(getColumnIndexOrThrow("name"))
         val decryptedName = db.decryptDocumentName(encryptedName)
-        
         val encryptedDescription = getStringOrNull("description") ?: ""
         val decryptedDescription = if (encryptedDescription.isNotEmpty()) {
             db.decryptDocumentName(encryptedDescription)
         } else {
             ""
         }
-        
         return Document(
             id = getString(getColumnIndexOrThrow("id")),
             templateId = getStringOrNull("template_id"),
@@ -553,7 +457,6 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
             lastOpenedAt = getLong(getColumnIndexOrThrow("last_opened_at"))
         )
     }
-
     override suspend fun create(
         templateId: String?,
         folderId: String?,
@@ -600,15 +503,14 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         emitHome()
         id
     }
-
     override suspend fun createWithNames(
         templateId: String?,
         folderId: String?,
         name: String,
         description: String,
         fields: List<Pair<String, String>>,
-        photoFiles: List<Pair<String, String>>, // URI, displayName
-        pdfFiles: List<Pair<String, String>> // URI, displayName
+        photoFiles: List<Pair<String, String>>,
+        pdfFiles: List<Pair<String, String>>
     ): String = withContext(Dispatchers.IO) {
         val id = newId()
         val ts = now()
@@ -649,20 +551,16 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         emitHome()
         id
     }
-
     private fun String.encode(): ByteArray = this.toByteArray(Charsets.UTF_8)
-
     override suspend fun getFull(id: String): DocumentRepository.FullDocument? = withContext(Dispatchers.IO) {
         var doc: Document? = null
         val fields = mutableListOf<DocumentField>()
         val photos = mutableListOf<Attachment>()
         val pdfs = mutableListOf<Attachment>()
-
         db.encryptedReadableDatabase.rawQuery("SELECT * FROM documents WHERE id=?", arrayOf(id)).use { c ->
             if (c.moveToFirst()) doc = c.toDoc()
         }
         if (doc == null) return@withContext null
-
         db.encryptedReadableDatabase.rawQuery(
             "SELECT * FROM document_fields WHERE document_id=? ORDER BY ord",
             arrayOf(id)
@@ -674,7 +572,6 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
                 } else {
                     ByteArray(0)
                 }
-                
                 fields.add(
                     DocumentField(
                         id = c.getString(c.getColumnIndexOrThrow("id")),
@@ -697,16 +594,12 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
                 val mime = c.getString(c.getColumnIndexOrThrow("mime"))
                 val uriString = c.getString(c.getColumnIndexOrThrow("uri"))
                 val name = c.getString(c.getColumnIndexOrThrow("name"))
-                
                 ErrorHandler.showInfo("DocumentDao: Found attachment: $mime, name: $name")
-                
-                // Determine file type by MIME
                 val kind = when {
                     mime.startsWith("image/") -> AttachmentKind.photo
                     mime == "application/pdf" -> AttachmentKind.pdf
-                    else -> AttachmentKind.photo // Default to photo
+                    else -> AttachmentKind.photo
                 }
-                
                 val a = Attachment(
                     id = c.getString(c.getColumnIndexOrThrow("id")),
                     documentId = id,
@@ -717,20 +610,19 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
                         Uri.parse(uriString)
                     } catch (e: Exception) {
                         AppLogger.log("Db", "ERROR: Failed to parse URI: $uriString")
-                        Uri.parse("file:///invalid")
+                        Uri.parse("file://")
                     },
                     createdAt = c.getLong(c.getColumnIndexOrThrow("createdAt"))
                 )
                 when (a.kind) {
                     AttachmentKind.photo -> photos.add(a)
                     AttachmentKind.pdfs -> pdfs.add(a)
-                    AttachmentKind.pdf -> pdfs.add(a) // keep compatibility with legacy data
+                    AttachmentKind.pdf -> pdfs.add(a)
                 }
             }
         }
         DocumentRepository.FullDocument(doc ?: throw IllegalStateException("Document not found"), fields, photos, pdfs)
     }
-
     override suspend fun update(doc: Document, fields: List<DocumentField>, attachments: List<Attachment>) = withContext(Dispatchers.IO) {
         val ts = now()
         db.encryptedWritableDatabase.beginTransaction()
@@ -774,7 +666,6 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         }
         emitHome()
     }
-
     override suspend fun delete(id: String) = withContext(Dispatchers.IO) {
         db.encryptedWritableDatabase.beginTransaction()
         try {
@@ -787,7 +678,6 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         }
         emitHome()
     }
-
     override suspend fun pin(id: String, pinned: Boolean) = withContext(Dispatchers.IO) {
         if (pinned) {
             val maxOrder = db.encryptedReadableDatabase.rawQuery(
@@ -805,7 +695,6 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         }
         emitHome()
     }
-
     override suspend fun touch(id: String) = withContext(Dispatchers.IO) {
         db.encryptedWritableDatabase.execSQL(
             "UPDATE documents SET last_opened_at=? WHERE id=?",
@@ -813,7 +702,6 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         )
         emitHome()
     }
-
     override suspend fun move(id: String, folderId: String?) = withContext(Dispatchers.IO) {
         db.encryptedWritableDatabase.execSQL(
             "UPDATE documents SET folder_id=? WHERE id=?",
@@ -821,7 +709,6 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         )
         emitHome()
     }
-
     override suspend fun swapPinned(aId: String, bId: String) = withContext(Dispatchers.IO) {
         db.encryptedWritableDatabase.beginTransaction()
         try {
@@ -841,7 +728,6 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         }
         emitHome()
     }
-
     override suspend fun getAllDocumentIds(): List<String> = withContext(Dispatchers.IO) {
         val ids = mutableListOf<String>()
         db.encryptedReadableDatabase.rawQuery("SELECT id FROM documents", null).use { c ->
@@ -851,20 +737,18 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         }
         ids
     }
-
     override suspend fun getDocumentsInFolder(folderId: String): List<Document> = withContext(Dispatchers.IO) {
         val docs = mutableListOf<Document>()
         db.encryptedReadableDatabase.rawQuery(
-            "SELECT * FROM documents WHERE folder_id=? ORDER BY created_at DESC", 
+            "SELECT * FROM documents WHERE folder_id=? ORDER BY created_at DESC",
             arrayOf(folderId)
-        ).use { c -> 
+        ).use { c ->
             while (c.moveToNext()) {
                 docs.add(c.toDoc())
             }
         }
         docs
     }
-
     private fun ensureSequentialPinnedOrders_NoThrow() {
         try {
             val ids = mutableListOf<String>()
@@ -883,13 +767,8 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         } catch (_: Exception) { }
     }
 }
-
-/* ==================== Settings ==================== */
-
 class SettingsDaoSql(private val db: AppDb) : SettingsDao {
-
     init { ensureRow() }
-
     private fun ensureRow() {
         db.encryptedReadableDatabase.rawQuery("SELECT COUNT(*) FROM settings WHERE id=1", null).use { c ->
             val exists = if (c.moveToFirst()) c.getInt(0) > 0 else false
@@ -899,12 +778,10 @@ class SettingsDaoSql(private val db: AppDb) : SettingsDao {
             }
         }
     }
-
     override suspend fun isPinSet(): Boolean = withContext(Dispatchers.IO) {
         db.encryptedReadableDatabase.rawQuery("SELECT length(pin_hash) FROM settings WHERE id=1", null)
             .use { c -> if (c.moveToFirst()) c.getInt(0) > 0 else false }
     }
-
     override suspend fun get(): Settings = withContext(Dispatchers.IO) {
         db.encryptedReadableDatabase.rawQuery("SELECT * FROM settings WHERE id=1", null).use { c ->
             if (c.moveToFirst()) {
@@ -916,12 +793,10 @@ class SettingsDaoSql(private val db: AppDb) : SettingsDao {
                 )
             }
         }
-        // Instead of error(...) — return a default row
         val w = db.encryptedWritableDatabase
         w.execSQL("INSERT OR IGNORE INTO settings(id,pin_hash,pin_salt,db_key_salt,version) VALUES(1, x'', x'', x'', '1.0.0')")
         Settings(version = "1.0.0", pinHash = ByteArray(0), pinSalt = ByteArray(0), dbKeySalt = ByteArray(0))
     }
-
     override suspend fun updatePin(hash: ByteArray) = withContext(Dispatchers.IO) {
         db.encryptedWritableDatabase.beginTransaction()
         try {
@@ -932,11 +807,10 @@ class SettingsDaoSql(private val db: AppDb) : SettingsDao {
             db.encryptedWritableDatabase.endTransaction()
         }
     }
-
     override suspend fun clearPin() = withContext(Dispatchers.IO) {
         db.encryptedWritableDatabase.beginTransaction()
         try {
-            val cv = ContentValues().apply { put("pin_hash", ByteArray(0)) } // empty BLOB, not null
+            val cv = ContentValues().apply { put("pin_hash", ByteArray(0)) }
             db.encryptedWritableDatabase.update("settings", cv, "id=1", null)
             db.encryptedWritableDatabase.setTransactionSuccessful()
         } finally {

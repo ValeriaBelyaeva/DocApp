@@ -1,5 +1,4 @@
 package com.example.docapp.ui.pin
-
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -55,11 +54,6 @@ import com.example.docapp.ui.theme.AppBorderWidths
 import com.example.docapp.ui.theme.AppFontSizes
 import kotlinx.coroutines.launch
 import kotlin.UninitializedPropertyAccessException
-
-/* ────────────────────────────────────────────────────────────
-   Палитра и формы — как на макете
-   ──────────────────────────────────────────────────────────── */
-
 object PinColors {
     val Bg: Color
         @Composable get() = MaterialTheme.colorScheme.background
@@ -72,19 +66,13 @@ object PinColors {
     val TextPri: Color
         @Composable get() = MaterialTheme.colorScheme.onSurface
 }
-
 private object PinShapes {
     val Capsule
         @Composable get() = AppShapes.panelLarge()
 }
-
-/* ────────────────────────────────────────────────────────────
-   Переиспользуемые куски UI
-   ──────────────────────────────────────────────────────────── */
-
 @Composable
 private fun RoundKey(
-    label: String? = null, 
+    label: String? = null,
     isBackspace: Boolean = false,
     onClick: () -> Unit = {}
 ) {
@@ -106,14 +94,13 @@ private fun RoundKey(
             !label.isNullOrEmpty() -> Text(
                 text = label,
                 color = PinColors.Neon,
-                fontSize = AppFontSizes.Pin.keypadTitle, // formerly 28sp, tuned to design spec
+                fontSize = AppFontSizes.Pin.keypadTitle,
                 fontWeight = FontWeight.Medium
             )
-            else -> {} // пустой круг (как на макете)
+            else -> {}
         }
     }
 }
-
 @Composable
 private fun LogoBlock() {
     Column(
@@ -123,7 +110,7 @@ private fun LogoBlock() {
         Icon(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = null,
-            tint = PinColors.Neon, // логотип в акценте
+            tint = PinColors.Neon,
             modifier = Modifier.size(AppDimens.Pin.avatarSize)
         )
         Spacer(Modifier.height(AppDimens.spaceSm))
@@ -135,7 +122,6 @@ private fun LogoBlock() {
         )
     }
 }
-
 @Composable
 private fun PinCapsule(isVisible: Boolean = false, actualPin: String = "", onVisibilityToggle: () -> Unit = {}) {
     Row(
@@ -159,7 +145,6 @@ private fun PinCapsule(isVisible: Boolean = false, actualPin: String = "", onVis
         Spacer(Modifier.width(AppDimens.spaceLg))
         Text(
             text = if (isVisible) {
-                // Показываем числа с пробелами
                 when {
                     actualPin.isEmpty() -> ""
                     actualPin.length == 1 -> actualPin
@@ -169,19 +154,18 @@ private fun PinCapsule(isVisible: Boolean = false, actualPin: String = "", onVis
                     else -> actualPin
                 }
             } else {
-                // Показываем звездочки без пробелов
                 when {
                     actualPin.isEmpty() -> ""
-                    actualPin.length == 1 -> "＊"
-                    actualPin.length == 2 -> "＊＊"
-                    actualPin.length == 3 -> "＊＊＊"
-                    actualPin.length == 4 -> "＊＊＊＊"
-                    else -> "＊＊＊＊"
+                    actualPin.length == 1 -> "*"
+                    actualPin.length == 2 -> "**"
+                    actualPin.length == 3 -> "***"
+                    actualPin.length == 4 -> "****"
+                    else -> "****"
                 }
             },
             color = PinColors.Neon,
             fontSize = AppFontSizes.Pin.keypadSubtitle,
-            fontWeight = FontWeight.Medium, // Фиксированный стиль текста
+            fontWeight = FontWeight.Medium,
             modifier = Modifier.weight(1f)
         )
         Icon(
@@ -194,11 +178,6 @@ private fun PinCapsule(isVisible: Boolean = false, actualPin: String = "", onVis
         )
     }
 }
-
-/* ────────────────────────────────────────────────────────────
-   Сам экран: логотип → капсула ввода → круглая клавиатура 3×4
-   ──────────────────────────────────────────────────────────── */
-
 @Composable
 fun PinScreenDesign() {
     Surface(color = PinColors.Bg, modifier = Modifier.fillMaxSize()) {
@@ -210,13 +189,9 @@ fun PinScreenDesign() {
         ) {
             Spacer(Modifier.height(AppDimens.spaceXl))
             LogoBlock()
-
             Spacer(Modifier.height(AppDimens.spaceXl))
             PinCapsule(isVisible = false, actualPin = "1234")
-
             Spacer(Modifier.height(AppDimens.spaceXl))
-
-            // сетка 3×4
             Column(
                 verticalArrangement = Arrangement.spacedBy(AppDimens.spaceLg),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -231,7 +206,7 @@ fun PinScreenDesign() {
                     RoundKey("7"); RoundKey("8"); RoundKey("9")
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceXl)) {
-                    RoundKey()            // пустой слева
+                    RoundKey()
                     RoundKey("0")
                     RoundKey(isBackspace = true)
                 }
@@ -239,11 +214,6 @@ fun PinScreenDesign() {
         }
     }
 }
-
-/* ────────────────────────────────────────────────────────────
-   ФУНКЦИОНАЛЬНАЯ ВЕРСИЯ PIN ЭКРАНА С НОВЫМ ДИЗАЙНОМ
-   ──────────────────────────────────────────────────────────── */
-
 @Composable
 fun PinScreenNew(onSuccess: () -> Unit) {
     var stage by remember { mutableStateOf(PinStageNew.Loading) }
@@ -251,13 +221,10 @@ fun PinScreenNew(onSuccess: () -> Unit) {
     var firstNew by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var isProcessing by remember { mutableStateOf(false) }
-    var isPinVisible by remember { mutableStateOf(false) } // Состояние видимости PIN
+    var isPinVisible by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-
     BackHandler(enabled = true) {
-        // Block system "back" to avoid leaving the PIN screen
     }
-
     LaunchedEffect(Unit) {
         AppLogger.log("PinScreen", "PinScreen initialized")
         try {
@@ -269,9 +236,7 @@ fun PinScreenNew(onSuccess: () -> Unit) {
                 stage = PinStageNew.Loading
                 return@LaunchedEffect
             }
-            
             ErrorHandler.showInfo("Checking PIN status...")
-            
             stage = if (ServiceLocator.crypto.isPinSet()) {
                 AppLogger.log("PinScreen", "PIN is set, showing enter existing PIN screen")
                 ErrorHandler.showInfo("PIN set, enter your current PIN")
@@ -287,10 +252,8 @@ fun PinScreenNew(onSuccess: () -> Unit) {
             stage = PinStageNew.Loading
         }
     }
-
     val density = LocalDensity.current
     val bottomInset = WindowInsets.navigationBars.getBottom(density).div(density.density).dp
-
     Surface(color = PinColors.Bg, modifier = Modifier.fillMaxSize()) {
         Column(
             Modifier
@@ -300,7 +263,6 @@ fun PinScreenNew(onSuccess: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(AppDimens.spaceXl))
-            // Логотип с заголовком
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -324,17 +286,12 @@ fun PinScreenNew(onSuccess: () -> Unit) {
                     fontWeight = FontWeight.SemiBold
                 )
             }
-
             Spacer(Modifier.height(AppDimens.spaceXl))
-            
-            // Капсула с PIN - показываем звездочки или реальный PIN
             PinCapsule(
                 isVisible = isPinVisible,
                 actualPin = pin,
                 onVisibilityToggle = { isPinVisible = !isPinVisible }
             )
-
-            // Ошибка
             error?.let { errorText ->
                 Spacer(Modifier.height(AppDimens.spaceLg))
                 Text(
@@ -344,13 +301,8 @@ fun PinScreenNew(onSuccess: () -> Unit) {
                     fontWeight = FontWeight.Medium
                 )
             }
-
-            Spacer(Modifier.height(AppDimens.spaceHuge)) // Увеличил расстояние до клавиатуры
-
-            // Область между капсулой и клавиатурой, чтобы опустить блок вниз
+            Spacer(Modifier.height(AppDimens.spaceHuge))
             Spacer(Modifier.weight(1f))
-
-            // Функциональная клавиатура 3×4 в нижней части экрана
             Column(
                 verticalArrangement = Arrangement.spacedBy(AppDimens.spaceLg),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -398,7 +350,7 @@ fun PinScreenNew(onSuccess: () -> Unit) {
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(AppDimens.spaceXl)) {
-                    RoundKey() // пустая кнопка слева
+                    RoundKey()
                     RoundKey("0") {
                         pin += "0"
                         error = null
@@ -411,12 +363,9 @@ fun PinScreenNew(onSuccess: () -> Unit) {
                     }
                 }
             }
-
         Spacer(Modifier.height(AppDimens.spaceXl + bottomInset))
         }
     }
-
-    // Автоматическая проверка PIN при вводе 4 цифр
     LaunchedEffect(pin) {
         if (pin.length == 4 && !isProcessing) {
             isProcessing = true
@@ -458,7 +407,6 @@ fun PinScreenNew(onSuccess: () -> Unit) {
                             }
                         }
                         PinStageNew.Loading -> {
-                            // Ничего не делаем в состоянии загрузки
                         }
                     }
                 } catch (e: SecurityException) {
@@ -480,5 +428,4 @@ fun PinScreenNew(onSuccess: () -> Unit) {
         }
     }
 }
-
 enum class PinStageNew { Loading, EnterExisting, EnterNew, ConfirmNew }

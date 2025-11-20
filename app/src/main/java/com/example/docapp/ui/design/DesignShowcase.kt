@@ -1,5 +1,4 @@
 package com.example.docapp.ui.design
-
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,15 +16,12 @@ import com.example.docapp.ui.theme.AppBorderWidths
 import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.ui.theme.AppFontSizes
 import com.example.docapp.ui.pin.PinScreenDesign
-
 @Composable
 fun DesignShowcase(navigator: com.example.docapp.ui.navigation.AppNavigator) {
     BackHandler(enabled = true) {
         navigator.safePopBack()
     }
-    
     var currentScreen by remember { mutableStateOf(ShowcaseScreen.Pin) }
-    
     Surface(color = Color(0xFF0B1014), modifier = Modifier.fillMaxSize()) {
         Column(
             Modifier
@@ -33,29 +29,26 @@ fun DesignShowcase(navigator: com.example.docapp.ui.navigation.AppNavigator) {
                 .padding(AppDimens.DesignDemo.showcasePadding),
             verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingMedium)
         ) {
-            // Simple navigation without extra headers
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingSmall)
             ) {
-                ShowcaseButton("PIN", currentScreen == ShowcaseScreen.Pin) { 
-                    currentScreen = ShowcaseScreen.Pin 
+                ShowcaseButton("PIN", currentScreen == ShowcaseScreen.Pin) {
+                    currentScreen = ShowcaseScreen.Pin
                 }
-                ShowcaseButton("Home", currentScreen == ShowcaseScreen.Home) { 
-                    currentScreen = ShowcaseScreen.Home 
+                ShowcaseButton("Home", currentScreen == ShowcaseScreen.Home) {
+                    currentScreen = ShowcaseScreen.Home
                 }
-                ShowcaseButton("Document", currentScreen == ShowcaseScreen.Document) { 
-                    currentScreen = ShowcaseScreen.Document 
+                ShowcaseButton("Document", currentScreen == ShowcaseScreen.Document) {
+                    currentScreen = ShowcaseScreen.Document
                 }
-                ShowcaseButton("New Doc", currentScreen == ShowcaseScreen.NewDocument) { 
-                    currentScreen = ShowcaseScreen.NewDocument 
+                ShowcaseButton("New Doc", currentScreen == ShowcaseScreen.NewDocument) {
+                    currentScreen = ShowcaseScreen.NewDocument
                 }
-                ShowcaseButton("Template", currentScreen == ShowcaseScreen.Template) { 
-                    currentScreen = ShowcaseScreen.Template 
+                ShowcaseButton("Template", currentScreen == ShowcaseScreen.Template) {
+                    currentScreen = ShowcaseScreen.Template
                 }
             }
-            
-            // Render the selected screen
             Box(
                 Modifier
                     .fillMaxSize()
@@ -65,16 +58,15 @@ fun DesignShowcase(navigator: com.example.docapp.ui.navigation.AppNavigator) {
             ) {
                 when (currentScreen) {
                     ShowcaseScreen.Pin -> PinScreenDesign()
-                    ShowcaseScreen.Home -> Text("Home Screen â€” in progress", color = Color(0xFFE9EFF6))
-                    ShowcaseScreen.Document -> Text("Document Screen â€” in progress", color = Color(0xFFE9EFF6))
-                    ShowcaseScreen.NewDocument -> Text("New Document Screen â€” in progress", color = Color(0xFFE9EFF6))
-                    ShowcaseScreen.Template -> Text("Template Screen â€” in progress", color = Color(0xFFE9EFF6))
+                    ShowcaseScreen.Home -> Text("Home Screen — in progress", color = Color(0xFFE9EFF6))
+                    ShowcaseScreen.Document -> Text("Document Screen — in progress", color = Color(0xFFE9EFF6))
+                    ShowcaseScreen.NewDocument -> Text("New Document Screen — in progress", color = Color(0xFFE9EFF6))
+                    ShowcaseScreen.Template -> Text("Template Screen — in progress", color = Color(0xFFE9EFF6))
                 }
             }
         }
     }
 }
-
 @Composable
 private fun ShowcaseButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
     Box(
@@ -92,7 +84,6 @@ private fun ShowcaseButton(text: String, isSelected: Boolean, onClick: () -> Uni
         )
     }
 }
-
 private enum class ShowcaseScreen {
     Pin, Home, Document, NewDocument, Template
 }

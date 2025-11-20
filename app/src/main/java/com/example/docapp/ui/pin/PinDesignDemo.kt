@@ -1,5 +1,4 @@
 package com.example.docapp.ui.pin
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,7 +12,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.ui.theme.AppFontSizes
-
 @Composable
 fun PinDesignDemo() {
     Surface(color = PinColors.Bg, modifier = Modifier.fillMaxSize()) {
@@ -30,16 +28,12 @@ fun PinDesignDemo() {
                 fontSize = AppFontSizes.DesignDemo.heroTitle,
                 fontWeight = FontWeight.SemiBold
             )
-            
             Text(
                 text = "Exact layout replica",
                 color = PinColors.Neon,
                 fontSize = AppFontSizes.DesignDemo.heroSubtitle
             )
-            
             Spacer(Modifier.height(AppDimens.DesignDemo.showcaseSpacingMedium))
-            
-            // Отображение PIN экрана
             Box(
                 Modifier
                     .fillMaxSize()

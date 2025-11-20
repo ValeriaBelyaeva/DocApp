@@ -1,5 +1,4 @@
 package com.example.docapp.ui.theme
-
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Shapes
@@ -9,7 +8,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
 import com.example.docapp.ui.theme.AppRadii
 import com.example.docapp.ui.theme.AppBorderWidths
-
 data class SurfaceShapes(
     val largeCard: Shape,
     val mediumCard: Shape,
@@ -18,7 +16,6 @@ data class SurfaceShapes(
     val button: Shape,
     val buttonSmall: Shape
 )
-
 data class SurfaceShapeRefs(
     val panelLarge: Shape,
     val panelMedium: Shape,
@@ -30,7 +27,6 @@ data class SurfaceShapeRefs(
     val chip: Shape,
     val badge: Shape
 )
-
 data class SurfaceStyleTokens(
     val shapes: SurfaceShapes,
     val materialShapes: Shapes,
@@ -39,7 +35,6 @@ data class SurfaceStyleTokens(
     val borderWidth: Dp,
     val refs: SurfaceShapeRefs
 )
-
 object SurfaceTokens {
     private val glassShapes = SurfaceShapes(
         largeCard = RoundedCornerShape(AppRadii.radiusLg),
@@ -49,13 +44,11 @@ object SurfaceTokens {
         button = RoundedCornerShape(AppRadii.radiusSm),
         buttonSmall = RoundedCornerShape(AppRadii.radiusXs)
     )
-    
     private val glassMaterialShapes = Shapes(
         small = RoundedCornerShape(AppRadii.radiusXs),
         medium = RoundedCornerShape(AppRadii.radiusSm),
         large = RoundedCornerShape(AppRadii.radiusMd)
     )
-
     private val matteShapes = SurfaceShapes(
         largeCard = RoundedCornerShape(AppRadii.radiusXl),
         mediumCard = RoundedCornerShape(AppRadii.radiusXl),
@@ -64,13 +57,11 @@ object SurfaceTokens {
         button = RoundedCornerShape(AppRadii.radiusLg * 2),
         buttonSmall = RoundedCornerShape(AppRadii.radiusLg)
     )
-
     private val matteMaterialShapes = Shapes(
         small = RoundedCornerShape(AppRadii.radiusLg),
         medium = RoundedCornerShape(AppRadii.radiusLg * 2),
         large = RoundedCornerShape(AppRadii.radiusLg * 2)
     )
-
     private fun SurfaceShapes.toRefs(): SurfaceShapeRefs = SurfaceShapeRefs(
         panelLarge = largeCard,
         panelMedium = mediumCard,
@@ -82,7 +73,6 @@ object SurfaceTokens {
         chip = mediumCard,
         badge = CircleShape
     )
-
     val glass = SurfaceStyleTokens(
         shapes = glassShapes,
         materialShapes = glassMaterialShapes,
@@ -91,7 +81,6 @@ object SurfaceTokens {
         borderWidth = AppBorderWidths.hero,
         refs = glassShapes.toRefs()
     )
-
     val matte = SurfaceStyleTokens(
         shapes = matteShapes,
         materialShapes = matteMaterialShapes,
@@ -100,7 +89,6 @@ object SurfaceTokens {
         borderWidth = 0.dp,
         refs = matteShapes.toRefs()
     )
-
     fun current(style: SurfaceStyle): SurfaceStyleTokens = when (style) {
         SurfaceStyle.Glass -> glass
         SurfaceStyle.Matte -> matte

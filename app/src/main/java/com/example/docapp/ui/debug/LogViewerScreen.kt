@@ -1,5 +1,4 @@
 package com.example.docapp.ui.debug
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -13,12 +12,10 @@ import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.core.AppLogger
 import com.example.docapp.ui.theme.GlassCard
 import java.io.File
-
 @Composable
 fun LogViewerScreen() {
     var logContent by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(true) }
-    
     LaunchedEffect(Unit) {
         try {
             val logFile = AppLogger.getLogFile()
@@ -33,7 +30,6 @@ fun LogViewerScreen() {
             isLoading = false
         }
     }
-    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -44,7 +40,6 @@ fun LogViewerScreen() {
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = AppDimens.DesignDemo.showcaseSpacingMedium)
         )
-        
         if (isLoading) {
             Box(
                 modifier = Modifier.fillMaxSize(),

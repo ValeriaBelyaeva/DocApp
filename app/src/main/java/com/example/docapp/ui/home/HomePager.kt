@@ -1,5 +1,4 @@
 package com.example.docapp.ui.home
-
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -66,9 +65,7 @@ import com.example.docapp.ui.theme.SurfaceStyle
 import com.example.docapp.ui.theme.SurfaceStyleTokens
 import com.example.docapp.ui.theme.SurfaceTokens
 import androidx.compose.foundation.shape.CircleShape
-
 private const val NO_FOLDER_SECTION_ID = "__NO_FOLDER_SECTION__"
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomePager(
@@ -79,7 +76,6 @@ fun HomePager(
     BackHandler(enabled = true) {
         navigator.safePopBack()
     }
-    
     val pager = rememberPagerState(initialPage = 1, pageCount = { 3 })
     HorizontalPager(state = pager, modifier = Modifier.fillMaxSize()) { page ->
         when (page) {
@@ -89,9 +85,6 @@ fun HomePager(
         }
     }
 }
-
-/* ===== Список (закреплённые/последние) с перестановкой + перемещением в папку ===== */
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
@@ -102,23 +95,15 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
     val home by documentInteractors.observeHome().collectAsState(
         initial = DocumentRepository.HomeList(emptyList(), emptyList())
     )
-
-    // pinned documents reorder state
     var reorderMode by remember { mutableStateOf(false) }
     var firstSelected by remember { mutableStateOf<String?>(null) }
-
-    // move dialog state
     var moveDocId by remember { mutableStateOf<String?>(null) }
-
     fun toast(s: String) = Toast.makeText(ctx, s, Toast.LENGTH_SHORT).show()
-
     var pinnedCollapsed by remember { mutableStateOf(false) }
     var recentCollapsed by remember { mutableStateOf(false) }
-
     val density = LocalDensity.current
     val bottomInset = WindowInsets.navigationBars.getBottom(density) / density.density
     val topInset = WindowInsets.statusBars.getTop(density) / density.density
-
     Surface(color = NeoPalette.background, modifier = Modifier.fillMaxSize()) {
         Box(Modifier.fillMaxSize()) {
             LazyColumn(
@@ -170,7 +155,6 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
                                 }
                                 Spacer(Modifier.height(AppDimens.sectionSpacing))
                             }
-
                             home.pinned.forEachIndexed { index, document ->
                                 var menuOpen by remember(document.id) { mutableStateOf(false) }
                                 val isSelected = reorderMode && firstSelected == document.id
@@ -219,7 +203,6 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
                         }
                     }
                 }
-
                 item {
                     HistorySectionCard(
                         title = "Recent",
@@ -253,7 +236,6 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
                     }
                 }
             }
-
             HistoryBottomBar(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -276,10 +258,8 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
             )
         }
     }
-
     MoveToFolderDialogIfNeeded(moveDocId = moveDocId, onClose = { moveDocId = null })
 }
-
 @Composable
 private fun HistorySectionCard(
     title: String,
@@ -327,7 +307,6 @@ private fun HistorySectionCard(
                     modifier = Modifier.weight(1f)
                 )
             }
-
             if (!isCollapsed) {
                 Spacer(Modifier.height(AppDimens.listSpacing))
                 content()
@@ -335,7 +314,6 @@ private fun HistorySectionCard(
         }
     }
 }
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun HistoryDocumentRow(
@@ -351,10 +329,8 @@ private fun HistoryDocumentRow(
     menuEnabled: Boolean
 ) {
     var descriptionMasked by remember(document.id) { mutableStateOf(true) }
-
     val rowBackground = if (isSelected) NeoPalette.item.copy(alpha = AppAlphas.Home.selectedRowBackground) else NeoPalette.item
     val borderColor = if (isSelected) NeoPalette.neon.copy(alpha = AppAlphas.Home.selectedBorderAccent) else Color.Transparent
-
     Box(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -400,7 +376,7 @@ private fun HistoryDocumentRow(
                 if (document.description.isNotBlank()) {
                     Spacer(Modifier.height(AppDimens.labelSpacing))
                     Text(
-                        text = if (descriptionMasked) "＊＊＊＊＊＊" else document.description,
+                        text = if (descriptionMasked) "******" else document.description,
                         color = NeoPalette.textSecondary,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -428,7 +404,6 @@ private fun HistoryDocumentRow(
         }
     }
 }
-
 @Composable
 private fun HistoryBottomBar(
     modifier: Modifier = Modifier,
@@ -459,9 +434,6 @@ private fun HistoryBottomBar(
         )
     }
 }
-
-/* ===== Дерево (папки + “без папки”) — новый визуал ===== */
-
 private object NeoPalette {
     val background: Color
         @Composable get() = MaterialTheme.colorScheme.background
@@ -484,7 +456,6 @@ private object NeoPalette {
     val textSecondary: Color
         @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
 }
-
 private object NeoShapes {
     val section
         @Composable get() = AppShapes.panelLarge()
@@ -495,7 +466,6 @@ private object NeoShapes {
     val dockButton
         @Composable get() = AppShapes.iconButton()
 }
-
 @Composable
 private fun TreeScreen(
     openDoc: (String) -> Unit,
@@ -509,20 +479,16 @@ private fun TreeScreen(
     val home by documentInteractors.observeHome().collectAsState(
         initial = DocumentRepository.HomeList(emptyList(), emptyList())
     )
-
     val allDocs = remember(home) { (home.pinned + home.recent).distinctBy { it.id } }
     val docsByFolderId = remember(folders, allDocs) {
         folders.associate { folder -> folder.id to allDocs.filter { it.folderId == folder.id } }
     }
     val docsNoFolder = remember(allDocs) { allDocs.filter { it.folderId == null } }
-
     var showNewFolderDialog by remember { mutableStateOf(false) }
     var newFolderName by remember { mutableStateOf("") }
     var moveDocId by remember { mutableStateOf<String?>(null) }
     var deleteFolderId by remember { mutableStateOf<String?>(null) }
-
     var collapsedFolders by remember { mutableStateOf(FolderStateStore.getCollapsedFolders()) }
-
     LaunchedEffect(folders, docsNoFolder.isNotEmpty()) {
         val validIds = folders.map { it.id }.toMutableSet()
         if (docsNoFolder.isNotEmpty()) {
@@ -534,11 +500,9 @@ private fun TreeScreen(
             FolderStateStore.saveCollapsedFolders(filtered)
         }
     }
-
     val density = LocalDensity.current
     val bottomInset = WindowInsets.navigationBars.getBottom(density) / density.density
     val topInset = WindowInsets.statusBars.getTop(density) / density.density
-
     Surface(color = NeoPalette.background, modifier = Modifier.fillMaxSize()) {
         Box(Modifier.fillMaxSize()) {
             LazyColumn(
@@ -572,7 +536,6 @@ private fun TreeScreen(
                         onMoveDoc = { moveDocId = it }
                     )
                 }
-
                 if (docsNoFolder.isNotEmpty()) {
                     val noFolderCollapsed = collapsedFolders.contains(NO_FOLDER_SECTION_ID)
                     item {
@@ -597,7 +560,6 @@ private fun TreeScreen(
                     }
                 }
             }
-
             FloatingDock(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -607,7 +569,6 @@ private fun TreeScreen(
             )
         }
     }
-
     if (showNewFolderDialog) {
         AlertDialog(
             onDismissRequest = { showNewFolderDialog = false },
@@ -642,11 +603,9 @@ private fun TreeScreen(
             }
         )
     }
-
     MoveToFolderDialogIfNeeded(moveDocId = moveDocId, onClose = { moveDocId = null })
     DeleteFolderDialogIfNeeded(deleteFolderId = deleteFolderId, onClose = { deleteFolderId = null })
 }
-
 @Composable
 private fun FolderSectionCard(
     title: String,
@@ -660,7 +619,6 @@ private fun FolderSectionCard(
     collapsible: Boolean = true
 ) {
     var menuOpen by remember { mutableStateOf(false) }
-
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -694,14 +652,12 @@ private fun FolderSectionCard(
                     } else {
                         Spacer(Modifier.width(AppDimens.spaceXxs))
                     }
-
                     Text(
                         text = title,
                         color = NeoPalette.textPrimary,
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.weight(1f)
                     )
-
                     if (onCreateInFolder != null || onDeleteFolder != null) {
                         Box {
                             IconButton(
@@ -740,7 +696,6 @@ private fun FolderSectionCard(
                         }
                     }
                 }
-
                 if (!isCollapsed || !collapsible) {
                     if (documents.isNotEmpty()) {
                         Spacer(Modifier.height(AppDimens.listSpacing))
@@ -760,7 +715,6 @@ private fun FolderSectionCard(
         }
     }
 }
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun DocumentRow(
@@ -770,7 +724,6 @@ private fun DocumentRow(
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     var isMasked by remember(document.id) { mutableStateOf(true) }
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -803,7 +756,7 @@ private fun DocumentRow(
             if (document.description.isNotBlank()) {
                 Spacer(Modifier.height(AppDimens.labelSpacing))
                 Text(
-                    text = if (isMasked) "＊＊＊＊＊＊" else document.description,
+                    text = if (isMasked) "******" else document.description,
                     color = NeoPalette.textSecondary,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -833,7 +786,6 @@ private fun DocumentRow(
         }
     }
 }
-
 @Composable
 private fun FloatingDock(
     modifier: Modifier = Modifier,
@@ -863,7 +815,6 @@ private fun FloatingDock(
         )
     }
 }
-
 @Composable
 private fun DockButton(
     icon: ImageVector,
@@ -885,8 +836,6 @@ private fun DockButton(
         )
     }
 }
-
-/* ===== Диалог перемещения документа в папку ===== */
 @Composable
 private fun MoveToFolderDialogIfNeeded(moveDocId: String?, onClose: () -> Unit) {
     if (moveDocId == null) return
@@ -896,17 +845,14 @@ private fun MoveToFolderDialogIfNeeded(moveDocId: String?, onClose: () -> Unit) 
     val scope = rememberCoroutineScope()
     var folders by remember { mutableStateOf<List<Folder>>(emptyList()) }
     var selectedFolderId by remember { mutableStateOf<String?>(null) }
-
     LaunchedEffect(Unit) {
         folders = folderInteractors.listAll()
     }
-
     AlertDialog(
         onDismissRequest = onClose,
         title = { Text("Move to folder") },
         text = {
             Column {
-                // "no folder" option
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(selected = selectedFolderId == null, onClick = { selectedFolderId = null })
                     Text("No folder")
@@ -933,9 +879,6 @@ private fun MoveToFolderDialogIfNeeded(moveDocId: String?, onClose: () -> Unit) 
         }
     )
 }
-
-/* ===== InfoScreen (как в предыдущей версии с валидацией PIN) ===== */
-
 @Composable
 private fun InfoScreen() {
     val context = LocalContext.current
@@ -955,7 +898,6 @@ private fun InfoScreen() {
     var showImportPasswordDialog by remember { mutableStateOf(false) }
     var importPassword by remember { mutableStateOf("") }
     var pendingImportUri by remember { mutableStateOf<Uri?>(null) }
-    
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -964,9 +906,7 @@ private fun InfoScreen() {
             showImportPasswordDialog = true
         }
     }
-    
     fun toast(message: String) = Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-    
     fun shareBackup(file: java.io.File) {
         try {
             val uri = androidx.core.content.FileProvider.getUriForFile(
@@ -987,11 +927,9 @@ private fun InfoScreen() {
         }
     }
     fun isFourDigits(value: String) = value.matches(Regex("^\\d{4}$"))
-
     val density = LocalDensity.current
     val bottomInset = WindowInsets.navigationBars.getBottom(density) / density.density
     val topInset = WindowInsets.statusBars.getTop(density) / density.density
-
     Surface(color = NeoPalette.background, modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -1010,7 +948,6 @@ private fun InfoScreen() {
                     style = MaterialTheme.typography.titleLarge
                 )
             }
-
             item {
                 InformationSectionCard(title = "App theme") {
                     Text(
@@ -1042,7 +979,6 @@ private fun InfoScreen() {
                     )
                 }
             }
-
             item {
                 InformationSectionCard(title = "Contacts & links") {
                     InformationLinkButton(
@@ -1050,7 +986,7 @@ private fun InfoScreen() {
                         onClick = {
                             val intent = Intent(
                                 Intent.ACTION_VIEW,
-                                Uri.parse("https://github.com/ValeriaBelyaeva/DOC_APP")
+                                Uri.parse("https://github.com")
                             )
                             context.startActivity(intent)
                         }
@@ -1068,7 +1004,6 @@ private fun InfoScreen() {
                     )
                 }
             }
-
             item {
                 InformationSectionCard(title = "PIN") {
                     if (!changing) {
@@ -1138,7 +1073,6 @@ private fun InfoScreen() {
                     }
                 }
             }
-
             item {
                 InformationSectionCard(title = "Data transfer") {
                     Text(
@@ -1180,8 +1114,6 @@ private fun InfoScreen() {
                 }
             }
         }
-        
-        // Диалог ввода пароля для экспорта
         if (showExportPasswordDialog) {
             AlertDialog(
                 onDismissRequest = { showExportPasswordDialog = false },
@@ -1222,18 +1154,16 @@ private fun InfoScreen() {
                     }) { Text("Export") }
                 },
                 dismissButton = {
-                    TextButton(onClick = { 
+                    TextButton(onClick = {
                         showExportPasswordDialog = false
                         exportPassword = ""
                     }) { Text("Cancel") }
                 }
             )
         }
-        
-        // Диалог ввода пароля для импорта
         if (showImportPasswordDialog && pendingImportUri != null) {
             AlertDialog(
-                onDismissRequest = { 
+                onDismissRequest = {
                     showImportPasswordDialog = false
                     pendingImportUri = null
                     importPassword = ""
@@ -1278,7 +1208,7 @@ private fun InfoScreen() {
                     }) { Text("Import") }
                 },
                 dismissButton = {
-                    TextButton(onClick = { 
+                    TextButton(onClick = {
                         showImportPasswordDialog = false
                         pendingImportUri = null
                         importPassword = ""
@@ -1288,7 +1218,6 @@ private fun InfoScreen() {
         }
     }
 }
-
 @Composable
 private fun InformationSectionCard(
     title: String,
@@ -1336,7 +1265,6 @@ private fun InformationSectionCard(
         }
     }
 }
-
 @Composable
 private fun InformationPrimaryButton(text: String, onClick: () -> Unit) {
     Button(
@@ -1351,7 +1279,6 @@ private fun InformationPrimaryButton(text: String, onClick: () -> Unit) {
         Text(text = text.uppercase())
     }
 }
-
 @Composable
 private fun InformationGhostButton(text: String, onClick: () -> Unit) {
     OutlinedButton(
@@ -1364,7 +1291,6 @@ private fun InformationGhostButton(text: String, onClick: () -> Unit) {
         Text(text = text.uppercase())
     }
 }
-
 @Composable
 private fun InformationLinkButton(text: String, onClick: () -> Unit) {
     OutlinedButton(
@@ -1377,7 +1303,6 @@ private fun InformationLinkButton(text: String, onClick: () -> Unit) {
         Text(text = text.uppercase())
     }
 }
-
 @Composable
 private fun InformationTextField(
     value: String,
@@ -1402,7 +1327,6 @@ private fun InformationTextField(
         )
     )
 }
-
 @Composable
 private fun InformationHintBlock(title: String, hints: List<String>) {
     Text(
@@ -1417,7 +1341,7 @@ private fun InformationHintBlock(title: String, hints: List<String>) {
             verticalAlignment = Alignment.Top
         ) {
             Text(
-                text = "•",
+                text = "�",
                 color = NeoPalette.neon,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(end = AppDimens.listSpacing)
@@ -1434,7 +1358,6 @@ private fun InformationHintBlock(title: String, hints: List<String>) {
         }
     }
 }
-
 @Composable
 private fun ThemePaletteToggle(isDark: Boolean, onSelect: (Boolean) -> Unit) {
     Row(
@@ -1455,7 +1378,6 @@ private fun ThemePaletteToggle(isDark: Boolean, onSelect: (Boolean) -> Unit) {
         )
     }
 }
-
 @Composable
 private fun ThemePaletteOptionButton(
     title: String,
@@ -1476,7 +1398,6 @@ private fun ThemePaletteOptionButton(
         Text(title.uppercase())
     }
 }
-
 @Composable
 private fun SurfaceStyleToggle(current: SurfaceStyle, onSelect: (SurfaceStyle) -> Unit) {
     Row(
@@ -1499,7 +1420,6 @@ private fun SurfaceStyleToggle(current: SurfaceStyle, onSelect: (SurfaceStyle) -
         )
     }
 }
-
 @Composable
 private fun SurfaceStyleOptionButton(
     title: String,
@@ -1522,12 +1442,9 @@ private fun SurfaceStyleOptionButton(
         Text(title.uppercase())
     }
 }
-
-/* ===== Диалог удаления папки ===== */
 @Composable
 private fun DeleteFolderDialogIfNeeded(deleteFolderId: String?, onClose: () -> Unit) {
     if (deleteFolderId == null) return
-    
     val domainInteractors = ServiceLocator.domain
     val documentInteractors = domainInteractors.documents
     val folderInteractors = domainInteractors.folders
@@ -1535,13 +1452,10 @@ private fun DeleteFolderDialogIfNeeded(deleteFolderId: String?, onClose: () -> U
     val ctx = LocalContext.current
     var documentsInFolder by remember { mutableStateOf<List<Document>>(emptyList()) }
     var deleteDocuments by remember { mutableStateOf(false) }
-    
     LaunchedEffect(deleteFolderId) {
         documentsInFolder = documentInteractors.getDocumentsInFolder(deleteFolderId)
     }
-    
     fun toast(s: String) = Toast.makeText(ctx, s, Toast.LENGTH_SHORT).show()
-    
     AlertDialog(
         onDismissRequest = onClose,
         title = { Text("Delete folder") },
@@ -1551,7 +1465,6 @@ private fun DeleteFolderDialogIfNeeded(deleteFolderId: String?, onClose: () -> U
                 VSpace(AppDimens.spaceSm)
                 Text("What should happen to them?")
                 VSpace(AppDimens.spaceSm)
-
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = !deleteDocuments,
@@ -1559,7 +1472,6 @@ private fun DeleteFolderDialogIfNeeded(deleteFolderId: String?, onClose: () -> U
                     )
                     Text("Move to \"No folder\"", modifier = Modifier.padding(start = AppDimens.spaceSm))
                 }
-
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = deleteDocuments,

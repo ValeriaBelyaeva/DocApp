@@ -1,5 +1,4 @@
 package com.example.docapp.ui.design
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,11 +14,9 @@ import androidx.compose.ui.unit.dp
 import com.example.docapp.ui.theme.AppBorderWidths
 import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.ui.theme.AppFontSizes
-
 @Composable
 fun DesignSystemDemo() {
     var currentScreen by remember { mutableStateOf(DemoScreen.Pin) }
-    
     Surface(color = DMColors.Bg, modifier = Modifier.fillMaxSize()) {
         Column(
             Modifier
@@ -27,7 +24,6 @@ fun DesignSystemDemo() {
                 .padding(AppDimens.DesignDemo.showcasePadding),
             verticalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingMedium)
         ) {
-            // Navigation between showcase screens
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(AppDimens.DesignDemo.showcaseSpacingSmall)
@@ -39,8 +35,6 @@ fun DesignSystemDemo() {
                 DemoButton("Template", currentScreen == DemoScreen.Template) { currentScreen = DemoScreen.Template }
                 DemoButton("Test", currentScreen == DemoScreen.Test) { currentScreen = DemoScreen.Test }
             }
-            
-            // Render the selected showcase content
             Box(
                 Modifier
                     .fillMaxSize()
@@ -60,7 +54,6 @@ fun DesignSystemDemo() {
         }
     }
 }
-
 @Composable
 private fun DemoButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
     Box(
@@ -78,7 +71,6 @@ private fun DemoButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
         )
     }
 }
-
 private enum class DemoScreen {
     Pin, Home, Document, NewDocument, Template, Test
 }

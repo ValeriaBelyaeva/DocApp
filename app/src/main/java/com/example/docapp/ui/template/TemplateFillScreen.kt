@@ -1,5 +1,4 @@
 package com.example.docapp.ui.template
-
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -66,7 +65,6 @@ import com.example.docapp.ui.theme.AppLayout
 import com.example.docapp.ui.theme.AppAlphas
 import com.example.docapp.ui.theme.AppBorderWidths
 import com.example.docapp.ui.theme.AppDimens
-
 @Composable
 fun TemplateFillScreen(
     templateId: String,
@@ -78,23 +76,16 @@ fun TemplateFillScreen(
     BackHandler(enabled = true) {
         navigator.safePopBack()
     }
-    
     val useCases = ServiceLocator.useCases
     val scope = rememberCoroutineScope()
-    
-    // Состояние экрана
     var template by remember { mutableStateOf<com.example.docapp.domain.Template?>(null) }
     var templateFields by remember { mutableStateOf<List<com.example.docapp.domain.TemplateField>>(emptyList()) }
     val fieldValues = remember { mutableStateMapOf<String, String>() }
     var documentName by remember { mutableStateOf("") }
     var documentDescription by remember { mutableStateOf("") }
     var isCreating by remember { mutableStateOf(false) }
-    
-    // Прикрепленные файлы
-    var attachedPhotos by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) } // URI, displayName
-    var attachedPdfs by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) } // URI, displayName
-    
-    // Пикеры файлов
+    var attachedPhotos by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
+    var attachedPdfs by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
     ) { uris ->
@@ -105,7 +96,6 @@ fun TemplateFillScreen(
             attachedPhotos = attachedPhotos + newPhotos
         }
     }
-    
     val documentPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments()
     ) { uris ->
@@ -116,8 +106,6 @@ fun TemplateFillScreen(
             attachedPdfs = attachedPdfs + newPdfs
         }
     }
-    
-    // Загрузка шаблона
     LaunchedEffect(templateId) {
         try {
             template = useCases.getTemplate(templateId)
@@ -131,7 +119,6 @@ fun TemplateFillScreen(
             ErrorHandler.showError("Failed to load template: ${e.message}")
         }
     }
-    
     Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = AppLayout.appScreenInsets(Modifier.fillMaxSize())
@@ -140,7 +127,6 @@ fun TemplateFillScreen(
             verticalArrangement = Arrangement.spacedBy(AppDimens.sectionSpacing)
         ) {
             Spacer(Modifier.height(AppDimens.spaceXl))
-
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
         Text(
                     text = "Template fill",
@@ -155,7 +141,6 @@ fun TemplateFillScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-
             TemplateSectionCard(title = "Basic info") {
                 TemplateTextField(
                     label = "Document name",
@@ -171,7 +156,6 @@ fun TemplateFillScreen(
                     maxLines = 3
                 )
             }
-
             if (templateFields.isNotEmpty()) {
                 TemplateSectionCard(title = "Fill the fields") {
                     Column(verticalArrangement = Arrangement.spacedBy(AppDimens.listSpacing)) {
@@ -187,7 +171,6 @@ fun TemplateFillScreen(
                     }
                 }
             }
-
             TemplateSectionCard(title = "Attachments") {
                 AttachmentList(
                     photos = attachedPhotos,
@@ -216,9 +199,7 @@ fun TemplateFillScreen(
                     )
             }
         }
-        
             Spacer(Modifier.height(AppDimens.listSpacing))
-        
         Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -240,7 +221,6 @@ fun TemplateFillScreen(
                         val value = fieldValues[field.name] ?: ""
                         DataValidator.validateFieldValue(value)
                     }
-                    
                     if (nameValidation.isSuccess && fieldValidations.all { it.isSuccess }) {
                         scope.launch {
                             isCreating = true
@@ -280,7 +260,6 @@ fun TemplateFillScreen(
         }
     }
 }
-
 @Composable
 private fun TemplateSectionCard(
     title: String,
@@ -305,7 +284,6 @@ private fun TemplateSectionCard(
         }
     }
 }
-
 @Composable
 private fun TemplateTextField(
     label: String,
@@ -334,7 +312,6 @@ private fun TemplateTextField(
         )
     )
 }
-
 @Composable
 private fun AttachmentList(
     photos: List<Pair<String, String>>,
@@ -370,7 +347,6 @@ private fun AttachmentList(
         }
     }
 }
-
 @Composable
 private fun AttachmentGroup(
     title: String,
@@ -446,7 +422,6 @@ private fun AttachmentGroup(
         }
     }
 }
-
 @Composable
 private fun SecondaryButton(
     text: String,
@@ -465,7 +440,6 @@ private fun SecondaryButton(
         Text(text)
     }
 }
-
 @Composable
 private fun PrimaryButton(
     text: String,

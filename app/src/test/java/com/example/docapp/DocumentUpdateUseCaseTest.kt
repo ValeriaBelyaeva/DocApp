@@ -1,5 +1,4 @@
-package com.example.docapp
-
+﻿package com.example.docapp
 import android.content.Context
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
@@ -31,17 +30,14 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.io.File
-
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28])
 class DocumentUpdateUseCaseTest {
-
     private lateinit var context: Context
     private lateinit var attachmentStore: EncryptedAttachmentStore
     private lateinit var fakeRepos: FakeRepositories
     private lateinit var useCases: UseCases
     private lateinit var document: Document
-
     @Before
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
@@ -62,7 +58,6 @@ class DocumentUpdateUseCaseTest {
             lastOpenedAt = timestamp
         )
     }
-
     @Test
     fun updateDoc_persistsNewAttachments_andAllowsRetrievalAfterRestart() = runBlocking {
         val existingSource = File(context.cacheDir, "existing-photo.jpg").apply {
@@ -78,7 +73,6 @@ class DocumentUpdateUseCaseTest {
             createdAt = System.currentTimeMillis(),
             requiresPersist = false
         )
-
         val newSource = File(context.cacheDir, "new-attachment.pdf").apply {
             writeText("new content")
         }
@@ -91,20 +85,16 @@ class DocumentUpdateUseCaseTest {
             createdAt = System.currentTimeMillis(),
             requiresPersist = true
         )
-
         val fullDocument = DocumentRepository.FullDocument(
             doc = document,
             fields = emptyList(),
             photos = listOf(existingAttachment),
             pdfs = listOf(newAttachment)
         )
-
         useCases.updateDoc(fullDocument)
-
         val persistedAttachments = fakeRepos.documentRepository.lastUpdatedAttachments
         assertEquals(2, persistedAttachments.size)
         assertFalse(persistedAttachments.any { it.requiresPersist })
-
         val persistedNew = persistedAttachments.first { it.id == newAttachment.id }
         assertTrue(persistedNew.uri.path?.contains("attachments") == true)
         val retrievedStream = attachmentStore.retrieve(persistedNew.uri)
@@ -112,12 +102,10 @@ class DocumentUpdateUseCaseTest {
         retrievedStream?.bufferedReader()?.use { reader ->
             assertEquals("new content", reader.readText())
         }
-
         val newStoreInstance = EncryptedAttachmentStore(context)
         val retrievedAfterRestart = newStoreInstance.retrieve(persistedNew.uri)
         assertNotNull("Attachment should be retrievable after restarting store", retrievedAfterRestart)
     }
-
     private class FakeRepositories(
         val documentRepository: FakeDocumentRepository
     ) : Repositories {
@@ -127,14 +115,12 @@ class DocumentUpdateUseCaseTest {
             override suspend fun setNewPin(pin: String) = throw NotImplementedError()
             override suspend fun disablePin() = throw NotImplementedError()
         }
-
         override val folders = object : com.example.docapp.domain.FolderRepository {
             override fun observeTree(): Flow<List<Folder>> = throw NotImplementedError()
             override suspend fun addFolder(name: String, parentId: String?): String = throw NotImplementedError()
             override suspend fun deleteFolder(id: String) = throw NotImplementedError()
             override suspend fun listAll(): List<Folder> = throw NotImplementedError()
         }
-
         override val templates: TemplateRepository = object : TemplateRepository {
             override suspend fun listTemplates(): List<Template> = throw NotImplementedError()
             override suspend fun getTemplate(id: String): Template? = throw NotImplementedError()
@@ -144,16 +130,12 @@ class DocumentUpdateUseCaseTest {
             override suspend fun deleteTemplate(id: String) = throw NotImplementedError()
             override suspend fun pinTemplate(id: String, pinned: Boolean) = throw NotImplementedError()
         }
-
         override val documents: DocumentRepository
             get() = documentRepository
     }
-
     private class FakeDocumentRepository : DocumentRepository {
         var lastUpdatedAttachments: List<Attachment> = emptyList()
-
         override fun observeHome(): Flow<DocumentRepository.HomeList> = throw NotImplementedError()
-
         override suspend fun createDocument(
             templateId: String?,
             folderId: String?,
@@ -162,9 +144,7 @@ class DocumentUpdateUseCaseTest {
             photoUris: List<String>,
             pdfUris: List<String>
         ): String = throw NotImplementedError()
-
         override suspend fun getDocument(id: String): DocumentRepository.FullDocument? = throw NotImplementedError()
-
         override suspend fun updateDocument(
             doc: Document,
             fields: List<DocumentField>,
@@ -172,7 +152,6 @@ class DocumentUpdateUseCaseTest {
         ) {
             lastUpdatedAttachments = attachments
         }
-
         override suspend fun deleteDocument(id: String) = throw NotImplementedError()
         override suspend fun pinDocument(id: String, pinned: Boolean) = throw NotImplementedError()
         override suspend fun touchOpened(id: String) = throw NotImplementedError()

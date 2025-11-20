@@ -1,5 +1,4 @@
 package com.example.docapp.ui.widgets
-
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -18,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import com.example.docapp.ui.theme.AppShapes
 import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.ui.theme.AppDurations
-
 @Composable
 fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Button(
@@ -31,12 +29,6 @@ fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
         Text(text)
     }
 }
-
-/**
- * Field tile widget.
- * When showValue=true and value is provided — reveal the full value and hide the title,
- * otherwise show the title with a short preview snippet.
- */
 @Composable
 fun FieldTile(
     title: String,
@@ -62,13 +54,11 @@ fun FieldTile(
         ) {
             Column(Modifier.weight(1f)) {
                 if (showValue && !value.isNullOrEmpty()) {
-                    // Show the complete value without the title
                     Text(
                         text = value,
                         style = MaterialTheme.typography.bodyLarge
                     )
                 } else {
-                    // Default mode: title plus gray preview (first characters)
                     Text(title, style = MaterialTheme.typography.titleSmall)
                     if (!preview.isNullOrBlank()) {
                         Text(
@@ -100,23 +90,17 @@ fun FieldTile(
         }
     }
 }
-
 fun copyToClipboard(ctx: Context, label: String, text: String) {
     val clip = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     clip.setPrimaryClip(ClipData.newPlainText(label, text))
     Toast.makeText(ctx, "Copied", Toast.LENGTH_SHORT).show()
-    
-    // Automatically clear clipboard after 30 seconds for safety
     val handler = android.os.Handler(android.os.Looper.getMainLooper())
     val runnable = Runnable {
         try {
             clip.setPrimaryClip(ClipData.newPlainText("", ""))
         } catch (e: Exception) {
-            // Ignore cleanup failures
         }
     }
-    
-    // Cancel previous cleanup tasks to avoid stacking them
     handler.removeCallbacks(runnable)
     handler.postDelayed(runnable, AppDurations.clipboardAutoClearMs)
 }

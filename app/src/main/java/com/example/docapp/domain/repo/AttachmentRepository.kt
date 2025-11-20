@@ -1,12 +1,10 @@
 package com.example.docapp.domain.repo
-
 import android.content.Context
 import android.net.Uri
 import com.example.docapp.data.db.entities.AttachmentEntity
 import com.example.docapp.data.storage.AttachStorage
 import com.example.docapp.data.storage.FileGc
 import kotlinx.coroutines.flow.Flow
-
 interface AttachmentRepository {
     suspend fun importAttachment(context: Context, uri: Uri): AttachmentEntity
     suspend fun importAttachments(context: Context, uris: List<Uri>): List<AttachmentEntity>

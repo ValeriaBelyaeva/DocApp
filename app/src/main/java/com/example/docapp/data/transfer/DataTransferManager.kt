@@ -1,5 +1,4 @@
 package com.example.docapp.data.transfer
-
 import android.content.Context
 import android.net.Uri
 import android.os.Environment
@@ -29,38 +28,31 @@ import android.database.sqlite.SQLiteDatabase
 import net.lingala.zip4j.ZipFile as Zip4jFile
 import net.lingala.zip4j.model.ZipParameters
 import net.lingala.zip4j.model.enums.EncryptionMethod
-
 class DataTransferManager(
     private val context: Context,
     private val db: AppDb,
     private val dao: SqlDaoFactory
 ) {
-
     data class ExportResult(val file: File, val documents: Int, val attachments: Int)
     data class ImportResult(val documents: Int, val attachments: Int)
-
     private data class AttachmentSnapshot(
         val metadata: AttachmentEntity,
         val sourceFile: File,
         val entryName: String
     )
-
     private data class DocumentSnapshot(
         val document: Document,
         val fields: List<DocumentField>,
         val attachments: List<AttachmentSnapshot>
     )
-
     private val attachmentsDir: File
         get() = File(context.filesDir, "attachments").also { if (!it.exists()) it.mkdirs() }
-
     suspend fun exportBackup(password: String?): ExportResult = withContext(Dispatchers.IO) {
         AppLogger.log("DataTransfer", "Starting export...")
         val folders = dao.folders.list()
         val documentIds = dao.documents.getAllDocumentIds()
         val snapshots = mutableListOf<DocumentSnapshot>()
         var totalAttachments = 0
-
         documentIds.forEach { docId ->
             val full = dao.documents.getFull(docId) ?: return@forEach
             val attachmentEntities = dao.attachments.listByDoc(docId)
@@ -77,31 +69,21 @@ class DataTransferManager(
             totalAttachments += attachmentSnapshots.size
             snapshots += DocumentSnapshot(full.doc, full.fields, attachmentSnapshots)
         }
-
         val payload = JSONObject().apply {
             put("version", 1)
             put("exportedAt", System.currentTimeMillis())
             put("folders", folders.serializeFolders())
             put("documents", snapshots.serializeDocuments())
         }
-
         val exportDir = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
             ?: context.filesDir
         val fileName = "docapp-backup-${timestamp()}.zip"
         val backupFile = File(exportDir, fileName)
-        
-        // Создаем временный файл для JSON
         val tempJsonFile = File(context.cacheDir, "backup-${System.currentTimeMillis()}.json")
         tempJsonFile.writeText(payload.toString(2), Charsets.UTF_8)
-        
-        // Создаем защищенный ZIP с помощью Zip4j
         val isEncrypted = password != null && password.isNotEmpty()
         val passwordChars = if (isEncrypted) password!!.toCharArray() else null
-        
         AppLogger.log("DataTransfer", "Creating ZIP file with encryption: $isEncrypted, password length: ${passwordChars?.size ?: 0}")
-        
-        // В Zip4j пароль устанавливается через конструктор ZipFile при создании
-        // Все файлы с EncryptionMethod.AES будут зашифрованы этим паролем
         val zipFile = if (isEncrypted && passwordChars != null) {
             AppLogger.log("DataTransfer", "Creating encrypted ZIP with password (length: ${passwordChars.size})")
             Zip4jFile(backupFile, passwordChars)
@@ -109,12 +91,8 @@ class DataTransferManager(
             AppLogger.log("DataTransfer", "Creating unencrypted ZIP")
             Zip4jFile(backupFile)
         }
-        
-        // Добавляем JSON файл
         val jsonParams = ZipParameters().apply {
-            // Указываем имя файла в архиве
             fileNameInZip = "backup.json"
-            // ВАЖНО: нужно явно включить шифрование и указать метод
             if (isEncrypted) {
                 AppLogger.log("DataTransfer", "Setting AES encryption for backup.json")
                 setEncryptFiles(true)
@@ -126,13 +104,10 @@ class DataTransferManager(
         }
         zipFile.addFile(tempJsonFile, jsonParams)
         AppLogger.log("DataTransfer", "Added backup.json to ZIP with encryption: ${jsonParams.encryptionMethod}, encryptFiles: ${jsonParams.isEncryptFiles}")
-        
-        // Добавляем все вложения
         var attachmentCount = 0
         snapshots.flatMap { it.attachments }.forEach { snap ->
             val fileParams = ZipParameters().apply {
                 fileNameInZip = snap.entryName
-                // ВАЖНО: нужно явно включить шифрование и указать метод для каждого файла
                 if (isEncrypted) {
                     setEncryptFiles(true)
                     encryptionMethod = EncryptionMethod.AES
@@ -145,10 +120,7 @@ class DataTransferManager(
             attachmentCount++
         }
         AppLogger.log("DataTransfer", "Added $attachmentCount attachment files to ZIP")
-        
-        // Удаляем временный JSON файл
         tempJsonFile.delete()
-
         AppLogger.log(
             "DataTransfer",
             "Export completed: ${snapshots.size} docs, $totalAttachments files -> ${backupFile.absolutePath}"
@@ -156,42 +128,33 @@ class DataTransferManager(
         ErrorHandler.showSuccess("Backup saved to ${backupFile.absolutePath}")
         ExportResult(backupFile, snapshots.size, totalAttachments)
     }
-
     suspend fun importBackup(sourceUri: Uri, password: String?): ImportResult = withContext(Dispatchers.IO) {
         AppLogger.log("DataTransfer", "Importing backup from $sourceUri")
         val tempZip = File(context.cacheDir, "import-${System.currentTimeMillis()}.zip")
         context.contentResolver.openInputStream(sourceUri)?.use { input ->
             FileOutputStream(tempZip).use { output -> input.copyTo(output) }
         } ?: throw IllegalArgumentException("Cannot read backup file")
-
         val zipFile = Zip4jFile(tempZip)
         if (password != null && password.isNotEmpty()) {
             zipFile.setPassword(password.toCharArray())
         }
-
         val fileHeaders = zipFile.fileHeaders
         val payloadHeader = fileHeaders.find { it.fileName == "backup.json" }
             ?: throw IllegalStateException("Invalid backup: missing backup.json")
-        
-        // Проверяем, защищен ли файл
         val isEncrypted = payloadHeader.isEncrypted
         if (isEncrypted && (password == null || password.isEmpty())) {
             throw SecurityException("Backup file is password protected")
         }
-        
         val tempJsonFile = File(context.cacheDir, "backup-${System.currentTimeMillis()}.json")
         zipFile.extractFile(payloadHeader, context.cacheDir.absolutePath, tempJsonFile.name)
         val payload = tempJsonFile.readText(Charsets.UTF_8)
         tempJsonFile.delete()
-        
         val json = JSONObject(payload)
         validateVersion(json)
         val folders = json.getJSONArray("folders")
         val documents = json.getJSONArray("documents")
-
         clearExistingData()
         importFolders(folders)
-
         var docCount = 0
         var attachmentCount = 0
         val sqlDb = db.encryptedWritableDatabase
@@ -201,12 +164,10 @@ class DataTransferManager(
                 val docJson = documents.getJSONObject(i)
                 val docId = docJson.getString("id")
                 insertDocument(sqlDb, docJson)
-
                 val fields = docJson.getJSONArray("fields")
                 for (fi in 0 until fields.length()) {
                     insertField(sqlDb, docId, fields.getJSONObject(fi))
                 }
-
                     val attachments = docJson.getJSONArray("attachments")
                     for (ai in 0 until attachments.length()) {
                         val attachmentJson = attachments.getJSONObject(ai)
@@ -214,31 +175,26 @@ class DataTransferManager(
                         insertAttachment(sqlDb, docId, prepared)
                         attachmentCount++
                     }
-
                 docCount++
             }
             sqlDb.setTransactionSuccessful()
         } finally {
             sqlDb.endTransaction()
         }
-
         dao.documents.emitHome()
         dao.folders.emitTree()
         ErrorHandler.showSuccess("Backup imported: $docCount docs, $attachmentCount files")
         ImportResult(docCount, attachmentCount)
     }
-
     private fun validateVersion(json: JSONObject) {
         val version = json.optInt("version", 1)
         if (version != 1) {
             throw IllegalArgumentException("Unsupported backup version: $version")
         }
     }
-
     private fun JSONArray.serializeFolders(): JSONArray {
         return this
     }
-
     private fun List<Folder>.serializeFolders(): JSONArray {
         val array = JSONArray()
         forEach { folder ->
@@ -253,7 +209,6 @@ class DataTransferManager(
         }
         return array
     }
-
     private fun List<DocumentSnapshot>.serializeDocuments(): JSONArray {
         val array = JSONArray()
         forEach { snapshot ->
@@ -276,7 +231,6 @@ class DataTransferManager(
         }
         return array
     }
-
     private fun List<DocumentField>.serializeFields(): JSONArray {
         val array = JSONArray()
         forEach { field ->
@@ -293,7 +247,6 @@ class DataTransferManager(
         }
         return array
     }
-
     private fun List<AttachmentSnapshot>.serializeAttachments(): JSONArray {
         val array = JSONArray()
         forEach { snapshot ->
@@ -311,7 +264,6 @@ class DataTransferManager(
         }
         return array
     }
-
     private fun clearExistingData() {
         AppLogger.log("DataTransfer", "Clearing current data before import...")
         val sqlDb = db.encryptedWritableDatabase
@@ -328,7 +280,6 @@ class DataTransferManager(
         }
         attachmentsDir.listFiles()?.forEach { it.delete() }
     }
-
     private fun importFolders(folders: JSONArray) {
         val sqlDb = db.encryptedWritableDatabase
         sqlDb.beginTransaction()
@@ -350,7 +301,6 @@ class DataTransferManager(
             sqlDb.endTransaction()
         }
     }
-
     private fun insertDocument(sqlDb: SQLiteDatabase, docJson: JSONObject) {
         val encryptedName = db.encryptDocumentName(docJson.getString("name"))
         val encryptedDescription = db.encryptDocumentName(docJson.optString("description"))
@@ -375,7 +325,6 @@ class DataTransferManager(
             )
         )
     }
-
     private fun insertField(sqlDb: SQLiteDatabase, docId: String, field: JSONObject) {
         val value = field.optString("value")
         val encryptedValue = db.encryptFieldValue(value)
@@ -395,7 +344,6 @@ class DataTransferManager(
             )
         )
     }
-
     private data class PreparedAttachment(
         val id: String,
         val name: String,
@@ -406,17 +354,13 @@ class DataTransferManager(
         val uri: String,
         val createdAt: Long
     )
-
     private fun extractAttachment(zip: Zip4jFile, attachment: JSONObject): PreparedAttachment {
         val entryName = attachment.getString("file")
         val fileHeader = zip.fileHeaders.find { it.fileName == entryName }
             ?: throw IllegalStateException("Missing attachment file $entryName")
         val targetName = sanitizeFileName("${attachment.getString("id")}_${attachment.getString("name")}")
         val targetFile = File(attachmentsDir, targetName)
-        
-        // Извлекаем файл из архива
         zip.extractFile(fileHeader, attachmentsDir.absolutePath, targetName)
-        
         val sha = computeSha256(targetFile)
         val expectedSha = attachment.getString("sha256")
         if (!expectedSha.equals(sha, ignoreCase = true)) {
@@ -438,7 +382,6 @@ class DataTransferManager(
             createdAt = attachment.optLong("createdAt")
         )
     }
-
     private fun insertAttachment(
         sqlDb: SQLiteDatabase,
         docId: String,
@@ -462,7 +405,6 @@ class DataTransferManager(
             )
         )
     }
-
     private fun computeSha256(file: File): String {
         val digest = MessageDigest.getInstance("SHA-256")
         file.inputStream().use { input ->
@@ -474,14 +416,11 @@ class DataTransferManager(
         }
         return digest.digest().joinToString("") { "%02x".format(it) }
     }
-
     private fun sanitizeFileName(name: String): String {
         return name.replace(Regex("[^A-Za-z0-9._-]"), "_")
     }
-
     private fun timestamp(): String {
         val formatter = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US)
         return formatter.format(Date())
     }
 }
-

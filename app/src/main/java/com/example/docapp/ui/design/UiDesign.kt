@@ -1,5 +1,4 @@
 package com.example.docapp.ui.design
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -22,30 +21,23 @@ import androidx.compose.ui.unit.dp
 import com.example.docapp.ui.theme.AppBorderWidths
 import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.ui.theme.AppFontSizes
-
-/* -----------------------------------------------------------
-   ПАЛИТРА / ФОРМЫ / ТЕКСТ
------------------------------------------------------------ */
-
 object DMColors {
-    val Bg = Color(0xFF0C1115)           // общий фон
-    val Surface = Color(0xFF171D24)      // крупные панели
-    val SurfaceSoft = Color(0xFF1E2630)  // внутренние элементы
-    val Accent = Color(0xFFC6FF00)       // лаймовый
+    val Bg = Color(0xFF0C1115)
+    val Surface = Color(0xFF171D24)
+    val SurfaceSoft = Color(0xFF1E2630)
+    val Accent = Color(0xFFC6FF00)
     val AccentDim = Color(0x99C6FF00)
     val TextPri = Color(0xFFEAF0F6)
     val TextSec = Color(0xFFB9C4D0)
     val Outline = Color(0xFF2B3340)
-    val Danger = Color(0xFFE53935)       // PDF
+    val Danger = Color(0xFFE53935)
 }
-
 object DMShapes {
     val xl = RoundedCornerShape(DemoDim.cornerXl)
     val lg = RoundedCornerShape(DemoDim.cornerLg)
     val md = RoundedCornerShape(DemoDim.cornerMd)
     val pill = RoundedCornerShape(DemoDim.pillCorner)
 }
-
 object DMText {
     val H1 = Typography().headlineMedium.copy(color = DMColors.TextPri, fontWeight = FontWeight.SemiBold)
     val H2 = Typography().titleLarge.copy(color = DMColors.TextPri, fontWeight = FontWeight.SemiBold)
@@ -53,14 +45,8 @@ object DMText {
     val Body = Typography().bodyMedium.copy(color = DMColors.TextSec)
     val Hint = Typography().bodySmall.copy(color = DMColors.TextSec)
 }
-
 private val DemoDim = AppDimens.DesignDemo
 private val DemoBorder = AppBorderWidths
-
-/* -----------------------------------------------------------
-   БАЗОВЫЕ ВИЗУАЛЬНЫЕ КОМПОНЕНТЫ
------------------------------------------------------------ */
-
 @Composable
 fun NeonIconButton(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Box(
@@ -71,7 +57,6 @@ fun NeonIconButton(modifier: Modifier = Modifier, content: @Composable () -> Uni
         contentAlignment = Alignment.Center
     ) { content() }
 }
-
 @Composable
 fun NeonPrimaryButton(text: String, modifier: Modifier = Modifier) {
     Box(
@@ -85,7 +70,6 @@ fun NeonPrimaryButton(text: String, modifier: Modifier = Modifier) {
         Text(text, color = Color.Black, fontWeight = FontWeight.SemiBold, fontSize = AppFontSizes.DesignDemo.heroSubtitle)
     }
 }
-
 @Composable
 fun NeonSecondaryButton(text: String, modifier: Modifier = Modifier) {
     Box(
@@ -99,7 +83,6 @@ fun NeonSecondaryButton(text: String, modifier: Modifier = Modifier) {
         Text(text, color = DMColors.Accent, fontWeight = FontWeight.Medium, fontSize = AppFontSizes.DesignDemo.heroSubtitle)
     }
 }
-
 @Composable
 fun SectionCard(
     title: String,
@@ -129,7 +112,6 @@ fun SectionCard(
         content()
     }
 }
-
 @Composable
 fun DocRow(title: String, subtitle: String, trailing: @Composable () -> Unit) {
     Row(
@@ -148,24 +130,16 @@ fun DocRow(title: String, subtitle: String, trailing: @Composable () -> Unit) {
                 .border(DemoBorder.thin, DMColors.Outline, CircleShape),
             contentAlignment = Alignment.Center
         ) { Icon(Icons.Outlined.Description, null, tint = DMColors.Accent) }
-
         Spacer(Modifier.width(DemoDim.arrangeSpacingSmall))
-
         Column(Modifier.weight(1f)) {
             Text(title, style = DMText.Title, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(DemoDim.detailSpacingXs))
             Text(subtitle, style = DMText.Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-
         Spacer(Modifier.width(DemoDim.showcaseSpacingSmall))
         trailing()
     }
 }
-
-/* -----------------------------------------------------------
-   PIN SCREEN
------------------------------------------------------------ */
-
 @Composable
 fun PinScreenDesign() {
     Surface(color = DMColors.Bg, modifier = Modifier.fillMaxSize()) {
@@ -179,9 +153,7 @@ fun PinScreenDesign() {
             Icon(Icons.Outlined.Description, null, tint = DMColors.Accent, modifier = Modifier.size(DemoDim.heroIconSize))
             Spacer(Modifier.height(DemoDim.rowSpacingSmall))
             Text("DocManager", color = DMColors.Accent, fontSize = AppFontSizes.DesignDemo.brandTitle, fontWeight = FontWeight.SemiBold)
-
             Spacer(Modifier.height(DemoDim.formSpacingLarge))
-
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -192,17 +164,15 @@ fun PinScreenDesign() {
             ) {
                 Icon(Icons.Outlined.VpnKey, null, tint = DMColors.Accent)
                 Spacer(Modifier.width(DemoDim.rowSpacingMedium))
-                Text("•  •  •  •", style = DMText.H2, modifier = Modifier.weight(1f))
+                Text("�  �  �  �", style = DMText.H2, modifier = Modifier.weight(1f))
                 Icon(Icons.Outlined.Visibility, null, tint = DMColors.Accent)
             }
-
             Spacer(Modifier.height(DemoDim.formSpacingHuge))
-
             val keys = listOf(
                 "1","2","3",
                 "4","5","6",
                 "7","8","9",
-                "","0","⌫"
+                "","0","?"
             )
             Column(verticalArrangement = Arrangement.spacedBy(DemoDim.keypadSpacingLarge), horizontalAlignment = Alignment.CenterHorizontally) {
                 keys.chunked(3).forEach { row ->
@@ -222,11 +192,6 @@ fun PinScreenDesign() {
         }
     }
 }
-
-/* -----------------------------------------------------------
-   HOME SCREEN
------------------------------------------------------------ */
-
 @Composable
 fun HomeScreenDesign() {
     Surface(color = DMColors.Bg, modifier = Modifier.fillMaxSize()) {
@@ -238,7 +203,6 @@ fun HomeScreenDesign() {
                 contentPadding = PaddingValues(DemoDim.showcasePadding),
                 verticalArrangement = Arrangement.spacedBy(DemoDim.rowSpacingMedium)
             ) {
-                // My documents
                 item {
                     SectionCard(title = "My documents", trailing = {
                         NeonIconButton { Icon(Icons.Outlined.Tune, null, tint = DMColors.Accent) }
@@ -253,13 +217,11 @@ fun HomeScreenDesign() {
                         }
                     }
                 }
-                // My paswords
                 item {
                     SectionCard(title = "My paswords", trailing = {
                         NeonIconButton { Icon(Icons.Outlined.Tune, null, tint = DMColors.Accent) }
-                    }) { /* пусто для вида */ }
+                    }) {  }
                 }
-                // Without a folder
                 item {
                     SectionCard(title = "Without a folder", trailing = {
                         NeonIconButton { Icon(Icons.Outlined.Tune, null, tint = DMColors.Accent) }
@@ -278,8 +240,6 @@ fun HomeScreenDesign() {
                     }
                 }
             }
-
-            // Нижняя панель
             Row(
                 Modifier
                     .align(Alignment.BottomCenter)
@@ -320,11 +280,6 @@ fun HomeScreenDesign() {
         }
     }
 }
-
-/* -----------------------------------------------------------
-   DOCUMENT SCREEN
------------------------------------------------------------ */
-
 @Composable
 private fun FieldTile(title: String, value: String, trailing: @Composable () -> Unit) {
     Column(
@@ -353,7 +308,6 @@ private fun FieldTile(title: String, value: String, trailing: @Composable () -> 
         }
     }
 }
-
 @Composable
 private fun PdfChip(name: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -369,7 +323,6 @@ private fun PdfChip(name: String) {
         Text(name, style = DMText.Body, color = DMColors.TextPri)
     }
 }
-
 @Composable
 fun DocumentScreenDesign() {
     Surface(color = DMColors.Bg, modifier = Modifier.fillMaxSize()) {
@@ -392,12 +345,9 @@ fun DocumentScreenDesign() {
                     Text("Copy all", color = DMColors.Accent, fontWeight = FontWeight.Medium)
                 }
             }
-
             item { FieldTile("Passport number", "4006 45869721") { Icon(Icons.Outlined.Visibility, null, tint = DMColors.Accent) } }
             item { FieldTile("Issued", "Main Directorate of the Ministry of Internal Affairs, Saint Petersburg region. Issued 24.03.2023") { Icon(Icons.Outlined.VisibilityOff, null, tint = DMColors.Accent) } }
             item { FieldTile("Department code", "780-020") { Icon(Icons.Outlined.Visibility, null, tint = DMColors.Accent) } }
-
-            // Фото
             item {
                 Column(
                     Modifier
@@ -416,8 +366,6 @@ fun DocumentScreenDesign() {
                     ) { Text("Photo", color = DMColors.TextSec) }
                 }
             }
-
-            // Прикреплённые файлы
             item {
                 Column(
                     Modifier
@@ -437,11 +385,6 @@ fun DocumentScreenDesign() {
         }
     }
 }
-
-/* -----------------------------------------------------------
-   NEW DOCUMENT SCREEN
------------------------------------------------------------ */
-
 @Composable
 private fun AttributeTile(label: String, value: String, removable: Boolean = false) {
     Row(
@@ -460,19 +403,15 @@ private fun AttributeTile(label: String, value: String, removable: Boolean = fal
                 .border(DemoBorder.thin, DMColors.Outline, CircleShape),
             contentAlignment = Alignment.Center
         ) { Icon(Icons.Outlined.Description, null, tint = DMColors.Accent) }
-
         Spacer(Modifier.width(DemoDim.arrangeSpacingSmall))
-
         Column(Modifier.weight(1f)) {
             Text(label, style = DMText.Hint)
             Spacer(Modifier.height(DemoDim.detailSpacingSm))
             Text(value, style = DMText.Title)
         }
-
         if (removable) NeonIconButton { Icon(Icons.Outlined.Cancel, null, tint = DMColors.Accent) }
     }
 }
-
 @Composable
 fun NewDocumentScreenDesign() {
     Surface(color = DMColors.Bg, modifier = Modifier.fillMaxSize()) {
@@ -489,7 +428,6 @@ fun NewDocumentScreenDesign() {
                 Text("New document", style = DMText.H1, modifier = Modifier.weight(1f))
                 NeonIconButton { Icon(Icons.Outlined.Close, null, tint = DMColors.Accent) }
             }
-
             LazyColumn(
                 Modifier
                     .weight(1f)
@@ -501,7 +439,6 @@ fun NewDocumentScreenDesign() {
                 item { AttributeTile("Passport issue date:", "20.12.2008", removable = true) }
                 item { Spacer(Modifier.height(DemoDim.cardPaddingLarge)) }
             }
-
             Column(Modifier.padding(DemoDim.showcasePadding), verticalArrangement = Arrangement.spacedBy(DemoDim.arrangeSpacingSmall)) {
                 NeonSecondaryButton("Add attribut")
                 NeonSecondaryButton("Add file")
@@ -510,14 +447,8 @@ fun NewDocumentScreenDesign() {
         }
     }
 }
-
-/* -----------------------------------------------------------
-   TEMPLATE PICKER SCREEN
------------------------------------------------------------ */
-
 @Immutable
 data class TemplateRow(val name: String)
-
 @Composable
 fun TemplatePickerDesign() {
     Surface(color = DMColors.Bg, modifier = Modifier.fillMaxSize()) {
@@ -539,7 +470,6 @@ fun TemplatePickerDesign() {
                         .border(DemoBorder.accent, DMColors.Accent, DMShapes.pill),
                     contentAlignment = Alignment.Center
                 ) { Text("Add file", color = DMColors.Accent, fontWeight = FontWeight.Medium) }
-
                 Box(
                     Modifier
                         .weight(1f)
@@ -549,7 +479,6 @@ fun TemplatePickerDesign() {
                     contentAlignment = Alignment.Center
                 ) { Text("Add template", color = Color.Black, fontWeight = FontWeight.SemiBold) }
             }
-
             val templates = listOf(TemplateRow("Passport"), TemplateRow("Passwords"))
             LazyColumn(
                 Modifier

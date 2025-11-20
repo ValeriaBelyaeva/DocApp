@@ -1,5 +1,4 @@
 package com.example.docapp.ui.template
-
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -52,7 +51,6 @@ import com.example.docapp.ui.theme.AppAlphas
 import com.example.docapp.ui.theme.AppLayout
 import com.example.docapp.ui.theme.AppDimens
 import kotlinx.coroutines.launch
-
 @Composable
 fun TemplateSelectorScreen(
     folderId: String?,
@@ -63,20 +61,16 @@ fun TemplateSelectorScreen(
     BackHandler(enabled = true) {
         navigator.safePopBack()
     }
-    
     val uc = ServiceLocator.useCases
     var templates by remember { mutableStateOf<List<Template>>(emptyList()) }
     val scope = rememberCoroutineScope()
-
     var showDialog by remember { mutableStateOf(false) }
     var tplName by remember { mutableStateOf("") }
     val fieldNames = remember { mutableStateListOf<String>() }
     var newField by remember { mutableStateOf("") }
-
     LaunchedEffect(Unit) {
         templates = uc.listTemplates()
     }
-
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Box(
             modifier = AppLayout.appScreenInsets(Modifier.fillMaxSize())
@@ -107,7 +101,6 @@ fun TemplateSelectorScreen(
                         )
                     }
                 }
-                
                 item {
                     Row(
                          modifier = Modifier.fillMaxWidth(),
@@ -129,7 +122,6 @@ fun TemplateSelectorScreen(
                         )
                     }
                 }
-
                 if (templates.isNotEmpty()) {
                     item {
                         Text(
@@ -139,7 +131,6 @@ fun TemplateSelectorScreen(
                             color = MaterialTheme.colorScheme.onBackground
                         )
                     }
-
                     items(templates) { template ->
                         TemplateListItem(
                             template = template,
@@ -161,7 +152,6 @@ fun TemplateSelectorScreen(
                     item { TemplateEmptyState() }
                 }
             }
-
             if (showDialog) {
                 TemplateDialog(
                     tplName = tplName,
@@ -186,7 +176,6 @@ fun TemplateSelectorScreen(
                     onConfirm = {
                         val nameValidation = DataValidator.validateTemplateName(tplName)
                         val fieldValidations = fieldNames.map { DataValidator.validateFieldName(it) }
-
                         if (nameValidation.isSuccess && fieldValidations.all { it.isSuccess }) {
                             scope.launch {
                                 val normalizedName = nameValidation.getValue()!!
@@ -214,7 +203,6 @@ fun TemplateSelectorScreen(
         }
     }
 }
-
 @Composable
 private fun TemplateOptionCard(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
@@ -262,7 +250,6 @@ private fun TemplateOptionCard(
                     }
                 }
             }
-            
 @Composable
 private fun TemplateListItem(
     template: Template,
@@ -306,7 +293,6 @@ private fun TemplateListItem(
                             }
                         }
                     }
-
 @Composable
 private fun TemplateEmptyState() {
     GlassCard(modifier = Modifier.fillMaxWidth(), shape = AppShapes.panelLarge()) {
@@ -335,7 +321,6 @@ private fun TemplateEmptyState() {
                 }
             }
         }
-
 @Composable
 private fun TemplateDialog(
     tplName: String,
@@ -351,7 +336,7 @@ private fun TemplateDialog(
 ) {
             AlertDialog(
         onDismissRequest = onDismiss,
-                title = { 
+                title = {
                     Text(
                         text = "New template",
                         style = MaterialTheme.typography.headlineSmall,
@@ -380,14 +365,12 @@ private fun TemplateDialog(
                         unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent
                             )
                         )
-                        
                         Text(
                     text = "Add fields for the template",
                             style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface
                         )
-                        
                         Row(
                     horizontalArrangement = Arrangement.spacedBy(AppDimens.listSpacing),
                             verticalAlignment = Alignment.CenterVertically
@@ -424,7 +407,6 @@ private fun TemplateDialog(
                         )
                             }
                         }
-                        
                 if (fields.isNotEmpty()) {
                     Column(
                         modifier = Modifier
@@ -486,7 +468,7 @@ private fun TemplateDialog(
                 onClick = onDismiss,
                 colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
             ) {
-                        Text("Cancel") 
+                        Text("Cancel")
                     }
                 }
             )

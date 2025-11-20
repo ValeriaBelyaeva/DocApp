@@ -1,5 +1,4 @@
 package com.example.docapp.data.db.dao
-
 import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
@@ -11,11 +10,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
-
 class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
-    
     private val docAttachments = mutableMapOf<String, MutableStateFlow<List<AttachmentEntity>>>()
-    
     override suspend fun insert(attachment: AttachmentEntity): Unit = withContext(Dispatchers.IO) {
         try {
             val cv = ContentValues().apply {
@@ -29,12 +25,10 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
                 put("uri", attachment.uri)
                 put("createdAt", attachment.createdAt)
             }
-            
             val result = db.insert("attachments_new", null, cv)
             if (result == -1L) {
                 throw RuntimeException("Failed to insert attachment")
             }
-            
             AppLogger.log("AttachmentDaoSql", "Attachment inserted: ${attachment.name}")
             attachment.docId?.let { emitDocAttachments(it) }
         } catch (e: Exception) {
@@ -43,7 +37,6 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
             throw e
         }
     }
-    
     override suspend fun insertAll(attachments: List<AttachmentEntity>): Unit = withContext(Dispatchers.IO) {
         db.beginTransaction()
         try {
@@ -63,11 +56,8 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
             }
             db.setTransactionSuccessful()
             AppLogger.log("AttachmentDaoSql", "Inserted ${attachments.size} attachments")
-            
-            // Notify all affected document flows
             attachments.mapNotNull { it.docId }.distinct().forEach { docId ->
-                // Update flow directly without a suspend function
-                docAttachments[docId]?.value = emptyList() // Temporarily clear; data will refresh on next access
+                docAttachments[docId]?.value = emptyList()
             }
         } catch (e: Exception) {
             AppLogger.log("AttachmentDaoSql", "ERROR: Failed to insert attachments: ${e.message}")
@@ -77,7 +67,6 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
             db.endTransaction()
         }
     }
-    
     override suspend fun listByDoc(docId: String): List<AttachmentEntity> = withContext(Dispatchers.IO) {
         val result = mutableListOf<AttachmentEntity>()
         db.rawQuery(
@@ -90,20 +79,16 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
         }
         result
     }
-    
     override fun observeByDoc(docId: String): Flow<List<AttachmentEntity>> {
-        return docAttachments.getOrPut(docId) { 
+        return docAttachments.getOrPut(docId) {
             MutableStateFlow<List<AttachmentEntity>>(emptyList())
         }.asStateFlow()
     }
-    
     override suspend fun deleteById(id: String): Unit = withContext(Dispatchers.IO) {
         try {
-            // Fetch docId first to update the flow after deletion
             val docId = db.rawQuery("SELECT docId FROM attachments_new WHERE id = ?", arrayOf(id)).use { cursor ->
                 if (cursor.moveToFirst()) cursor.getString(0) else null
             }
-            
             val deleted = db.delete("attachments_new", "id = ?", arrayOf(id))
             if (deleted > 0) {
                 AppLogger.log("AttachmentDaoSql", "Attachment deleted: $id")
@@ -117,7 +102,6 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
             throw e
         }
     }
-    
     override suspend fun bindToDoc(ids: List<String>, docId: String): Unit = withContext(Dispatchers.IO) {
         db.beginTransaction()
         try {
@@ -136,7 +120,6 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
             db.endTransaction()
         }
     }
-    
     override suspend fun listOrphans(): List<AttachmentEntity> = withContext(Dispatchers.IO) {
         val result = mutableListOf<AttachmentEntity>()
         try {
@@ -159,7 +142,6 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
         }
         result
     }
-    
     override suspend fun deleteByDocId(docId: String): Unit = withContext(Dispatchers.IO) {
         try {
             val deleted = db.delete("attachments_new", "docId = ?", arrayOf(docId))
@@ -171,7 +153,6 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
             throw e
         }
     }
-    
     override suspend fun getById(id: String): AttachmentEntity? = withContext(Dispatchers.IO) {
         db.rawQuery("SELECT * FROM attachments_new WHERE id = ?", arrayOf(id)).use { cursor ->
             if (cursor.moveToFirst()) {
@@ -179,7 +160,6 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
             } else null
         }
     }
-    
     override suspend fun findBySha256(sha256: String): List<AttachmentEntity> = withContext(Dispatchers.IO) {
         val result = mutableListOf<AttachmentEntity>()
         db.rawQuery("SELECT * FROM attachments_new WHERE sha256 = ?", arrayOf(sha256)).use { cursor ->
@@ -189,17 +169,14 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
         }
         result
     }
-    
     override suspend fun countByDoc(docId: String): Int = withContext(Dispatchers.IO) {
         db.rawQuery("SELECT COUNT(*) FROM attachments_new WHERE docId = ?", arrayOf(docId)).use { cursor ->
             if (cursor.moveToFirst()) cursor.getInt(0) else 0
         }
     }
-    
     private suspend fun emitDocAttachments(docId: String) {
         docAttachments[docId]?.value = runCatching { listByDoc(docId) }.getOrDefault(emptyList())
     }
-    
     private fun Cursor.toAttachmentEntity(): AttachmentEntity {
         return AttachmentEntity(
             id = getString(getColumnIndexOrThrow("id")),
@@ -213,7 +190,6 @@ class AttachmentDaoSql(private val db: SQLiteDatabase) : AttachmentDao {
             createdAt = getLong(getColumnIndexOrThrow("createdAt"))
         )
     }
-    
     private fun Cursor.getStringOrNull(column: String): String? {
         val index = getColumnIndex(column)
         return if (index >= 0 && !isNull(index)) getString(index) else null

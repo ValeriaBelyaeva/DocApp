@@ -1,9 +1,7 @@
 package com.example.docapp.ui.theme
-
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-
 @Immutable
 data class GlassColors(
     val containerTop: Color,
@@ -13,7 +11,6 @@ data class GlassColors(
     val borderShadow: Color,
     val shadowColor: Color
 )
-
 val LocalGlassColors = staticCompositionLocalOf {
     GlassColors(
         containerTop = Color.Transparent,

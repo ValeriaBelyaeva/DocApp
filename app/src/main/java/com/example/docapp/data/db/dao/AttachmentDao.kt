@@ -1,8 +1,6 @@
 package com.example.docapp.data.db.dao
-
 import com.example.docapp.data.db.entities.AttachmentEntity
 import kotlinx.coroutines.flow.Flow
-
 interface AttachmentDao {
     suspend fun insert(attachment: AttachmentEntity): Unit
     suspend fun insertAll(attachments: List<AttachmentEntity>): Unit
