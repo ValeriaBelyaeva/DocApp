@@ -82,6 +82,7 @@ fun TemplateSelectorScreen(
     var templates by remember { mutableStateOf<List<Template>>(emptyList()) }
     val scope = rememberCoroutineScope()
     var showDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf<Template?>(null) }
     var tplName by remember { mutableStateOf("") }
     val fieldNames = remember { mutableStateListOf<String>() }
     var newField by remember { mutableStateOf("") }
@@ -152,17 +153,7 @@ fun TemplateSelectorScreen(
                         TemplateListItem(
                             template = template,
                             onOpen = { onCreateDocFromTemplate(template.id, folderId) },
-                            onDelete = {
-                                scope.launch {
-                                    try {
-                                        uc.deleteTemplate(template.id)
-                                        templates = uc.listTemplates()
-                                        ErrorHandler.showSuccess("Template removed")
-                                    } catch (e: Exception) {
-                                        ErrorHandler.showError("Failed to delete template: ${e.message}")
-                                    }
-                                }
-                            }
+                            onDelete = { showDeleteDialog = template }
                         )
                     }
                 } else {
@@ -216,6 +207,39 @@ fun TemplateSelectorScreen(
                     },
                     confirmEnabled = tplName.trim().isNotEmpty() && fieldNames.isNotEmpty()
                 )
+            }
+            if (showDeleteDialog != null) {
+                val templateToDelete = showDeleteDialog
+                if (templateToDelete != null) {
+                    AlertDialog(
+                        onDismissRequest = { showDeleteDialog = null },
+                        title = { Text("Delete template") },
+                        text = { Text("Are you sure you want to delete the template \"${templateToDelete.name}\"? This action cannot be undone.") },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    scope.launch {
+                                        try {
+                                            uc.deleteTemplate(templateToDelete.id)
+                                            templates = uc.listTemplates()
+                                            ErrorHandler.showSuccess("Template deleted")
+                                        } catch (e: Exception) {
+                                            ErrorHandler.showError("Failed to delete template: ${e.message}")
+                                        }
+                                    }
+                                    showDeleteDialog = null
+                                }
+                            ) {
+                                Text("Delete")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDeleteDialog = null }) {
+                                Text("Cancel")
+                            }
+                        }
+                    )
+                }
             }
         }
     }

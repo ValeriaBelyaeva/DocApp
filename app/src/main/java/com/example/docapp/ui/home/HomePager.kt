@@ -1507,7 +1507,7 @@ private fun DeleteFolderDialogIfNeeded(deleteFolderId: String?, onClose: () -> U
         title = { Text("Delete folder") },
         text = {
             Column {
-                Text("Folder contains ${documentsInFolder.size} documents.")
+                Text("Folder contains ${documentsInFolder.size} ${if (documentsInFolder.size == 1) "document" else "documents"}.")
                 VSpace(AppDimens.spaceSm)
                 Text("What should happen to them?")
                 VSpace(AppDimens.spaceSm)

@@ -404,32 +404,18 @@ fun DocumentEditScreen(
     var currentPhotos by remember { mutableStateOf<List<Attachment>>(emptyList()) }
     var currentPdfs by remember { mutableStateOf<List<Attachment>>(emptyList()) }
     var pdfPreviews by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    var showDeletePhotoDialog by remember { mutableStateOf<Attachment?>(null) }
+    var showDeletePdfDialog by remember { mutableStateOf<Attachment?>(null) }
     val deletePhoto: (String) -> Unit = { photoId: String ->
-        scope.launch {
-            try {
-                useCases.deleteAttachment(photoId)
-                currentPhotos = currentPhotos.filter { it.id != photoId }
-                if (existingDocId == null) {
-                    importedAttachments = importedAttachments.filter { it != photoId }
-                }
-                ErrorHandler.showSuccess("Photo removed")
-            } catch (e: Exception) {
-                ErrorHandler.showError("Failed to delete photo: ${e.message}")
-            }
+        val photo = currentPhotos.find { it.id == photoId }
+        if (photo != null) {
+            showDeletePhotoDialog = photo
         }
     }
     val deletePdf: (String) -> Unit = { pdfId: String ->
-        scope.launch {
-            try {
-                useCases.deleteAttachment(pdfId)
-                currentPdfs = currentPdfs.filter { it.id != pdfId }
-                if (existingDocId == null) {
-                    importedAttachments = importedAttachments.filter { it != pdfId }
-                }
-                ErrorHandler.showSuccess("PDF removed")
-            } catch (e: Exception) {
-                ErrorHandler.showError("Failed to delete PDF: ${e.message}")
-            }
+        val pdf = currentPdfs.find { it.id == pdfId }
+        if (pdf != null) {
+            showDeletePdfDialog = pdf
         }
     }
     val openPdf = { pdfUri: String ->
@@ -867,6 +853,98 @@ fun DocumentEditScreen(
                 }
             }
         )
+    }
+    if (showDeletePhotoDialog != null) {
+        val photoToDelete = showDeletePhotoDialog
+        if (photoToDelete != null) {
+            AlertDialog(
+                onDismissRequest = { showDeletePhotoDialog = null },
+                containerColor = EditorPalette.section,
+                title = { Text("Delete photo", color = EditorPalette.textPrimary) },
+                text = {
+                    Text(
+                        "Are you sure you want to delete the photo \"${photoToDelete.displayName ?: "photo"}\"? This action cannot be undone.",
+                        color = EditorPalette.textSecondary
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                try {
+                                    useCases.deleteAttachment(photoToDelete.id)
+                                    currentPhotos = currentPhotos.filter { it.id != photoToDelete.id }
+                                    if (existingDocId == null) {
+                                        importedAttachments = importedAttachments.filter { it != photoToDelete.id }
+                                    }
+                                    ErrorHandler.showSuccess("Photo deleted")
+                                } catch (e: Exception) {
+                                    ErrorHandler.showError("Failed to delete photo: ${e.message}")
+                                }
+                            }
+                            showDeletePhotoDialog = null
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = EditorPalette.danger)
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showDeletePhotoDialog = null },
+                        colors = ButtonDefaults.textButtonColors(contentColor = EditorPalette.textSecondary)
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+    }
+    if (showDeletePdfDialog != null) {
+        val pdfToDelete = showDeletePdfDialog
+        if (pdfToDelete != null) {
+            AlertDialog(
+                onDismissRequest = { showDeletePdfDialog = null },
+                containerColor = EditorPalette.section,
+                title = { Text("Delete PDF", color = EditorPalette.textPrimary) },
+                text = {
+                    Text(
+                        "Are you sure you want to delete the file \"${pdfToDelete.displayName ?: "PDF"}\"? This action cannot be undone.",
+                        color = EditorPalette.textSecondary
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                try {
+                                    useCases.deleteAttachment(pdfToDelete.id)
+                                    currentPdfs = currentPdfs.filter { it.id != pdfToDelete.id }
+                                    if (existingDocId == null) {
+                                        importedAttachments = importedAttachments.filter { it != pdfToDelete.id }
+                                    }
+                                    ErrorHandler.showSuccess("PDF deleted")
+                                } catch (e: Exception) {
+                                    ErrorHandler.showError("Failed to delete PDF: ${e.message}")
+                                }
+                            }
+                            showDeletePdfDialog = null
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = EditorPalette.danger)
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showDeletePdfDialog = null },
+                        colors = ButtonDefaults.textButtonColors(contentColor = EditorPalette.textSecondary)
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
     }
 }
 @Composable
