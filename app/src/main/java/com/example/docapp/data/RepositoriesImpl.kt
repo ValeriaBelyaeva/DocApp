@@ -11,6 +11,20 @@ import com.example.docapp.data.storage.AttachStorage
 import com.example.docapp.data.storage.AttachStorageImpl
 import com.example.docapp.data.storage.FileGc
 import kotlinx.coroutines.flow.Flow
+/**
+ * Implementation of the Repositories interface that provides concrete repository implementations.
+ * Wraps DAOs and core services to provide domain repository interfaces.
+ * 
+ * Works by creating repository implementations that delegate to DAOs and core services,
+ * providing a bridge between domain layer and data layer. Implements all repository interfaces
+ * defined in the domain layer.
+ * 
+ * arguments:
+ *     dao - SqlDaoFactory: Factory providing access to all DAO interfaces
+ *     crypto - CryptoManager: Service for cryptographic operations and PIN management
+ *     files - AttachmentStore: Service for managing attachment file storage
+ *     ctx - Context: Android context for accessing system services
+ */
 class RepositoriesImpl(
     private val dao: SqlDaoFactory,
     private val crypto: CryptoManager,

@@ -54,6 +54,13 @@ import com.example.docapp.ui.theme.AppBorderWidths
 import com.example.docapp.ui.theme.AppFontSizes
 import kotlinx.coroutines.launch
 import kotlin.UninitializedPropertyAccessException
+/**
+ * Color scheme object for PIN screen components.
+ * Provides theme-aware colors that adapt to the current Material theme.
+ * 
+ * Works by accessing MaterialTheme color scheme and app-specific color tokens to provide
+ * consistent colors for background, layers, accents, and text throughout the PIN screen.
+ */
 object PinColors {
     val Bg: Color
         @Composable get() = MaterialTheme.colorScheme.background
@@ -66,10 +73,34 @@ object PinColors {
     val TextPri: Color
         @Composable get() = MaterialTheme.colorScheme.onSurface
 }
+
+/**
+ * Shape definitions object for PIN screen components.
+ * Provides consistent shape styling for PIN screen UI elements.
+ * 
+ * Works by accessing app-specific shape tokens to provide consistent rounded corners
+ * and styling for PIN screen components.
+ */
 private object PinShapes {
     val Capsule
         @Composable get() = AppShapes.panelLarge()
 }
+
+/**
+ * Composable for a round keypad button in the PIN screen.
+ * Displays a number, backspace icon, or empty circle based on the provided parameters.
+ * 
+ * Works by rendering a circular button with border, showing either a text label, backspace icon,
+ * or remaining empty, and handling click events through the onClick callback.
+ * 
+ * arguments:
+ *     label - String?: Optional text label to display on the button, usually a digit from 0-9
+ *     isBackspace - Boolean: If true, displays backspace icon instead of label, false to show label or empty
+ *     onClick - () -> Unit: Callback function invoked when the button is clicked
+ * 
+ * return:
+ *     Unit - No return value
+ */
 @Composable
 private fun RoundKey(
     label: String? = null,
@@ -101,6 +132,15 @@ private fun RoundKey(
         }
     }
 }
+/**
+ * Composable for displaying the application logo and name in the PIN screen.
+ * Shows the app logo icon and "DocManager" text in a centered column layout.
+ * 
+ * Works by rendering an icon from resources and text below it, both styled with the PIN screen accent color.
+ * 
+ * return:
+ *     Unit - No return value
+ */
 @Composable
 private fun LogoBlock() {
     Column(
@@ -122,6 +162,21 @@ private fun LogoBlock() {
         )
     }
 }
+/**
+ * Composable for displaying the PIN input field with visibility toggle.
+ * Shows the entered PIN either as visible digits or masked with asterisks, with a toggle button.
+ * 
+ * Works by displaying PIN digits with spaces between them when visible, or asterisks when hidden.
+ * Provides a toggle button to switch between visible and hidden states.
+ * 
+ * arguments:
+ *     isVisible - Boolean: Whether to show the actual PIN digits or mask them with asterisks
+ *     actualPin - String: The current PIN value being entered, empty string if no digits entered
+ *     onVisibilityToggle - () -> Unit: Callback function invoked when visibility toggle button is clicked
+ * 
+ * return:
+ *     Unit - No return value
+ */
 @Composable
 private fun PinCapsule(isVisible: Boolean = false, actualPin: String = "", onVisibilityToggle: () -> Unit = {}) {
     Row(
@@ -178,6 +233,16 @@ private fun PinCapsule(isVisible: Boolean = false, actualPin: String = "", onVis
         )
     }
 }
+/**
+ * Design showcase composable for the PIN screen.
+ * Used for design system demonstration and preview purposes, not for actual PIN entry.
+ * 
+ * Works by rendering a static PIN screen layout with sample data (PIN "1234") to demonstrate
+ * the visual design without requiring actual PIN functionality.
+ * 
+ * return:
+ *     Unit - No return value
+ */
 @Composable
 fun PinScreenDesign() {
     Surface(color = PinColors.Bg, modifier = Modifier.fillMaxSize()) {
@@ -214,6 +279,21 @@ fun PinScreenDesign() {
         }
     }
 }
+/**
+ * Main PIN screen composable that handles PIN entry for existing PINs and PIN creation for new users.
+ * Manages PIN verification, ServiceLocator initialization, and navigation on success.
+ * Blocks back navigation to prevent leaving the PIN screen.
+ * 
+ * Works by checking if PIN is set on initialization, then showing either PIN entry or PIN creation screen.
+ * Automatically processes PIN when 4 digits are entered, verifying existing PINs or creating new ones.
+ * Calls onSuccess callback after successful PIN verification or creation.
+ * 
+ * arguments:
+ *     onSuccess - () -> Unit: Callback function invoked when PIN is successfully verified or created
+ * 
+ * return:
+ *     Unit - No return value
+ */
 @Composable
 fun PinScreenNew(onSuccess: () -> Unit) {
     var stage by remember { mutableStateOf(PinStageNew.Loading) }
@@ -428,4 +508,11 @@ fun PinScreenNew(onSuccess: () -> Unit) {
         }
     }
 }
+/**
+ * Enumeration of possible stages in the PIN screen flow.
+ * Represents the current state of PIN entry or creation process.
+ * 
+ * Works by tracking which stage the user is in: loading (checking PIN status), entering existing PIN,
+ * entering new PIN, or confirming new PIN.
+ */
 enum class PinStageNew { Loading, EnterExisting, EnterNew, ConfirmNew }

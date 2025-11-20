@@ -1,9 +1,47 @@
 package com.example.docapp.core
 import android.net.Uri
+
+/**
+ * Interface for managing persistent URI permissions for attachments.
+ * Provides methods to persist and release URI permissions for long-term file access.
+ * 
+ * Works by managing Android's persistent URI permissions, allowing the app to access
+ * files even after the user grants permission, without requiring re-granting.
+ */
 interface AttachmentStore {
+    /**
+     * Makes a URI permission persistent, allowing long-term access to the file.
+     * 
+     * arguments:
+     *     uri - Uri: The URI to make persistent
+     * 
+     * return:
+     *     uri - Uri: The same URI that was made persistent
+     */
     fun persist(uri: Uri): Uri
+    
+    /**
+     * Releases a persistent URI permission, revoking long-term access to the file.
+     * 
+     * arguments:
+     *     uri - Uri: The URI to release permissions for
+     * 
+     * return:
+     *     Unit - No return value
+     */
     fun release(uri: Uri)
 }
+
+/**
+ * Implementation of AttachmentStore interface using Android ContentResolver.
+ * Manages persistent URI permissions for file attachments.
+ * 
+ * Works by using ContentResolver to take and release persistent URI permissions,
+ * allowing the app to access files across app restarts.
+ * 
+ * arguments:
+ *     ctx - Context: Android context for accessing ContentResolver
+ */
 class AttachmentStoreImpl(private val ctx: android.content.Context) : AttachmentStore {
     override fun persist(uri: Uri): Uri {
         try {

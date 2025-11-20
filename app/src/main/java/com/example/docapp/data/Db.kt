@@ -16,6 +16,18 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
+/**
+ * Main database class that manages the encrypted SQLite database.
+ * Handles database creation, migrations, and provides access to encrypted database instances.
+ * 
+ * Works by using SQLCipher to create and manage an encrypted SQLite database. Validates
+ * existing database files, creates tables if needed, and runs migrations. Provides thread-safe
+ * access to encrypted database instances.
+ * 
+ * arguments:
+ *     ctx - Context: Android context for accessing database file paths
+ *     passphrase - ByteArray: The encryption key for the database, typically derived from PIN
+ */
 class AppDb(private val ctx: Context, val passphrase: ByteArray) {
     val dbEncryption = DatabaseEncryption(ctx)
     private fun ByteArray.toHex(): String {
@@ -255,6 +267,13 @@ class AppDb(private val ctx: Context, val passphrase: ByteArray) {
             arrayOf<Any?>(p2, null, "CARDS", 1))
     }
 }
+/**
+ * Data access object interface for template operations.
+ * Provides methods to list, get, create, update, and delete templates.
+ * 
+ * Works by defining the contract for template database operations that must be implemented
+ * by concrete DAO implementations.
+ */
 interface TemplateDao {
     suspend fun list(): List<Template>
     suspend fun get(id: String): Template?
@@ -262,6 +281,13 @@ interface TemplateDao {
     suspend fun add(name: String, fields: List<String>): String
     suspend fun delete(id: String)
 }
+/**
+ * Data access object interface for folder operations.
+ * Provides methods to observe folder tree, create, delete, and list folders.
+ * 
+ * Works by defining the contract for folder database operations that must be implemented
+ * by concrete DAO implementations.
+ */
 interface FolderDao {
     fun observeTree(): Flow<List<Folder>>
     fun list(): List<Folder>
@@ -269,6 +295,13 @@ interface FolderDao {
     suspend fun delete(id: String)
     fun emitTree()
 }
+/**
+ * Data access object interface for document operations.
+ * Provides methods to create, read, update, delete documents and manage their organization.
+ * 
+ * Works by defining the contract for document database operations that must be implemented
+ * by concrete DAO implementations.
+ */
 interface DocumentDao {
     fun observeHome(): Flow<DocumentRepository.HomeList>
     fun emitHome()
@@ -290,6 +323,13 @@ interface DocumentDao {
     suspend fun getAllDocumentIds(): List<String>
     suspend fun getDocumentsInFolder(folderId: String): List<Document>
 }
+/**
+ * Data access object interface for settings operations.
+ * Provides methods to check PIN status, get settings, and manage PIN codes.
+ * 
+ * Works by defining the contract for settings database operations that must be implemented
+ * by concrete DAO implementations.
+ */
 interface SettingsDao {
     suspend fun isPinSet(): Boolean
     suspend fun get(): Settings
@@ -384,6 +424,15 @@ class TemplateDaoSql(private val db: AppDb) : TemplateDao {
         }
     }
 }
+/**
+ * SQL implementation of FolderDao interface.
+ * Provides concrete implementation of folder database operations using SQL queries.
+ * 
+ * Works by executing SQL queries against the encrypted database to perform folder operations.
+ * 
+ * arguments:
+ *     db - AppDb: The database instance to execute queries against
+ */
 class FolderDaoSql(private val db: AppDb) : FolderDao {
     private val tree = MutableStateFlow<List<Folder>>(emptyList())
     override fun observeTree(): Flow<List<Folder>> = tree.asStateFlow()
@@ -421,6 +470,15 @@ class FolderDaoSql(private val db: AppDb) : FolderDao {
         tree.value = runCatching { list() }.getOrDefault(emptyList())
     }
 }
+/**
+ * SQL implementation of DocumentDao interface.
+ * Provides concrete implementation of document database operations using SQL queries.
+ * 
+ * Works by executing SQL queries against the encrypted database to perform document operations.
+ * 
+ * arguments:
+ *     db - AppDb: The database instance to execute queries against
+ */
 class DocumentDaoSql(private val db: AppDb) : DocumentDao {
     private val home = MutableStateFlow(DocumentRepository.HomeList(emptyList(), emptyList()))
     override fun observeHome(): Flow<DocumentRepository.HomeList> = home.asStateFlow()
@@ -767,6 +825,15 @@ class DocumentDaoSql(private val db: AppDb) : DocumentDao {
         } catch (_: Exception) { }
     }
 }
+/**
+ * SQL implementation of SettingsDao interface.
+ * Provides concrete implementation of settings database operations using SQL queries.
+ * 
+ * Works by executing SQL queries against the encrypted database to perform settings operations.
+ * 
+ * arguments:
+ *     db - AppDb: The database instance to execute queries against
+ */
 class SettingsDaoSql(private val db: AppDb) : SettingsDao {
     init { ensureRow() }
     private fun ensureRow() {

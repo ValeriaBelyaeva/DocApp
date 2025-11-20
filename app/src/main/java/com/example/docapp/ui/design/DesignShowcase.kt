@@ -16,6 +16,20 @@ import com.example.docapp.ui.theme.AppBorderWidths
 import com.example.docapp.ui.theme.AppDimens
 import com.example.docapp.ui.theme.AppFontSizes
 import com.example.docapp.ui.pin.PinScreenDesign
+/**
+ * Design showcase screen for demonstrating UI components and design system elements.
+ * Used for design system preview and testing purposes.
+ * 
+ * Works by displaying a navigation interface to switch between different design screens,
+ * showing examples of PIN screen, home screen, document screen, and other UI components.
+ * Blocks back navigation to prevent returning to PIN screen.
+ * 
+ * arguments:
+ *     navigator - AppNavigator: Navigation helper for safe back navigation
+ * 
+ * return:
+ *     Unit - No return value
+ */
 @Composable
 fun DesignShowcase(navigator: com.example.docapp.ui.navigation.AppNavigator) {
     BackHandler(enabled = true) {
@@ -58,10 +72,10 @@ fun DesignShowcase(navigator: com.example.docapp.ui.navigation.AppNavigator) {
             ) {
                 when (currentScreen) {
                     ShowcaseScreen.Pin -> PinScreenDesign()
-                    ShowcaseScreen.Home -> Text("Home Screen — in progress", color = Color(0xFFE9EFF6))
-                    ShowcaseScreen.Document -> Text("Document Screen — in progress", color = Color(0xFFE9EFF6))
-                    ShowcaseScreen.NewDocument -> Text("New Document Screen — in progress", color = Color(0xFFE9EFF6))
-                    ShowcaseScreen.Template -> Text("Template Screen — in progress", color = Color(0xFFE9EFF6))
+                    ShowcaseScreen.Home -> Text("Home Screen ï¿½ in progress", color = Color(0xFFE9EFF6))
+                    ShowcaseScreen.Document -> Text("Document Screen ï¿½ in progress", color = Color(0xFFE9EFF6))
+                    ShowcaseScreen.NewDocument -> Text("New Document Screen ï¿½ in progress", color = Color(0xFFE9EFF6))
+                    ShowcaseScreen.Template -> Text("Template Screen ï¿½ in progress", color = Color(0xFFE9EFF6))
                 }
             }
         }

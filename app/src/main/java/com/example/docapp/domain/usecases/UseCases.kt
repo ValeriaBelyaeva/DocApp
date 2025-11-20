@@ -10,6 +10,18 @@ import com.example.docapp.core.UriDebugger
 import com.example.docapp.core.AppLogger
 import com.example.docapp.data.storage.FileGc
 import com.example.docapp.data.db.entities.AttachmentEntity
+/**
+ * Use cases class that provides high-level business operations for the application.
+ * Aggregates operations from multiple repositories and provides unified interfaces.
+ * 
+ * Works by coordinating operations across repositories, handling business logic,
+ * error handling, and user feedback for common application operations.
+ * 
+ * arguments:
+ *     repos - Repositories: Container providing access to all repository interfaces
+ *     attachmentStore - AttachmentStore: Service for managing attachment file storage
+ *     documentDao - DocumentDao: Data access object for direct document database operations
+ */
 class UseCases(
     private val repos: Repositories,
     private val attachmentStore: AttachmentStore,

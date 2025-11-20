@@ -27,10 +27,32 @@ import com.example.docapp.ui.navigation.AppDestination
 import com.example.docapp.ui.navigation.rememberAppNavigator
 import com.example.docapp.ui.theme.AppDurations
 import kotlinx.coroutines.delay
+/**
+ * Root composable wrapper that simply renders the provided content.
+ * Currently used as a pass-through wrapper for the main application content.
+ * 
+ * Works by directly calling the provided content composable function.
+ * 
+ * arguments:
+ *     content - @Composable () -> Unit: The composable content to display
+ * 
+ * return:
+ *     Unit - No return value
+ */
 @Composable
 fun AppRoot(content: @Composable () -> Unit) {
     content()
 }
+
+/**
+ * Main application composable that sets up navigation, inactivity timeout monitoring, and user interaction tracking.
+ * 
+ * Works by creating a navigation controller, monitoring user interactions (taps, gestures, keyboard), and automatically
+ * navigating to PIN screen after a period of inactivity. Tracks all user interactions to reset the inactivity timer.
+ * 
+ * return:
+ *     Unit - No return value
+ */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun App() {

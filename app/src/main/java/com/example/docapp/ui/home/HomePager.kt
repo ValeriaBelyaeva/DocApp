@@ -66,6 +66,21 @@ import com.example.docapp.ui.theme.SurfaceStyleTokens
 import com.example.docapp.ui.theme.SurfaceTokens
 import androidx.compose.foundation.shape.CircleShape
 private const val NO_FOLDER_SECTION_ID = "__NO_FOLDER_SECTION__"
+/**
+ * Main home screen composable that displays a horizontal pager with three tabs: tree view, list view, and info screen.
+ * Provides navigation to documents and document creation functionality.
+ * 
+ * Works by using HorizontalPager to display three different screens that can be swiped between.
+ * Blocks back navigation to prevent returning to PIN screen.
+ * 
+ * arguments:
+ *     openDoc - (String) -> Unit: Callback function invoked when a document is selected, receives the document ID
+ *     createNew - (folderId: String?) -> Unit: Callback function invoked when creating a new document, receives optional folder ID
+ *     navigator - AppNavigator: Navigation helper for safe back navigation
+ * 
+ * return:
+ *     Unit - No return value
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomePager(
@@ -85,6 +100,20 @@ fun HomePager(
         }
     }
 }
+/**
+ * List screen composable that displays pinned and recently opened documents in a scrollable list.
+ * Shows documents sorted by pinned status and last opened timestamp.
+ * 
+ * Works by observing the home document list from the repository, displaying pinned documents first,
+ * then recently opened documents, with options to open documents or create new ones.
+ * 
+ * arguments:
+ *     openDoc - (String) -> Unit: Callback function invoked when a document is selected, receives the document ID
+ *     onCreate - () -> Unit: Callback function invoked when creating a new document
+ * 
+ * return:
+ *     Unit - No return value
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
@@ -260,6 +289,23 @@ private fun ListScreen(openDoc: (String) -> Unit, onCreate: () -> Unit) {
     }
     MoveToFolderDialogIfNeeded(moveDocId = moveDocId, onClose = { moveDocId = null })
 }
+/**
+ * Composable for a collapsible section card in the history list screen.
+ * Displays a title with icon and collapsible content area for pinned or recent documents.
+ * 
+ * Works by rendering a glass card with a header row containing icon and title, and a collapsible
+ * content area that shows or hides based on the isCollapsed state.
+ * 
+ * arguments:
+ *     title - String: The section title text to display in the header
+ *     icon - ImageVector: The icon to display next to the title
+ *     isCollapsed - Boolean: Whether the content area is currently collapsed (hidden) or expanded (visible)
+ *     onToggleCollapse - () -> Unit: Callback function invoked when the collapse/expand button is clicked
+ *     content - @Composable ColumnScope.() -> Unit: The composable content to display in the collapsible area
+ * 
+ * return:
+ *     Unit - No return value
+ */
 @Composable
 private fun HistorySectionCard(
     title: String,

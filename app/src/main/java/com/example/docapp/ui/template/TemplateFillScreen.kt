@@ -65,6 +65,24 @@ import com.example.docapp.ui.theme.AppLayout
 import com.example.docapp.ui.theme.AppAlphas
 import com.example.docapp.ui.theme.AppBorderWidths
 import com.example.docapp.ui.theme.AppDimens
+/**
+ * Screen for filling out a template to create a new document.
+ * Displays template fields for user input and allows attaching photos and PDFs.
+ * 
+ * Works by loading the template structure, displaying input fields for each template field,
+ * and allowing users to fill in values and attach files before creating the document.
+ * Blocks back navigation to prevent returning to PIN screen.
+ * 
+ * arguments:
+ *     templateId - String: The ID of the template to use for document creation
+ *     folderId - String?: Optional folder ID where the document will be created, null for root folder
+ *     onDocumentCreated - (String) -> Unit: Callback function invoked when document is successfully created, receives the document ID
+ *     onCancel - () -> Unit: Callback function invoked when the user cancels document creation
+ *     navigator - AppNavigator: Navigation helper for safe back navigation
+ * 
+ * return:
+ *     Unit - No return value
+ */
 @Composable
 fun TemplateFillScreen(
     templateId: String,

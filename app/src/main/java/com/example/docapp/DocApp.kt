@@ -5,7 +5,27 @@ import com.example.docapp.core.AppLogger
 import com.example.docapp.core.ErrorHandler
 import com.example.docapp.core.ThemeManager
 import com.example.docapp.core.FolderStateStore
+/**
+ * Main application class that initializes core services and components on app startup.
+ * Sets up logging, error handling, theme management, folder state, and service locator.
+ * 
+ * Works by initializing all core systems in onCreate() before any activities are created,
+ * ensuring services are available when the app starts. Handles initialization errors gracefully.
+ */
 class DocApp : Application() {
+    /**
+     * Initializes the application by setting up core services and components.
+     * Called by Android system when the application process is created.
+     * 
+     * Works by initializing AppLogger, ErrorHandler, ThemeManager, FolderStateStore, and ServiceLocator
+     * in sequence. Catches and handles initialization errors, showing appropriate error messages.
+     * 
+     * return:
+     *     Unit - No return value
+     * 
+     * throws:
+     *     Exception: If ServiceLocator initialization fails, the exception is rethrown after logging
+     */
     override fun onCreate() {
         super.onCreate()
         AppLogger.init(this)

@@ -8,6 +8,14 @@ import com.example.docapp.data.transfer.DataTransferManager
 import com.example.docapp.domain.Repositories
 import com.example.docapp.domain.interactors.DomainInteractors
 import com.example.docapp.domain.usecases.UseCases
+/**
+ * Central service locator object that provides access to all application services and dependencies.
+ * Implements dependency injection pattern for accessing database, crypto, file storage, repositories, and use cases.
+ * 
+ * Works by initializing all core services in a specific order: first SQLite, then crypto manager,
+ * then database and repositories, and finally domain interactors and use cases. Services are initialized
+ * lazily when PIN is provided, ensuring database encryption is set up correctly.
+ */
 object ServiceLocator {
     lateinit var db: AppDb
         private set
@@ -27,6 +35,20 @@ object ServiceLocator {
         private set
     private lateinit var appContext: Context
     private var sqlCipherInitialized = false
+    
+    /**
+     * Initializes the ServiceLocator with application context and prepares SQLite encryption libraries.
+     * Must be called before initializeWithPin() to set up the crypto manager and prepare for database initialization.
+     * 
+     * Works by initializing SQLCipher libraries for database encryption and creating the CryptoManager instance.
+     * Database itself is created later when PIN is provided via initializeWithPin().
+     * 
+     * arguments:
+     *     appCtx - Context: The application context for accessing system services and resources
+     * 
+     * return:
+     *     Unit - No return value
+     */
     fun init(appCtx: Context) {
         AppLogger.log("ServiceLocator", "Initializing ServiceLocator...")
         appContext = appCtx
@@ -53,6 +75,24 @@ object ServiceLocator {
         AppLogger.log("ServiceLocator", "CryptoManager initialized")
         AppLogger.log("ServiceLocator", "ServiceLocator initialized, database will be created on first PIN entry")
     }
+    /**
+     * Initializes all services with the provided PIN, creating or opening the encrypted database.
+     * Verifies existing PIN or creates new database key for new PINs, then initializes all repositories and use cases.
+     * 
+     * Works by verifying the PIN if it's already set, or creating a new database key if it's a new PIN.
+     * Then creates the encrypted database, initializes DAOs, repositories, domain interactors, and use cases.
+     * 
+     * arguments:
+     *     pin - String: The PIN code to use for database encryption, must be 4 digits
+     *     isNewPin - Boolean: Whether this is a new PIN being set (true) or an existing PIN being verified (false)
+     * 
+     * return:
+     *     Unit - No return value
+     * 
+     * throws:
+     *     SecurityException: If PIN verification fails for existing PIN
+     *     IllegalStateException: If PIN is set but database key is missing
+     */
     fun initializeWithPin(pin: String, isNewPin: Boolean = false) {
         AppLogger.log("ServiceLocator", "Initializing with PIN... (isNewPin: $isNewPin)")
         ErrorHandler.showInfo("ServiceLocator: Initializing with PIN (isNewPin: $isNewPin)")

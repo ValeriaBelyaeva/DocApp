@@ -80,6 +80,22 @@ import com.example.docapp.ui.theme.AppShapes
 import com.example.docapp.ui.theme.AppColors
 import com.example.docapp.ui.theme.GlassCard
 import kotlinx.coroutines.launch
+/**
+ * Main document view screen that displays document details, fields, and attachments.
+ * Provides options to edit, delete, move, and interact with document content.
+ * 
+ * Works by loading the full document data from the repository, displaying all fields and attachments,
+ * and providing interactive buttons for various document operations. Blocks back navigation to prevent returning to PIN screen.
+ * 
+ * arguments:
+ *     docId - String: The unique identifier of the document to display
+ *     onEdit - () -> Unit: Callback function invoked when the user wants to edit the document
+ *     onDeleted - () -> Unit: Callback function invoked when the document is deleted
+ *     navigator - AppNavigator: Navigation helper for safe back navigation
+ * 
+ * return:
+ *     Unit - No return value
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DocumentViewScreen(
@@ -345,6 +361,24 @@ private object EditorShapes {
     val icon
         @Composable get() = AppShapes.iconButton()
 }
+/**
+ * Document editor screen for creating new documents or editing existing ones.
+ * Allows editing document name, description, custom fields, and managing attachments.
+ * 
+ * Works by loading existing document data if editing, or starting with empty form if creating.
+ * Provides input fields for all document properties and handles saving changes back to the repository.
+ * Blocks back navigation to prevent returning to PIN screen.
+ * 
+ * arguments:
+ *     existingDocId - String?: Optional ID of existing document to edit, null to create a new document
+ *     templateId - String?: Optional ID of template to use for new document creation, null if no template
+ *     folderId - String?: Optional folder ID where the document will be created/edited, null for root folder
+ *     onSaved - (String) -> Unit: Callback function invoked when document is saved, receives the document ID
+ *     navigator - AppNavigator: Navigation helper for safe back navigation
+ * 
+ * return:
+ *     Unit - No return value
+ */
 @Composable
 fun DocumentEditScreen(
     existingDocId: String?,

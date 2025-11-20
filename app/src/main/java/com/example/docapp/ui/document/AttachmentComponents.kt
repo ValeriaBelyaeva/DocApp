@@ -26,6 +26,20 @@ import com.example.docapp.ui.theme.GlassCard
 import com.example.docapp.ui.theme.AppColors
 import kotlinx.coroutines.launch
 import com.example.docapp.ui.theme.AppDimens
+/**
+ * Composable for managing document attachments, displaying attachment list and providing share functionality.
+ * Loads and displays all attachments for a given document.
+ * 
+ * Works by loading attachments from the repository when docId changes, displaying the count,
+ * and providing a share button to share all attachments via Android share intent.
+ * 
+ * arguments:
+ *     docId - String?: Optional document ID to load attachments for, null if no document selected
+ *     onAttachmentsChanged - () -> Unit: Callback function invoked when attachments are modified, currently unused
+ * 
+ * return:
+ *     Unit - No return value
+ */
 @Composable
 fun AttachmentManager(
     docId: String?,
@@ -96,6 +110,18 @@ fun AttachmentManager(
         }
     }
 }
+/**
+ * Formats a file size in bytes to a human-readable string with appropriate unit (B, KB, MB, GB).
+ * 
+ * Works by converting bytes to the largest appropriate unit (bytes, kilobytes, megabytes, or gigabytes)
+ * and formatting it as a string with the unit suffix.
+ * 
+ * arguments:
+ *     bytes - Long: The file size in bytes to format
+ * 
+ * return:
+ *     formattedSize - String: Human-readable file size string with unit (e.g., "1.5 MB", "256 KB")
+ */
 private fun formatFileSize(bytes: Long): String {
     return when {
         bytes < 1024 -> "$bytes B"

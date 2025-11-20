@@ -15,6 +15,16 @@ import java.security.spec.KeySpec
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
+/**
+ * Manages cryptographic operations for PIN hashing, database key derivation, and secure storage.
+ * Handles PIN verification, database encryption key management, and secure preference storage.
+ * 
+ * Works by using Android Keystore for master key, EncryptedSharedPreferences for secure storage,
+ * and PBKDF2 for deriving database keys from PIN codes. Stores PIN hashes and database keys securely.
+ * 
+ * arguments:
+ *     context - Context: The application context for accessing Android Keystore and SharedPreferences
+ */
 class CryptoManager(val context: Context) {
     companion object {
         private const val KEYSTORE_ALIAS = "DocAppMasterKey"
@@ -66,6 +76,18 @@ class CryptoManager(val context: Context) {
             throw e
         }
     }
+    /**
+     * Initializes SQLCipher library for encrypted database operations.
+     * Currently a placeholder that logs database readiness.
+     * 
+     * Works by verifying SQLCipher is available and ready for use.
+     * 
+     * return:
+     *     Unit - No return value
+     * 
+     * throws:
+     *     RuntimeException: If database initialization fails
+     */
     fun initializeSQLCipher() {
         try {
             android.util.Log.d("CryptoManager", "SQLite database ready")
@@ -74,10 +96,34 @@ class CryptoManager(val context: Context) {
             throw RuntimeException("Database initialization failed", e)
         }
     }
+    
+    /**
+     * Derives a database encryption key from a PIN code using PBKDF2.
+     * Uses a stored salt or creates a new one if none exists.
+     * 
+     * Works by retrieving or creating a salt, then using PBKDF2 with SHA-256 to derive
+     * a 256-bit key from the PIN and salt.
+     * 
+     * arguments:
+     *     pin - String: The PIN code to derive the key from
+     * 
+     * return:
+     *     key - ByteArray: The derived 256-bit encryption key
+     */
     fun deriveKeyFromPin(pin: String): ByteArray {
         val salt = getOrCreateSalt()
         return deriveKey(pin.toCharArray(), salt)
     }
+    
+    /**
+     * Generates a random 256-bit database encryption key and stores it securely.
+     * 
+     * Works by generating random bytes using SecureRandom and storing the key
+     * in encrypted shared preferences.
+     * 
+     * return:
+     *     key - ByteArray: The generated random 256-bit encryption key
+     */
     fun generateRandomDbKey(): ByteArray {
         val key = ByteArray(KEY_LENGTH / 8)
         SecureRandom().nextBytes(key)
@@ -86,9 +132,30 @@ class CryptoManager(val context: Context) {
             .apply()
         return key
     }
+    
+    /**
+     * Retrieves the existing database encryption key from secure storage.
+     * 
+     * Works by reading the stored key from encrypted shared preferences and decoding it from base64.
+     * 
+     * return:
+     *     key - ByteArray?: The stored database encryption key, or null if no key exists
+     */
     fun getExistingDbKey(): ByteArray? {
         return encryptedPrefs.getString(DB_KEY_PREF, null)?.decodeFromString()
     }
+    
+    /**
+     * Saves a database encryption key to secure storage.
+     * 
+     * Works by encoding the key to base64 and storing it in encrypted shared preferences.
+     * 
+     * arguments:
+     *     key - ByteArray: The database encryption key to store
+     * 
+     * return:
+     *     Unit - No return value
+     */
     fun saveDbKey(key: ByteArray) {
         encryptedPrefs.edit()
             .putString(DB_KEY_PREF, key.encodeToString())
@@ -115,14 +182,51 @@ class CryptoManager(val context: Context) {
         val spec: KeySpec = PBEKeySpec(pin, salt, PBKDF2_ITERATIONS, KEY_LENGTH)
         return factory.generateSecret(spec).encoded
     }
+    /**
+     * Computes SHA-256 hash of a PIN code for storage and verification.
+     * 
+     * Works by applying SHA-256 message digest algorithm to the PIN string bytes.
+     * 
+     * arguments:
+     *     pin - String: The PIN code to hash
+     * 
+     * return:
+     *     hash - ByteArray: The SHA-256 hash of the PIN
+     */
     fun sha256Pin(pin: String): ByteArray {
         val digest = java.security.MessageDigest.getInstance("SHA-256")
         return digest.digest(pin.toByteArray())
     }
+    
+    /**
+     * Verifies a PIN code against a stored hash.
+     * 
+     * Works by computing the SHA-256 hash of the input PIN and comparing it with the stored hash.
+     * 
+     * arguments:
+     *     pin - String: The PIN code to verify
+     *     storedHash - ByteArray: The stored hash to compare against
+     * 
+     * return:
+     *     isValid - Boolean: True if the PIN hash matches the stored hash, false otherwise
+     */
     fun verifyPin(pin: String, storedHash: ByteArray): Boolean {
         val inputHash = sha256Pin(pin)
         return inputHash.contentEquals(storedHash)
     }
+    
+    /**
+     * Verifies a PIN code against the stored hash in secure preferences.
+     * 
+     * Works by retrieving the stored PIN hash from encrypted preferences and comparing it
+     * with the hash of the input PIN.
+     * 
+     * arguments:
+     *     pin - String: The PIN code to verify
+     * 
+     * return:
+     *     isValid - Boolean: True if the PIN is correct, false if incorrect or no PIN is set
+     */
     fun verifyPin(pin: String): Boolean {
         ErrorHandler.showInfo("CryptoManager: Verifying PIN...")
         val storedHash = encryptedPrefs.getString("pin_hash", null)?.decodeFromString()
@@ -142,6 +246,24 @@ class CryptoManager(val context: Context) {
         }
         return isValid
     }
+    /**
+     * Changes the PIN code while preserving the existing database encryption key.
+     * Verifies the current PIN before allowing the change.
+     * 
+     * Works by verifying the current PIN, then storing the new PIN hash while keeping
+     * the existing database key unchanged.
+     * 
+     * arguments:
+     *     pin - String: The current PIN code to verify
+     *     newPin - String: The new PIN code to set
+     *     currentKey - ByteArray: The current database encryption key to preserve
+     * 
+     * return:
+     *     key - ByteArray: The preserved database encryption key (same as currentKey)
+     * 
+     * throws:
+     *     SecurityException: If the current PIN is incorrect
+     */
     fun setNewPin(pin: String, newPin: String, currentKey: ByteArray): ByteArray {
         val currentHash = sha256Pin(pin)
         val storedHash = encryptedPrefs.getString("pin_hash", null)?.decodeFromString()
@@ -156,6 +278,23 @@ class CryptoManager(val context: Context) {
         AppLogger.log("CryptoManager", "PIN changed but DB key preserved")
         return currentKey
     }
+    /**
+     * Sets the initial PIN code and creates or preserves the database encryption key.
+     * Creates a new key derived from PIN if no key exists, or preserves existing key if it does.
+     * 
+     * Works by hashing the PIN and storing it, then either deriving a new key from the PIN
+     * or preserving an existing database key if one is already stored.
+     * 
+     * arguments:
+     *     pin - String: The PIN code to set as the initial PIN
+     * 
+     * return:
+     *     key - ByteArray: The database encryption key (either newly derived or preserved)
+     * 
+     * throws:
+     *     RuntimeException: If saving PIN and key fails
+     *     IllegalStateException: If key cannot be retrieved after saving
+     */
     fun setInitialPin(pin: String): ByteArray {
         AppLogger.log("CryptoManager", "setInitialPin() - setting up new PIN...")
         ErrorHandler.showInfo("CryptoManager: Setting a new PIN...")
@@ -193,11 +332,37 @@ class CryptoManager(val context: Context) {
             throw e
         }
     }
+    /**
+     * Checks if a PIN code has been set and stored.
+     * 
+     * Works by checking if a PIN hash exists in encrypted shared preferences.
+     * 
+     * return:
+     *     isSet - Boolean: True if a PIN hash is stored, false otherwise
+     */
     fun isPinSet(): Boolean {
         val isSet = encryptedPrefs.getString("pin_hash", null) != null
         AppLogger.log("CryptoManager", "isPinSet() = $isSet")
         return isSet
     }
+    
+    /**
+     * Changes the encryption key for an existing database, re-encrypting it with the new key.
+     * Attempts to restore the old key if rekeying fails.
+     * 
+     * Works by saving the new key and executing SQLite PRAGMA rekey command to re-encrypt
+     * the database. If rekeying fails, attempts to restore the old key.
+     * 
+     * arguments:
+     *     db - AppDb: The database instance to rekey
+     *     newKey - ByteArray: The new encryption key to use
+     * 
+     * return:
+     *     Unit - No return value
+     * 
+     * throws:
+     *     Exception: If rekeying fails and old key restoration also fails
+     */
     fun reKey(db: AppDb, newKey: ByteArray) {
         try {
             saveDbKey(newKey)
@@ -220,6 +385,14 @@ class CryptoManager(val context: Context) {
             throw e
         }
     }
+    /**
+     * Clears all security data including PIN hash and database keys from secure storage.
+     * 
+     * Works by clearing all entries from encrypted shared preferences.
+     * 
+     * return:
+     *     Unit - No return value
+     */
     fun clearSecurityData() {
         encryptedPrefs.edit().clear().apply()
     }

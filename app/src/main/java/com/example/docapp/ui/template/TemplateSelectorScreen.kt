@@ -51,6 +51,23 @@ import com.example.docapp.ui.theme.AppAlphas
 import com.example.docapp.ui.theme.AppLayout
 import com.example.docapp.ui.theme.AppDimens
 import kotlinx.coroutines.launch
+/**
+ * Screen for selecting a template to create a new document, or creating a blank document.
+ * Displays a list of available templates and provides option to create document without template.
+ * 
+ * Works by loading all available templates from the repository and displaying them in a list.
+ * Users can select a template to fill, or create a blank document without a template.
+ * Blocks back navigation to prevent returning to PIN screen.
+ * 
+ * arguments:
+ *     folderId - String?: Optional folder ID where the document will be created, null for root folder
+ *     onCreateDocFromTemplate - (templateId: String, folderId: String?) -> Unit: Callback function invoked when a template is selected, receives template ID and folder ID
+ *     onCreateEmpty - (folderId: String?) -> Unit: Callback function invoked when creating a blank document, receives folder ID
+ *     navigator - AppNavigator: Navigation helper for safe back navigation
+ * 
+ * return:
+ *     Unit - No return value
+ */
 @Composable
 fun TemplateSelectorScreen(
     folderId: String?,
