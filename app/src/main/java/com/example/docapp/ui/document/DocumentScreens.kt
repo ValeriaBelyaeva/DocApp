@@ -1,5 +1,6 @@
 package com.example.docapp.ui.document
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -90,8 +91,13 @@ import kotlinx.coroutines.launch
 fun DocumentViewScreen(
     docId: String,
     onEdit: () -> Unit,
-    onDeleted: () -> Unit
+    onDeleted: () -> Unit,
+    navigator: com.example.docapp.ui.navigation.AppNavigator
 ) {
+    BackHandler(enabled = true) {
+        navigator.safePopBack()
+    }
+    
     val useCases = ServiceLocator.useCases
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -172,15 +178,15 @@ fun DocumentViewScreen(
         color = MaterialTheme.colorScheme.background,
         modifier = Modifier.fillMaxSize()
     ) {
-        Column(
-            modifier = AppLayout.appScreenInsets(Modifier.fillMaxSize())
+    Column(
+        modifier = AppLayout.appScreenInsets(Modifier.fillMaxSize())
                 .verticalScroll(scrollState)
-                .padding(AppDimens.screenPadding)
+            .padding(AppDimens.screenPadding)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
                 NeonCircleButton(
                     icon = Icons.Outlined.Edit,
                     description = "Edit document",
@@ -189,14 +195,14 @@ fun DocumentViewScreen(
                     onClick = onEdit
                 )
                 Spacer(modifier = Modifier.width(AppDimens.spaceLg))
-                Text(
-                    text = doc.doc.name,
+            Text(
+                text = doc.doc.name,
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.weight(1f)
-                )
+                modifier = Modifier.weight(1f)
+            )
                 if (viewFields.isNotEmpty()) {
-                    Text(
+            Text(
                         text = "Copy all",
                         color = AppColors.iconAccent(),
                         style = MaterialTheme.typography.titleMedium,
@@ -222,24 +228,24 @@ fun DocumentViewScreen(
             if (doc.photos.isNotEmpty()) {
                 SectionTitle("Photos")
                 Spacer(modifier = Modifier.height(AppDimens.spaceMd))
-                doc.photos.forEach { photo ->
-                    GlassCard(
+                    doc.photos.forEach { photo ->
+                        GlassCard(
                         modifier = Modifier.fillMaxWidth(),
-                        onClick = { openPhoto(photo.uri.toString()) },
+                            onClick = { openPhoto(photo.uri.toString()) },
                         shape = EditorShapes.section
-                    ) {
-                        AsyncImage(
+                        ) {
+                            AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
-                                .data(photo.uri)
-                                .crossfade(true)
-                                .build(),
+                                    .data(photo.uri)
+                                    .crossfade(true)
+                                    .build(),
                             contentDescription = photo.displayName ?: "Photo",
-                            modifier = Modifier
+                                modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(EditorShapes.section),
                             contentScale = ContentScale.Crop
-                        )
-                    }
+                            )
+                        }
                     Spacer(modifier = Modifier.height(AppDimens.spaceLg))
                 }
             }
@@ -254,7 +260,7 @@ fun DocumentViewScreen(
                             vertical = AppDimens.panelPaddingVertical
                         )
                     ) {
-                        Text(
+                                Text(
                             text = "Attached files",
                             style = MaterialTheme.typography.titleSmall,
                             color = EditorPalette.textPrimary
@@ -299,11 +305,11 @@ fun DocumentViewScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                    scope.launch {
+                        scope.launch {
                             try {
                                 useCases.deleteDoc(docId)
                                 ErrorHandler.showSuccess("Document deleted")
-                        onDeleted()
+                                onDeleted()
                             } catch (e: Exception) {
                                 ErrorHandler.showError("Failed to delete document: ${e.message}")
                             }
@@ -373,8 +379,12 @@ fun DocumentEditScreen(
     existingDocId: String?,
     templateId: String?,
     folderId: String?,
-    onSaved: (String) -> Unit
+    onSaved: (String) -> Unit,
+    navigator: com.example.docapp.ui.navigation.AppNavigator
 ) {
+    BackHandler(enabled = true) {
+        navigator.safePopBack()
+    }
     val useCases = ServiceLocator.useCases
     val repos = ServiceLocator.repos
     val scope = rememberCoroutineScope()

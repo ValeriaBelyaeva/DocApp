@@ -1,5 +1,6 @@
 package com.example.docapp.ui.design
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,7 +19,11 @@ import com.example.docapp.ui.theme.AppFontSizes
 import com.example.docapp.ui.pin.PinScreenDesign
 
 @Composable
-fun DesignShowcase() {
+fun DesignShowcase(navigator: com.example.docapp.ui.navigation.AppNavigator) {
+    BackHandler(enabled = true) {
+        navigator.safePopBack()
+    }
+    
     var currentScreen by remember { mutableStateOf(ShowcaseScreen.Pin) }
     
     Surface(color = Color(0xFF0B1014), modifier = Modifier.fillMaxSize()) {

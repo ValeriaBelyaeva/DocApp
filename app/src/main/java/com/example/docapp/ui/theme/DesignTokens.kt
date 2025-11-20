@@ -315,7 +315,7 @@ object AppAlphas {
 
 object AppDurations {
     /** Timeout before pin screen protects the app after inactivity (milliseconds) */
-    const val inactivityTimeoutMs: Long = 30_000L
+    const val inactivityTimeoutMs: Long = 180_000L
 
     /** Delay before clearing sensitive clipboard data (milliseconds) */
     const val clipboardAutoClearMs: Long = 30_000L

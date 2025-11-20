@@ -1,6 +1,7 @@
 package com.example.docapp.ui.template
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -71,8 +72,13 @@ fun TemplateFillScreen(
     templateId: String,
     folderId: String?,
     onDocumentCreated: (String) -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    navigator: com.example.docapp.ui.navigation.AppNavigator
 ) {
+    BackHandler(enabled = true) {
+        navigator.safePopBack()
+    }
+    
     val useCases = ServiceLocator.useCases
     val scope = rememberCoroutineScope()
     

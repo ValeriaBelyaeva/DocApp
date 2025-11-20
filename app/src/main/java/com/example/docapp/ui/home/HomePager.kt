@@ -3,6 +3,7 @@ package com.example.docapp.ui.home
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -72,8 +73,13 @@ private const val NO_FOLDER_SECTION_ID = "__NO_FOLDER_SECTION__"
 @Composable
 fun HomePager(
     openDoc: (String) -> Unit,
-    createNew: (folderId: String?) -> Unit
+    createNew: (folderId: String?) -> Unit,
+    navigator: com.example.docapp.ui.navigation.AppNavigator
 ) {
+    BackHandler(enabled = true) {
+        navigator.safePopBack()
+    }
+    
     val pager = rememberPagerState(initialPage = 1, pageCount = { 3 })
     HorizontalPager(state = pager, modifier = Modifier.fillMaxSize()) { page ->
         when (page) {

@@ -98,12 +98,13 @@ fun App() {
                 })
             }
             composable(AppDestination.Showcase.route) {
-                DesignShowcase()
+                DesignShowcase(navigator = navigator)
             }
             composable(AppDestination.Home.route) {
                 HomePager(
                     openDoc = { id -> navigator.openDocView(id) },
-                    createNew = { folderId -> navigator.openTemplateSelector(folderId) }
+                    createNew = { folderId -> navigator.openTemplateSelector(folderId) },
+                    navigator = navigator
                 )
             }
             composable(
@@ -121,7 +122,8 @@ fun App() {
                     },
                     onCreateEmpty = { fId ->
                         navigator.openDocEditor(templateId = null, folderId = fId)
-                    }
+                    },
+                    navigator = navigator
                 )
             }
             composable(
@@ -145,7 +147,8 @@ fun App() {
                     },
                     onCancel = {
                         navigator.popBack()
-                    }
+                    },
+                    navigator = navigator
                 )
             }
             composable(
@@ -161,7 +164,8 @@ fun App() {
                     },
                     onDeleted = {
                         navigator.popBack()
-                    }
+                    },
+                    navigator = navigator
                 )
             }
             composable(
@@ -183,7 +187,8 @@ fun App() {
                         ?.ifBlank { null },
                     onSaved = { id ->
                         navigator.openDocView(id, popUpTo = AppDestination.Home)
-                    }
+                    },
+                    navigator = navigator
                 )
             }
         }

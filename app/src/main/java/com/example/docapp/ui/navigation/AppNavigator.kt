@@ -61,7 +61,31 @@ class AppNavigator(private val navController: NavHostController) {
     }
 
     fun popBack() {
-        navController.popBackStack()
+        val backStackEntry = navController.previousBackStackEntry
+        val previousRoute = backStackEntry?.destination?.route
+        
+        if (previousRoute == AppDestination.Pin.route) {
+            navController.navigate(AppDestination.Home.route) {
+                popUpTo(AppDestination.Home.route) {
+                    inclusive = true
+                }
+                launchSingleTop = true
+            }
+        } else {
+            navController.popBackStack()
+        }
+    }
+    
+    fun canPopBack(): Boolean {
+        val backStackEntry = navController.previousBackStackEntry
+        val previousRoute = backStackEntry?.destination?.route
+        return previousRoute != null && previousRoute != AppDestination.Pin.route
+    }
+    
+    fun safePopBack() {
+        if (canPopBack()) {
+            navController.popBackStack()
+        }
     }
 
     private fun navigate(route: String, popUpTo: AppDestination?, inclusive: Boolean) {

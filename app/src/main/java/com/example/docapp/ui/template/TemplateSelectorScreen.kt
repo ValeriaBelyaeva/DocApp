@@ -1,5 +1,6 @@
 package com.example.docapp.ui.template
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -56,8 +57,13 @@ import kotlinx.coroutines.launch
 fun TemplateSelectorScreen(
     folderId: String?,
     onCreateDocFromTemplate: (templateId: String, folderId: String?) -> Unit,
-    onCreateEmpty: (folderId: String?) -> Unit
+    onCreateEmpty: (folderId: String?) -> Unit,
+    navigator: com.example.docapp.ui.navigation.AppNavigator
 ) {
+    BackHandler(enabled = true) {
+        navigator.safePopBack()
+    }
+    
     val uc = ServiceLocator.useCases
     var templates by remember { mutableStateOf<List<Template>>(emptyList()) }
     val scope = rememberCoroutineScope()
